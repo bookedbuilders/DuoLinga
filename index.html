@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DuoLinga — Learn Spanish</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦜</text></svg>" />
+</head>
+<body>
+  <!-- ============ HOME SCREEN ============ -->
+  <div id="screen-home" class="screen active">
+    <header class="topbar">
+      <div class="brand"><span class="brand-icon">🦜</span> DuoLinga <span class="brand-flag">🇪🇸</span></div>
+      <div class="stats">
+        <div class="stat" title="Day streak"><span class="stat-icon">🔥</span><span id="stat-streak">0</span></div>
+        <div class="stat" title="Total XP"><span class="stat-icon">⚡</span><span id="stat-xp">0</span></div>
+        <div class="stat" title="Gems"><span class="stat-icon">💎</span><span id="stat-gems">0</span></div>
+      </div>
+    </header>
+
+    <main class="home-main">
+      <div class="unit-banner">
+        <div class="unit-banner-text">
+          <div class="unit-label">Unit 1 · Intermediate refresher</div>
+          <h1>Spanish for returning learners</h1>
+          <p>Past tense, real conversations, travel &amp; plans</p>
+        </div>
+        <div class="unit-mascot" id="home-mascot"></div>
+      </div>
+      <div id="lesson-path" class="lesson-path"></div>
+    </main>
+  </div>
+
+  <!-- ============ LESSON SCREEN ============ -->
+  <div id="screen-lesson" class="screen">
+    <header class="lesson-topbar">
+      <button id="btn-quit" class="icon-btn" title="Quit lesson">✕</button>
+      <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
+      <div class="hearts" id="hearts-box"></div>
+    </header>
+
+    <main class="lesson-main">
+      <h2 id="q-instruction" class="q-instruction"></h2>
+      <div id="q-character-row" class="q-character-row">
+        <div id="q-character" class="q-character"></div>
+        <div id="q-bubble" class="speech-bubble"></div>
+      </div>
+      <div id="q-body" class="q-body"></div>
+    </main>
+
+    <footer id="lesson-footer" class="lesson-footer">
+      <div id="feedback" class="feedback">
+        <div id="feedback-title" class="feedback-title"></div>
+        <div id="feedback-detail" class="feedback-detail"></div>
+      </div>
+      <button id="btn-check" class="btn btn-primary" disabled>Check</button>
+    </footer>
+  </div>
+
+  <!-- ============ RESULTS SCREEN ============ -->
+  <div id="screen-results" class="screen">
+    <main class="results-main">
+      <div id="results-mascot" class="results-mascot"></div>
+      <h1 id="results-title">Lesson complete!</h1>
+      <p id="results-sub" class="results-sub"></p>
+      <div class="results-cards">
+        <div class="results-card xp"><div class="rc-label">Total XP</div><div class="rc-value" id="res-xp">0</div></div>
+        <div class="results-card acc"><div class="rc-label">Accuracy</div><div class="rc-value" id="res-acc">0%</div></div>
+        <div class="results-card combo"><div class="rc-label">Best combo</div><div class="rc-value" id="res-combo">0</div></div>
+        <div class="results-card gems"><div class="rc-label">Gems</div><div class="rc-value" id="res-gems">0</div></div>
+      </div>
+      <button id="btn-results-continue" class="btn btn-primary">Continue</button>
+      <button id="btn-results-retry" class="btn btn-ghost">Practice again</button>
+    </main>
+  </div>
+
+  <script src="js/data/lessons.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
