@@ -33,14 +33,23 @@ Or simply open `index.html` directly in a browser.
 - Multiple choice (Spanish → English comprehension, grammar picks)
 - Fill in the blank (conjugation choices with hints)
 - Translate — build the sentence from a tap-a-word bank (both directions)
+- Type the translation — free typing, tolerant of missing accents and ¿¡
 - Listening — "tap what you hear," using the browser's Spanish text-to-speech
   (degrades gracefully to reading if TTS isn't available)
 - Match the pairs (vocabulary)
 
+**Learning aids:**
+
+- Every lesson opens with a short grammar tip (the "meaning of the lesson")
+- Every question has a teaching note behind a "💡 Why?" button in the
+  feedback bar — it opens automatically when you get something wrong
+
 **Game systems, Duolingo-style:**
 
 - ⚡ **XP** — 10 per correct answer, +2 combo bonus at 3+ in a row,
-  +15 for a perfect lesson
+  +15 for a perfect lesson. Every lesson is always playable; XP milestones
+  mark whether you're "on track" or jumping ahead, and per-lesson best
+  scores (XP, accuracy, 1–3 stars) are saved and shown on the path
 - ❤️ **Hearts** — 5 per lesson; wrong answers cost one, run out and the
   lesson ends (match mistakes are free)
 - 🔥 **Daily streak** — practice on consecutive days to grow it

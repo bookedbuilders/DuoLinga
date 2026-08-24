@@ -170,6 +170,17 @@
     return na.length === nb.length && na.every((t, i) => t === nb[i]);
   }
 
+  /* for typed answers: lowercase, drop accents and punctuation, squeeze spaces */
+  function normalizeTyped(s) {
+    return s
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[¿?¡!.,;:"“”']/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
   function todayKey() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -209,30 +220,27 @@
       node.className = "path-node";
 
       const done = (profile.lessonsDone[lesson.id] || 0) > 0;
-      // unlock by finishing the previous lesson, OR by earning enough XP
-      // anywhere — so you can skip ahead once your score is high enough
+      // every lesson is playable; the XP milestone marks whether you're
+      // "on track" (previous lesson finished, or enough XP earned anywhere)
       const prevDone = i === 0 || (profile.lessonsDone[LESSONS[i - 1].id] || 0) > 0;
       const xpNeeded = lesson.xpToUnlock || 0;
-      const unlocked = prevDone || profile.xp >= xpNeeded;
+      const onTrack = prevDone || profile.xp >= xpNeeded;
 
       const best = profile.bestScores[lesson.id];
       const stars = best ? "★".repeat(starsFor(best.accuracy)) + "☆".repeat(3 - starsFor(best.accuracy)) : "";
-      const skipped = unlocked && !prevDone;
 
       const btn = document.createElement("button");
-      btn.className = "lesson-btn" + (done ? " done" : unlocked ? " unlocked" : "");
-      btn.disabled = !unlocked;
+      btn.className = "lesson-btn " + (done ? "done" : onTrack ? "unlocked" : "ahead");
       btn.innerHTML = `
-        <div class="lesson-icon">${unlocked ? lesson.icon : "🔒"}</div>
+        <div class="lesson-icon">${lesson.icon}</div>
         <div>
           <div class="lesson-title">${lesson.title}</div>
           <div class="lesson-sub">${lesson.subtitle}</div>
           ${best ? `<div class="lesson-best"><span class="stars">${stars}</span> Best +${best.xp} XP · ${best.accuracy}%</div>` : ""}
           ${done ? `<div class="lesson-crowns">👑 × ${profile.lessonsDone[lesson.id]}</div>` : ""}
-          ${!unlocked ? `<div class="lesson-locked-note">Unlocks at ⚡${xpNeeded} XP — you have ${profile.xp}</div>` : ""}
-          ${skipped && !done ? `<div class="lesson-skip-note">⚡ Unlocked by XP — jump in!</div>` : ""}
+          ${!onTrack ? `<div class="lesson-locked-note">On track at ⚡${xpNeeded} XP (you have ${profile.xp}) — or jump ahead</div>` : ""}
         </div>`;
-      if (unlocked) btn.addEventListener("click", () => startLesson(lesson));
+      btn.addEventListener("click", () => startLesson(lesson));
 
       node.appendChild(btn);
       path.appendChild(node);
@@ -270,9 +278,30 @@
       answerTokens: null,
       matchState: null,
       solved: false,
+      intro: !!lesson.tip,
     };
     showScreen("lesson");
-    renderQuestion();
+    if (session.intro) renderIntro();
+    else renderQuestion();
+  }
+
+  /* lesson intro: a short grammar tip before the first question */
+  function renderIntro() {
+    renderHearts();
+    renderProgress();
+    setFooterState(null);
+
+    $("q-instruction").textContent = session.lesson.title;
+    const charRow = $("q-character-row");
+    charRow.classList.remove("hidden");
+    $("q-character").innerHTML = CHARACTERS[Math.floor(Math.random() * CHARACTERS.length)].svg;
+    $("q-bubble").innerHTML = `<span class="tip-label">💡 Before you start</span><span>${session.lesson.tip}</span>`;
+    $("q-body").innerHTML = "";
+
+    const checkBtn = $("btn-check");
+    checkBtn.textContent = "Start lesson";
+    checkBtn.disabled = false;
+    checkBtn.classList.remove("wrong");
   }
 
   function currentItem() {
@@ -395,6 +424,28 @@
         $("q-instruction").textContent = toSpanish ? "Translate into Spanish" : "Translate into English";
         showBubble(`${toSpanish ? "" : audioButton(q.prompt)}<span>${q.prompt}</span>`);
         buildWordBank(body, q.answer.concat(q.extra || []), checkBtn);
+        break;
+      }
+
+      case "typing": {
+        $("q-instruction").textContent = "Type the Spanish translation";
+        showBubble(`<span>${q.prompt}</span>`);
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "typing-input";
+        input.placeholder = "Escribe en español…";
+        input.autocomplete = "off";
+        input.autocapitalize = "off";
+        input.spellcheck = false;
+        input.addEventListener("input", () => {
+          checkBtn.disabled = input.value.trim().length === 0;
+        });
+        body.appendChild(input);
+        const note = document.createElement("p");
+        note.className = "typing-note";
+        note.textContent = "Accents and ¿¡ punctuation are optional — we'll show the full spelling.";
+        body.appendChild(note);
+        setTimeout(() => input.focus(), 50);
         break;
       }
 
@@ -569,6 +620,19 @@
         gradeAnswer(ok, { detail });
         break;
       }
+      case "typing": {
+        const input = document.querySelector(".typing-input");
+        const given = normalizeTyped(input.value);
+        const targets = [q.answer].concat(q.alt || []);
+        const ok = targets.some((t) => normalizeTyped(t) === given);
+        input.disabled = true;
+        input.classList.add(ok ? "typed-correct" : "typed-wrong");
+        const detail = ok
+          ? `Full spelling: ${q.answer}`
+          : `Correct answer: ${q.answer}`;
+        gradeAnswer(ok, { detail });
+        break;
+      }
     }
   }
 
@@ -607,6 +671,25 @@
         session.retried.add(item.originalIndex);
         session.queue.push({ q: item.q, originalIndex: item.originalIndex, isRetry: true });
       }
+    }
+
+    // "Why?" button: reveal the teaching note for this question
+    const explainBtn = $("btn-explain");
+    const explainPanel = $("explain-panel");
+    explainPanel.hidden = true;
+    explainPanel.textContent = "";
+    if (item.q.explain) {
+      explainBtn.hidden = false;
+      explainBtn.textContent = "💡 Why? Explain this";
+      explainBtn.onclick = () => {
+        explainPanel.textContent = item.q.explain;
+        explainPanel.hidden = !explainPanel.hidden;
+        explainBtn.textContent = explainPanel.hidden ? "💡 Why? Explain this" : "Hide explanation";
+      };
+      // a wrong answer is a teaching moment — open the explanation right away
+      if (!ok) explainBtn.onclick();
+    } else {
+      explainBtn.hidden = true;
     }
 
     const checkBtn = $("btn-check");
@@ -703,8 +786,14 @@
   /* ---------- wiring ---------- */
 
   $("btn-check").addEventListener("click", () => {
-    if (session.solved) advance();
-    else checkCurrent();
+    if (session.intro) {
+      session.intro = false;
+      renderQuestion();
+    } else if (session.solved) {
+      advance();
+    } else {
+      checkCurrent();
+    }
   });
 
   // two-tap quit: native confirm() can be blocked in sandboxed iframes
@@ -743,6 +832,8 @@
     if (e.key === "Enter" && !$("btn-check").disabled) {
       e.preventDefault();
       $("btn-check").click();
+    } else if (e.target.tagName === "INPUT") {
+      return; // digits are text while typing an answer
     } else if (/^[1-4]$/.test(e.key)) {
       const btns = document.querySelectorAll(".choice-btn:not(:disabled)");
       const n = Number(e.key) - 1;
