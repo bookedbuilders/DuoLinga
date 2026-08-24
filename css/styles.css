@@ -116,7 +116,7 @@ button { font-family: inherit; cursor: pointer; }
 .path-connector.done { background: var(--gold); }
 
 .lesson-btn {
-  width: 210px;
+  width: 260px;
   border: 2px solid var(--line);
   border-radius: var(--radius);
   background: var(--bg);
@@ -143,6 +143,11 @@ button { font-family: inherit; cursor: pointer; }
 .lesson-title { font-weight: 800; font-size: 15px; }
 .lesson-sub { font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; }
 .lesson-crowns { font-size: 12px; color: var(--gold); font-weight: 800; margin-top: 3px; }
+.lesson-best { font-size: 12px; color: var(--ink-soft); font-weight: 700; margin-top: 4px; }
+.lesson-best .stars { color: var(--gold); font-size: 13px; letter-spacing: 1px; }
+.lesson-locked-note { font-size: 11.5px; color: var(--blue); font-weight: 800; margin-top: 4px; }
+.lesson-skip-note { font-size: 11.5px; color: var(--purple); font-weight: 800; margin-top: 4px; }
+.save-note { font-size: 12.5px; color: #b5b5b5; margin-top: 28px; text-align: center; }
 
 /* ---------- Lesson screen ---------- */
 .lesson-topbar {

@@ -136,6 +136,7 @@ const LESSONS = [
      --------------------------------------------------------- */
   {
     id: "pasado",
+    xpToUnlock: 100,
     title: "Talking about the past",
     subtitle: "Preterite · regular & key irregulars",
     icon: "⏰",
@@ -254,6 +255,7 @@ const LESSONS = [
      --------------------------------------------------------- */
   {
     id: "restaurante",
+    xpToUnlock: 250,
     title: "At the restaurant",
     subtitle: "Ordering · polite requests",
     icon: "🥘",
@@ -368,6 +370,7 @@ const LESSONS = [
      --------------------------------------------------------- */
   {
     id: "viaje",
+    xpToUnlock: 400,
     title: "Getting around",
     subtitle: "Travel · directions · transport",
     icon: "🧭",
@@ -481,6 +484,7 @@ const LESSONS = [
      --------------------------------------------------------- */
   {
     id: "planes",
+    xpToUnlock: 550,
     title: "Making plans",
     subtitle: "ir a + infinitive · invitations",
     icon: "🗓️",

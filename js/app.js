@@ -105,7 +105,7 @@
   }
 
   function defaultProfile() {
-    return { xp: 0, gems: 0, streak: 0, lastPracticeDay: null, lessonsDone: {} };
+    return { xp: 0, gems: 0, streak: 0, lastPracticeDay: null, lessonsDone: {}, bestScores: {} };
   }
 
   function saveProfile() {
@@ -209,7 +209,15 @@
       node.className = "path-node";
 
       const done = (profile.lessonsDone[lesson.id] || 0) > 0;
-      const unlocked = i === 0 || (profile.lessonsDone[LESSONS[i - 1].id] || 0) > 0;
+      // unlock by finishing the previous lesson, OR by earning enough XP
+      // anywhere — so you can skip ahead once your score is high enough
+      const prevDone = i === 0 || (profile.lessonsDone[LESSONS[i - 1].id] || 0) > 0;
+      const xpNeeded = lesson.xpToUnlock || 0;
+      const unlocked = prevDone || profile.xp >= xpNeeded;
+
+      const best = profile.bestScores[lesson.id];
+      const stars = best ? "★".repeat(starsFor(best.accuracy)) + "☆".repeat(3 - starsFor(best.accuracy)) : "";
+      const skipped = unlocked && !prevDone;
 
       const btn = document.createElement("button");
       btn.className = "lesson-btn" + (done ? " done" : unlocked ? " unlocked" : "");
@@ -219,13 +227,25 @@
         <div>
           <div class="lesson-title">${lesson.title}</div>
           <div class="lesson-sub">${lesson.subtitle}</div>
+          ${best ? `<div class="lesson-best"><span class="stars">${stars}</span> Best +${best.xp} XP · ${best.accuracy}%</div>` : ""}
           ${done ? `<div class="lesson-crowns">👑 × ${profile.lessonsDone[lesson.id]}</div>` : ""}
+          ${!unlocked ? `<div class="lesson-locked-note">Unlocks at ⚡${xpNeeded} XP — you have ${profile.xp}</div>` : ""}
+          ${skipped && !done ? `<div class="lesson-skip-note">⚡ Unlocked by XP — jump in!</div>` : ""}
         </div>`;
       if (unlocked) btn.addEventListener("click", () => startLesson(lesson));
 
       node.appendChild(btn);
       path.appendChild(node);
     });
+
+    const note = document.createElement("p");
+    note.className = "save-note";
+    note.textContent = "Progress saves automatically on this device 💾";
+    path.appendChild(note);
+  }
+
+  function starsFor(accuracy) {
+    return accuracy >= 90 ? 3 : accuracy >= 70 ? 2 : 1;
   }
 
   /* ---------- lesson session ---------- */
@@ -615,11 +635,29 @@
     const perfect = passed && session.firstTryCorrect === session.totalOriginal;
 
     let gems = 0;
+    let newRecord = false;
+    let unlockedNow = [];
     if (passed) {
       if (perfect) session.xp += PERFECT_BONUS;
       gems = GEMS_PER_LESSON + (perfect ? GEMS_PERFECT_BONUS : 0);
 
+      const xpBefore = profile.xp;
+      const prevBest = profile.bestScores[session.lesson.id];
+      newRecord = !prevBest || session.xp > prevBest.xp || accuracy > prevBest.accuracy;
+      profile.bestScores[session.lesson.id] = {
+        xp: Math.max(prevBest ? prevBest.xp : 0, session.xp),
+        accuracy: Math.max(prevBest ? prevBest.accuracy : 0, accuracy),
+      };
+
       profile.xp += session.xp;
+
+      unlockedNow = LESSONS.filter(
+        (l) =>
+          l.xpToUnlock &&
+          xpBefore < l.xpToUnlock &&
+          profile.xp >= l.xpToUnlock &&
+          !(profile.lessonsDone[l.id] > 0)
+      ).map((l) => l.title);
       profile.gems += gems;
       profile.lessonsDone[session.lesson.id] = (profile.lessonsDone[session.lesson.id] || 0) + 1;
 
@@ -638,11 +676,20 @@
         : "Lesson complete!"
       : "Out of hearts!";
     $("results-title").style.color = passed ? "var(--gold)" : "var(--red)";
-    $("results-sub").textContent = passed
-      ? perfect
-        ? `You aced “${session.lesson.title}” without a single miss.`
-        : `You finished “${session.lesson.title}”. Keep the streak alive!`
-      : "No worries — review the tricky ones and try again.";
+    const subParts = [];
+    if (passed) {
+      subParts.push(
+        perfect
+          ? `You aced “${session.lesson.title}” without a single miss.`
+          : `You finished “${session.lesson.title}”.`
+      );
+      if (newRecord) subParts.push("🏅 New personal best — saved!");
+      if (unlockedNow.length) subParts.push(`🔓 Unlocked: ${unlockedNow.join(", ")}!`);
+      if (!newRecord && !unlockedNow.length) subParts.push("Keep the streak alive!");
+    } else {
+      subParts.push("No worries — review the tricky ones and try again.");
+    }
+    $("results-sub").textContent = subParts.join(" ");
 
     $("res-xp").textContent = passed ? `+${session.xp}` : "0";
     $("res-acc").textContent = `${accuracy}%`;
