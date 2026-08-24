@@ -660,11 +660,26 @@
     else checkCurrent();
   });
 
+  // two-tap quit: native confirm() can be blocked in sandboxed iframes
+  let quitArmed = null;
   $("btn-quit").addEventListener("click", () => {
-    if (confirm("Quit this lesson? Progress in it will be lost.")) {
+    const btn = $("btn-quit");
+    if (quitArmed) {
+      clearTimeout(quitArmed);
+      quitArmed = null;
+      btn.textContent = "✕";
+      btn.style.color = "";
       if (tts.available) window.speechSynthesis.cancel();
       renderHome();
       showScreen("home");
+    } else {
+      btn.textContent = "Quit?";
+      btn.style.color = "var(--red)";
+      quitArmed = setTimeout(() => {
+        quitArmed = null;
+        btn.textContent = "✕";
+        btn.style.color = "";
+      }, 2500);
     }
   });
 
