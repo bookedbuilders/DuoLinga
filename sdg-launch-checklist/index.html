@@ -24,7 +24,7 @@
     --danger: #b42318;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme="light"]) {
       --bg: #101318;
       --surface: #1a1f27;
       --surface-2: #232a34;
@@ -41,6 +41,23 @@
       --badge-text: #e6c65c;
       --danger: #f97066;
     }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101318;
+    --surface: #1a1f27;
+    --surface-2: #232a34;
+    --text: #eef1f5;
+    --text-muted: #9aa5b1;
+    --border: #333c48;
+    --accent: #4d8dff;
+    --accent-text: #0b1220;
+    --green: #2fbf62;
+    --green-bg: #123b23;
+    --green-text: #7fe0a4;
+    --done: #6b7684;
+    --badge-bg: #3d3417;
+    --badge-text: #e6c65c;
+    --danger: #f97066;
   }
   * { box-sizing: border-box; }
   html { color-scheme: light dark; }
@@ -732,7 +749,8 @@ function refresh() {
 
 /* ===================== Export / Import ===================== */
 document.getElementById("exportBtn").addEventListener("click", () => {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const json = JSON.stringify(state, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   const d = new Date();
@@ -743,7 +761,15 @@ document.getElementById("exportBtn").addEventListener("click", () => {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  showToast("Exported backup");
+  // Some embedded viewers block downloads, so also copy the backup to the clipboard
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(json).then(
+      () => showToast("Backup downloaded and copied to clipboard"),
+      () => showToast("Exported backup")
+    );
+  } else {
+    showToast("Exported backup");
+  }
 });
 
 document.getElementById("importBtn").addEventListener("click", () => {
