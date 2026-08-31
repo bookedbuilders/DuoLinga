@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SDG Electric Launch Checklist</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --surface-2: #eef0f3;
+    --text: #16181d;
+    --text-muted: #5a6472;
+    --border: #d7dce2;
+    --accent: #1a6ef5;
+    --accent-text: #ffffff;
+    --green: #14803c;
+    --green-bg: #d9f2e1;
+    --green-text: #0c5228;
+    --done: #8a93a0;
+    --badge-bg: #fff3cd;
+    --badge-text: #7a5c00;
+    --danger: #b42318;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101318;
+      --surface: #1a1f27;
+      --surface-2: #232a34;
+      --text: #eef1f5;
+      --text-muted: #9aa5b1;
+      --border: #333c48;
+      --accent: #4d8dff;
+      --accent-text: #0b1220;
+      --green: #2fbf62;
+      --green-bg: #123b23;
+      --green-text: #7fe0a4;
+      --done: #6b7684;
+      --badge-bg: #3d3417;
+      --badge-text: #e6c65c;
+      --danger: #f97066;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.45;
+    -webkit-text-size-adjust: 100%;
+  }
+  header.app-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 14px 12px;
+  }
+  .header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  h1 {
+    font-size: 17px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+  .tier-counts {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .tier-count {
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 10px;
+    color: var(--text-muted);
+  }
+  .tier-count.complete {
+    background: var(--green-bg);
+    color: var(--green-text);
+    border-color: var(--green);
+  }
+  .progress-track {
+    margin-top: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    border-radius: 999px;
+    transition: width 0.25s ease;
+  }
+  .progress-fill.complete { background: var(--green); }
+  .progress-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-weight: 600;
+  }
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  button {
+    font: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn {
+    min-height: 44px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .btn:active { opacity: 0.75; }
+  .btn.primary-toggle.active {
+    background: var(--accent);
+    color: var(--accent-text);
+    border-color: var(--accent);
+  }
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 12px 10px 80px;
+  }
+  .tier {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .tier-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 52px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: none;
+    border-bottom: 1px solid transparent;
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 700;
+    text-align: left;
+  }
+  .tier.open .tier-header { border-bottom-color: var(--border); }
+  .tier-header.tier-complete {
+    background: var(--green-bg);
+    color: var(--green-text);
+  }
+  .tier-header .chev {
+    flex: none;
+    transition: transform 0.15s ease;
+    color: var(--text-muted);
+  }
+  .tier.open .chev { transform: rotate(90deg); }
+  .tier-header .tier-progress {
+    margin-left: auto;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+  .tier-header.tier-complete .tier-progress { color: var(--green-text); }
+  .tier-body { display: none; }
+  .tier.open .tier-body { display: block; }
+  .section-title {
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    padding: 14px 14px 4px;
+  }
+  ul.items { list-style: none; margin: 0; padding: 0 8px 8px; }
+  ul.items ul.children { list-style: none; margin: 0; padding: 0 0 0 34px; }
+  li.item { margin: 2px 0; }
+  .item-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px 6px;
+    border-radius: 10px;
+  }
+  .check {
+    flex: none;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 0;
+  }
+  .check .box {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: transparent;
+    transition: background 0.1s ease, border-color 0.1s ease;
+  }
+  .item-row.done .check .box {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+  }
+  .item-main {
+    flex: 1;
+    min-width: 0;
+    padding-top: 10px;
+  }
+  .item-text-btn {
+    display: block;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0;
+    text-align: left;
+    color: inherit;
+    font-size: 15px;
+    min-height: 24px;
+  }
+  .item-num {
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-right: 6px;
+    font-size: 13px;
+  }
+  .item-row.done .item-main { color: var(--done); }
+  .item-row.done .item-text { text-decoration: line-through; text-decoration-thickness: 1px; }
+  .note-badge {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--badge-bg);
+    color: var(--badge-text);
+    border-radius: 6px;
+    padding: 1px 6px;
+    vertical-align: 1px;
+  }
+  .note-wrap { display: none; padding: 6px 0 4px; }
+  .note-wrap.open { display: block; }
+  textarea.note {
+    width: 100%;
+    min-height: 64px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    resize: vertical;
+  }
+  textarea.note:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .hidden { display: none !important; }
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    background: var(--text);
+    color: var(--bg);
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 50;
+    max-width: 90vw;
+    text-align: center;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-row">
+    <h1>SDG Electric Launch Checklist</h1>
+  </div>
+  <div class="tier-counts" id="tierCounts"></div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-label" id="progressLabel"></div>
+  <div class="toolbar">
+    <button type="button" class="btn primary-toggle" id="filterBtn">Open only</button>
+    <button type="button" class="btn" id="exportBtn">Export</button>
+    <button type="button" class="btn" id="importBtn">Import</button>
+    <input type="file" id="importFile" accept="application/json,.json" class="hidden" />
+  </div>
+</header>
+
+<main id="app"></main>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ===================== Checklist data ===================== */
+const CHECKLIST = [
+  {
+    "tier": "Tier 1: Launch Blockers",
+    "sections": [
+      {
+        "title": "Stop the leaks first",
+        "items": [
+          { "id": "t1-01", "text": "Ask Ben: after hours call routing. His cell, voicemail, or answering service. Decision today." },
+          { "id": "t1-02", "text": "Test call from each number and confirm a GHL contact is created with correct source tag.",
+            "children": [
+              { "id": "t1-02a", "text": "Google Ads call extension" },
+              { "id": "t1-02b", "text": "Website DNI (CallRail pool)" },
+              { "id": "t1-02c", "text": "GBP number (purchased number)" },
+              { "id": "t1-02d", "text": "LSA dedicated number" }
+            ]
+          },
+          { "id": "t1-03", "text": "Submit a test on the landing page form and the organic site form. Confirm one contact, one workflow run, no duplicates." },
+          { "id": "t1-04", "text": "Book one fake job in JobTread as the VA would. Confirm the webhook fires and GHL pipeline updates." }
+        ]
+      },
+      {
+        "title": "Phones",
+        "items": [
+          { "id": "t1-05", "text": "Swap GBP phone number to the purchased number." },
+          { "id": "t1-06", "text": "Build missed call text-back workflow in GHL. Test from own cell." },
+          { "id": "t1-07", "text": "Set Google Ads schedule to business hours only." },
+          { "id": "t1-08", "text": "Toggle LSA on. Set schedule to business hours. Confirm dedicated number rings the VA." }
+        ]
+      },
+      {
+        "title": "Speed to lead",
+        "items": [
+          { "id": "t1-09", "text": "Form submit workflow: instant SMS to lead, GHL task 'Call now' assigned to VA, SMS alert to VA." },
+          { "id": "t1-10", "text": "30 minute escalation: task incomplete or missed call with no callback triggers SMS to Joe." },
+          { "id": "t1-11", "text": "VA script: answer, tag source, book directly in JobTread." }
+        ]
+      },
+      {
+        "title": "Tracking",
+        "items": [
+          { "id": "t1-12", "text": "Google Ads primary conversions: call extension calls and CallRail qualified calls. Form submit secondary. Booked job secondary until data flows." },
+          { "id": "t1-13", "text": "Confirm gclid capture on book.sdgaz.com still working after any recent page changes." }
+        ]
+      },
+      {
+        "title": "Booking automations",
+        "items": [
+          { "id": "t1-14", "text": "Booking confirmation SMS to customer on JobTread booked event." },
+          { "id": "t1-15", "text": "Tech assignment SMS on the same event." }
+        ]
+      },
+      {
+        "title": "Go live",
+        "items": [
+          { "id": "t1-16", "text": "Enable Google Ads campaign at $100/day." },
+          { "id": "t1-17", "text": "Confirm LSA is live and serving." },
+          { "id": "t1-18", "text": "Text VA: launch is live, watch the inbox." }
+        ]
+      }
+    ]
+  },
+  {
+    "tier": "Tier 2: Week One",
+    "sections": [
+      {
+        "title": "Week one",
+        "items": [
+          { "id": "t2-19", "text": "Customer reminders: 24 hour and 3 hour before appointment." },
+          { "id": "t2-20", "text": "Tech reminders: night before and morning of." },
+          { "id": "t2-21", "text": "End of day one audit: missed calls, untouched forms, unbooked leads. Fix what leaked." },
+          { "id": "t2-22", "text": "gclid stored on GHL contact and passed into JobTread custom field." },
+          { "id": "t2-23", "text": "Offline conversion import: manual sheet upload of booked jobs with gclid. Automate later." },
+          { "id": "t2-24", "text": "LSA: VA marks every real lead as Booked in the LSA inbox daily. Automate via Google Ads API lead feedback later." },
+          { "id": "t2-25", "text": "Ben's report: leads by source and booked jobs. GHL pipeline view or simple weekly summary." },
+          { "id": "t2-26", "text": "Review call recordings from first 10 leads. Adjust VA script." }
+        ]
+      }
+    ]
+  },
+  {
+    "tier": "Tier 3: Fast Follows",
+    "sections": [
+      {
+        "title": "Fast follows",
+        "items": [
+          { "id": "t3-27", "text": "Automate LSA lead feedback from JobTread booked event." },
+          { "id": "t3-28", "text": "Automate offline conversion upload from JobTread." },
+          { "id": "t3-29", "text": "Move booked job to primary conversion once 15+ imported." },
+          { "id": "t3-30", "text": "Adjust LSA budget based on actual spend pace." }
+        ]
+      }
+    ]
+  }
+];
+
+/* ===================== State ===================== */
+const STORAGE_KEY = "sdg-launch-checklist-v1";
+const UI_KEY = "sdg-launch-checklist-ui-v1";
+
+// Flat maps for quick lookups
+const itemById = {};      // id -> item def
+const parentOf = {};      // child id -> parent id
+const allIds = [];
+CHECKLIST.forEach(tier => tier.sections.forEach(sec => sec.items.forEach(item => {
+  itemById[item.id] = item;
+  allIds.push(item.id);
+  (item.children || []).forEach(child => {
+    itemById[child.id] = child;
+    parentOf[child.id] = item.id;
+    allIds.push(child.id);
+  });
+})));
+
+function blankEntry() { return { done: false, note: "", doneAt: null }; }
+
+function loadState() {
+  let raw = null;
+  try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { /* storage unavailable */ }
+  let parsed = {};
+  if (raw) {
+    try { parsed = JSON.parse(raw) || {}; } catch (e) { parsed = {}; }
+  }
+  const state = {};
+  allIds.forEach(id => {
+    const e = parsed[id];
+    state[id] = {
+      done: !!(e && e.done),
+      note: (e && typeof e.note === "string") ? e.note : "",
+      doneAt: (e && typeof e.doneAt === "string") ? e.doneAt : null
+    };
+  });
+  return state;
+}
+
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ }
+}
+
+function loadUi() {
+  const def = { openTiers: { 0: true, 1: true, 2: true }, filterOpen: false };
+  try {
+    const parsed = JSON.parse(localStorage.getItem(UI_KEY) || "");
+    if (parsed && typeof parsed === "object") {
+      return {
+        openTiers: Object.assign({}, def.openTiers, parsed.openTiers || {}),
+        filterOpen: !!parsed.filterOpen
+      };
+    }
+  } catch (e) { /* fall through */ }
+  return def;
+}
+
+function saveUi() {
+  try { localStorage.setItem(UI_KEY, JSON.stringify(ui)); } catch (e) { /* storage unavailable */ }
+}
+
+let state = loadState();
+let ui = loadUi();
+
+/* ===================== Mutations ===================== */
+function setDone(id, done) {
+  const e = state[id];
+  if (e.done === done) return;
+  e.done = done;
+  e.doneAt = done ? new Date().toISOString() : null;
+}
+
+function toggleItem(id) {
+  const item = itemById[id];
+  const next = !state[id].done;
+  if (item.children && !parentOf[id]) {
+    // Parent: toggling it applies to all children too
+    setDone(id, next);
+    item.children.forEach(c => setDone(c.id, next));
+  } else if (parentOf[id]) {
+    // Child: toggle, then parent follows the children
+    setDone(id, next);
+    const parent = itemById[parentOf[id]];
+    const allDone = parent.children.every(c => state[c.id].done);
+    setDone(parent.id, allDone);
+  } else {
+    setDone(id, next);
+  }
+  saveState();
+  refresh();
+}
+
+/* ===================== Rendering ===================== */
+const appEl = document.getElementById("app");
+const toastEl = document.getElementById("toast");
+let toastTimer = null;
+
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2200);
+}
+
+function itemNumber(id) {
+  // "t1-02" -> "2", "t1-02a" -> "2a"
+  const m = id.match(/-0?(\d+[a-z]?)$/);
+  return m ? m[1] : id;
+}
+
+const noteOpen = {}; // id -> bool, not persisted
+const debounceTimers = {};
+
+function buildItem(item, isChild) {
+  const li = document.createElement("li");
+  li.className = "item";
+  li.dataset.id = item.id;
+
+  const row = document.createElement("div");
+  row.className = "item-row";
+
+  const check = document.createElement("button");
+  check.type = "button";
+  check.className = "check";
+  check.setAttribute("role", "checkbox");
+  check.setAttribute("aria-label", "Mark done: " + item.text);
+  const box = document.createElement("span");
+  box.className = "box";
+  box.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  check.appendChild(box);
+  check.addEventListener("click", () => toggleItem(item.id));
+  row.appendChild(check);
+
+  const main = document.createElement("div");
+  main.className = "item-main";
+
+  const textBtn = document.createElement("button");
+  textBtn.type = "button";
+  textBtn.className = "item-text-btn";
+  const num = document.createElement("span");
+  num.className = "item-num";
+  num.textContent = itemNumber(item.id);
+  const txt = document.createElement("span");
+  txt.className = "item-text";
+  txt.textContent = item.text;
+  const badge = document.createElement("span");
+  badge.className = "note-badge";
+  badge.textContent = "note";
+  textBtn.appendChild(num);
+  textBtn.appendChild(txt);
+  textBtn.appendChild(badge);
+  textBtn.addEventListener("click", () => {
+    noteOpen[item.id] = !noteOpen[item.id];
+    refresh();
+    if (noteOpen[item.id]) {
+      const ta = li.querySelector("textarea.note");
+      if (ta) ta.focus();
+    }
+  });
+  main.appendChild(textBtn);
+
+  const noteWrap = document.createElement("div");
+  noteWrap.className = "note-wrap";
+  const ta = document.createElement("textarea");
+  ta.className = "note";
+  ta.placeholder = "Add a note";
+  ta.value = state[item.id].note;
+  const commit = () => {
+    const val = ta.value;
+    if (state[item.id].note !== val) {
+      state[item.id].note = val;
+      saveState();
+    }
+    updateBadges();
+  };
+  ta.addEventListener("input", () => {
+    clearTimeout(debounceTimers[item.id]);
+    debounceTimers[item.id] = setTimeout(commit, 500);
+  });
+  ta.addEventListener("blur", () => {
+    clearTimeout(debounceTimers[item.id]);
+    commit();
+  });
+  noteWrap.appendChild(ta);
+  main.appendChild(noteWrap);
+  row.appendChild(main);
+  li.appendChild(row);
+
+  if (item.children) {
+    const ulc = document.createElement("ul");
+    ulc.className = "children";
+    item.children.forEach(child => ulc.appendChild(buildItem(child, true)));
+    li.appendChild(ulc);
+  }
+  return li;
+}
+
+function buildDom() {
+  appEl.innerHTML = "";
+  CHECKLIST.forEach((tier, ti) => {
+    const tierEl = document.createElement("section");
+    tierEl.className = "tier";
+    tierEl.dataset.tier = ti;
+
+    const th = document.createElement("button");
+    th.type = "button";
+    th.className = "tier-header";
+    th.innerHTML =
+      '<span class="chev" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 3l6 5-6 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' +
+      '<span class="tier-name"></span>' +
+      '<span class="tier-progress"></span>';
+    th.querySelector(".tier-name").textContent = tier.tier;
+    th.addEventListener("click", () => {
+      ui.openTiers[ti] = !ui.openTiers[ti];
+      saveUi();
+      refresh();
+    });
+    tierEl.appendChild(th);
+
+    const body = document.createElement("div");
+    body.className = "tier-body";
+    tier.sections.forEach(sec => {
+      if (tier.sections.length > 1) {
+        const st = document.createElement("div");
+        st.className = "section-title";
+        st.textContent = sec.title;
+        body.appendChild(st);
+      }
+      const ul = document.createElement("ul");
+      ul.className = "items";
+      sec.items.forEach(item => ul.appendChild(buildItem(item, false)));
+      body.appendChild(ul);
+    });
+    tierEl.appendChild(body);
+    appEl.appendChild(tierEl);
+  });
+}
+
+function tierStats(tier) {
+  // Top-level items only; children count toward the parent, not the total
+  let done = 0, total = 0;
+  tier.sections.forEach(sec => sec.items.forEach(item => {
+    total++;
+    if (state[item.id].done) done++;
+  }));
+  return { done, total };
+}
+
+function updateBadges() {
+  document.querySelectorAll("li.item").forEach(li => {
+    const badge = li.querySelector(":scope > .item-row .note-badge");
+    const hasNote = (state[li.dataset.id].note || "").trim().length > 0;
+    badge.classList.toggle("hidden", !hasNote);
+  });
+}
+
+function refresh() {
+  // Item rows
+  document.querySelectorAll("li.item").forEach(li => {
+    const id = li.dataset.id;
+    const e = state[id];
+    const row = li.querySelector(":scope > .item-row");
+    row.classList.toggle("done", e.done);
+    row.querySelector(".check").setAttribute("aria-checked", e.done ? "true" : "false");
+    li.querySelector(":scope > .item-row .note-wrap").classList.toggle("open", !!noteOpen[id]);
+    const ta = li.querySelector(":scope > .item-row textarea.note");
+    if (document.activeElement !== ta && ta.value !== e.note) ta.value = e.note;
+    // Filter: open only hides done items (a done parent hides its children with it)
+    li.classList.toggle("hidden", ui.filterOpen && e.done);
+  });
+  updateBadges();
+
+  // Tier headers and counts
+  const countsEl = document.getElementById("tierCounts");
+  countsEl.innerHTML = "";
+  let overallDone = 0, overallTotal = 0;
+  CHECKLIST.forEach((tier, ti) => {
+    const { done, total } = tierStats(tier);
+    overallDone += done; overallTotal += total;
+    const tierEl = appEl.querySelector('.tier[data-tier="' + ti + '"]');
+    tierEl.classList.toggle("open", !!ui.openTiers[ti]);
+    const th = tierEl.querySelector(".tier-header");
+    th.querySelector(".tier-progress").textContent = done + "/" + total;
+    th.classList.toggle("tier-complete", ti === 0 && done === total);
+
+    const chip = document.createElement("span");
+    chip.className = "tier-count" + (done === total ? " complete" : "");
+    chip.textContent = "Tier " + (ti + 1) + ": " + done + "/" + total;
+    countsEl.appendChild(chip);
+  });
+
+  const pct = overallTotal ? Math.round((overallDone / overallTotal) * 100) : 0;
+  const fill = document.getElementById("progressFill");
+  fill.style.width = pct + "%";
+  fill.classList.toggle("complete", pct === 100);
+  document.getElementById("progressLabel").textContent = pct + "% complete, " + overallDone + " of " + overallTotal + " items";
+
+  const filterBtn = document.getElementById("filterBtn");
+  filterBtn.classList.toggle("active", ui.filterOpen);
+  filterBtn.textContent = ui.filterOpen ? "Showing open" : "Open only";
+}
+
+/* ===================== Export / Import ===================== */
+document.getElementById("exportBtn").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const d = new Date();
+  const stamp = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  a.href = url;
+  a.download = "sdg-launch-checklist-" + stamp + ".json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast("Exported backup");
+});
+
+document.getElementById("importBtn").addEventListener("click", () => {
+  document.getElementById("importFile").click();
+});
+
+document.getElementById("importFile").addEventListener("change", (ev) => {
+  const file = ev.target.files && ev.target.files[0];
+  ev.target.value = "";
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let parsed;
+    try { parsed = JSON.parse(reader.result); } catch (e) {
+      showToast("Import failed: not valid JSON");
+      return;
+    }
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      showToast("Import failed: unexpected format");
+      return;
+    }
+    let applied = 0;
+    allIds.forEach(id => {
+      const e = parsed[id];
+      if (e && typeof e === "object") {
+        state[id] = {
+          done: !!e.done,
+          note: typeof e.note === "string" ? e.note : "",
+          doneAt: typeof e.doneAt === "string" ? e.doneAt : null
+        };
+        applied++;
+      }
+    });
+    if (!applied) {
+      showToast("Import failed: no matching items");
+      return;
+    }
+    saveState();
+    refresh();
+    showToast("Imported " + applied + " items");
+  };
+  reader.onerror = () => showToast("Import failed: could not read file");
+  reader.readAsText(file);
+});
+
+document.getElementById("filterBtn").addEventListener("click", () => {
+  ui.filterOpen = !ui.filterOpen;
+  saveUi();
+  refresh();
+});
+
+/* ===================== Boot ===================== */
+buildDom();
+refresh();
+</script>
+</body>
+</html>
