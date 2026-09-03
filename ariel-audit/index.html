@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ariel Construction Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --ground: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #eef1f5;
+    --ink: #141a24;
+    --ink-2: #4f5a6b;
+    --ink-3: #8a94a4;
+    --rule: #dbe0e7;
+    --rule-2: #c5ccd6;
+    --accent: #1f5fc4;
+    --accent-soft: #e4edfa;
+    --graphite: #8a94a4;
+    --graphite-soft: #c6cdd7;
+    --danger: #c4202f;
+    --danger-soft: #fbe9eb;
+    --shadow: 0 1px 2px rgba(20, 26, 36, 0.05), 0 8px 24px rgba(20, 26, 36, 0.05);
+    --display: "Newsreader", "Iowan Old Style", Georgia, serif;
+    --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground: #101418;
+      --surface: #171c22;
+      --surface-2: #1f262e;
+      --ink: #eef1f5;
+      --ink-2: #b3bcc9;
+      --ink-3: #7f8998;
+      --rule: #2a323c;
+      --rule-2: #3a434f;
+      --accent: #5a95ee;
+      --accent-soft: #1b2b45;
+      --graphite: #6f7987;
+      --graphite-soft: #46515e;
+      --danger: #ec6470;
+      --danger-soft: #3a1f23;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #101418;
+    --surface: #171c22;
+    --surface-2: #1f262e;
+    --ink: #eef1f5;
+    --ink-2: #b3bcc9;
+    --ink-3: #7f8998;
+    --rule: #2a323c;
+    --rule-2: #3a434f;
+    --accent: #5a95ee;
+    --accent-soft: #1b2b45;
+    --graphite: #6f7987;
+    --graphite-soft: #46515e;
+    --danger: #ec6470;
+    --danger-soft: #3a1f23;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  .wrap { width: min(1040px, calc(100% - 48px)); margin: 0 auto; }
+  @media (max-width: 640px) { .wrap { width: calc(100% - 32px); } }
+
+  /* Top bar */
+  .topbar {
+    position: sticky; top: 0; z-index: 10;
+    background: color-mix(in srgb, var(--ground) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--rule);
+  }
+  .topbar .wrap {
+    display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    height: 56px;
+  }
+  .brand { font-size: 13px; font-weight: 600; letter-spacing: 0.02em; color: var(--ink); text-decoration: none; }
+  .brand span { color: var(--ink-3); font-weight: 500; }
+  .nav { display: flex; gap: 4px; }
+  .nav a {
+    font-size: 13px; font-weight: 500; color: var(--ink-2); text-decoration: none;
+    padding: 6px 10px; border-radius: 6px;
+  }
+  .nav a:hover { background: var(--surface-2); color: var(--ink); }
+  @media (max-width: 640px) { .nav a { padding: 6px 7px; } .brand span { display: none; } }
+
+  /* Type */
+  .eyebrow {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-3); margin: 0 0 14px;
+  }
+  .eyebrow b { color: var(--accent); font-weight: 600; }
+  .eyebrow.danger b { color: var(--danger); }
+  h1, h2, h3 { font-family: var(--display); font-weight: 500; letter-spacing: -0.01em; text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(40px, 6vw, 68px); line-height: 1.02; }
+  h2 { font-size: clamp(30px, 4vw, 44px); line-height: 1.1; }
+  h3 { font-size: 22px; line-height: 1.25; }
+  .lede { font-size: clamp(18px, 2vw, 21px); line-height: 1.5; color: var(--ink-2); max-width: 40ch; margin: 22px 0 0; text-wrap: pretty; }
+  .frame { font-family: var(--display); font-size: clamp(21px, 2.4vw, 26px); line-height: 1.35; color: var(--ink); max-width: 30ch; margin: 18px 0 0; text-wrap: pretty; }
+  .read { font-size: 15px; color: var(--ink-2); max-width: 62ch; margin: 0; }
+  .read b { color: var(--ink); font-weight: 600; }
+
+  /* Sections */
+  section { padding: 88px 0; border-top: 1px solid var(--rule); }
+  section.hero { border-top: 0; padding: 96px 0 72px; }
+  @media (max-width: 640px) { section { padding: 60px 0; } section.hero { padding: 56px 0 48px; } }
+  .section-head { display: grid; grid-template-columns: 1fr; gap: 0; margin-bottom: 44px; }
+
+  /* Stat strip */
+  .stats {
+    margin-top: 48px;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .stat { padding: 22px 24px; border-left: 1px solid var(--rule); }
+  .stat:first-child { border-left: 0; }
+  .stat .n { font-family: var(--display); font-size: clamp(32px, 4vw, 44px); line-height: 1; font-weight: 500; letter-spacing: -0.02em; color: var(--ink); }
+  .stat .l { font-size: 13px; color: var(--ink-2); margin-top: 8px; }
+  .stat.lead .n { color: var(--accent); }
+  .stat.results .n { color: var(--graphite); }
+  .stat .l q { quotes: "\201C" "\201D"; }
+  @media (max-width: 720px) {
+    .stats { grid-template-columns: 1fr 1fr; }
+    .stat:nth-child(3) { border-left: 0; }
+    .stat:nth-child(n+3) { border-top: 1px solid var(--rule); }
+  }
+  .micro { font-size: 13px; color: var(--ink-3); margin: 12px 0 0; }
+
+  /* Cards */
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 900px) { .cards { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) { .cards { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 10px;
+    padding: 22px 22px 24px; display: flex; flex-direction: column; gap: 12px;
+  }
+  .card .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .card .where { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+  .card h3 { font-family: var(--body); font-size: 17px; font-weight: 600; line-height: 1.35; letter-spacing: 0; }
+  .card p { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink-2); }
+
+  /* Severity */
+  .sev {
+    display: inline-flex; align-items: center; gap: 6px; flex: none;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 4px 9px; border-radius: 999px; border: 1px solid transparent; line-height: 1.2;
+  }
+  .sev::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .sev.critical { background: var(--danger); color: #fff; border-color: var(--danger); }
+  .sev.high { color: var(--danger); border-color: var(--danger); background: var(--danger-soft); }
+  .sev.medium { color: var(--ink-2); border-color: var(--rule-2); background: transparent; }
+
+  /* Figures */
+  figure { margin: 0; }
+  .exhibit {
+    margin-top: 56px; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px;
+    padding: 28px 28px 24px; box-shadow: var(--shadow);
+  }
+  @media (max-width: 640px) { .exhibit { padding: 20px 16px 18px; } }
+  .exhibit .cap-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+  .exhibit .ex-n { font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+  .exhibit .ex-t { font-size: 16px; font-weight: 600; color: var(--ink); }
+  .exhibit figcaption { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--rule); }
+  .svg-wrap { overflow-x: auto; }
+  svg.diagram { display: block; width: 100%; height: auto; min-width: 640px; color: var(--ink); }
+  .diagram text { font-family: var(--body); }
+  .diagram .node { fill: var(--surface-2); stroke: var(--rule-2); stroke-width: 1; }
+  .diagram .node-label { font-size: 14px; font-weight: 600; fill: var(--ink); }
+  .diagram .node-sub { font-size: 11.5px; fill: var(--ink-2); }
+  .diagram .pipe { stroke: var(--rule-2); stroke-width: 2; fill: none; }
+  .diagram .pipe.dead { stroke-dasharray: 4 5; }
+  .diagram .cut { stroke: var(--danger); stroke-width: 2.5; stroke-linecap: round; }
+  .diagram .cut-label { font-size: 12px; fill: var(--danger); font-weight: 600; }
+  .diagram .cut-sub { font-size: 11.5px; fill: var(--ink-2); }
+  .diagram .arrowhead { fill: var(--rule-2); }
+
+  /* Donut */
+  .donut-grid { display: grid; grid-template-columns: 300px 1fr; gap: 36px; align-items: center; }
+  @media (max-width: 720px) { .donut-grid { grid-template-columns: 1fr; gap: 20px; justify-items: center; } }
+  .donut { position: relative; width: 300px; max-width: 100%; }
+  .donut svg { display: block; width: 100%; height: auto; }
+  .donut .seg { fill: none; stroke-width: 34; transition: opacity 120ms ease; cursor: default; }
+  .donut .seg.leads { stroke: var(--accent); }
+  .donut .seg.other { stroke: var(--graphite); }
+  .donut .seg.engage { stroke: var(--graphite-soft); }
+  .donut:hover .seg { opacity: 0.35; }
+  .donut .seg:hover { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { .donut .seg { transition: none; } }
+  .donut .center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; pointer-events: none; }
+  .donut .center .n { font-family: var(--display); font-size: 46px; line-height: 1; letter-spacing: -0.02em; }
+  .donut .center .l { font-size: 12px; color: var(--ink-2); margin-top: 6px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .legend li { display: grid; grid-template-columns: 14px 1fr auto auto; gap: 14px; align-items: baseline; padding: 14px 0; border-top: 1px solid var(--rule); }
+  .legend li:first-child { border-top: 0; padding-top: 0; }
+  .legend .sw { width: 14px; height: 14px; border-radius: 3px; align-self: center; }
+  .legend .sw.leads { background: var(--accent); }
+  .legend .sw.other { background: var(--graphite); }
+  .legend .sw.engage { background: var(--graphite-soft); }
+  .legend .name { font-weight: 500; }
+  .legend .name small { display: block; font-size: 13px; font-weight: 400; color: var(--ink-2); }
+  .legend .val { font-family: var(--display); font-size: 26px; line-height: 1; text-align: right; min-width: 3ch; }
+  .legend .pct { font-size: 14px; color: var(--ink-2); min-width: 4ch; text-align: right; }
+  .legend li.leads .val { color: var(--accent); }
+  .tip {
+    position: fixed; z-index: 20; pointer-events: none; display: none;
+    background: var(--ink); color: var(--ground); font-size: 13px; padding: 6px 10px; border-radius: 6px;
+    white-space: nowrap; box-shadow: var(--shadow);
+  }
+  .tip.on { display: block; }
+
+  /* Findings table */
+  .table-wrap { overflow-x: auto; margin-top: 56px; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; }
+  th, td { text-align: left; vertical-align: top; padding: 18px 20px; border-top: 1px solid var(--rule); }
+  th { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); border-top: 0; padding-top: 16px; padding-bottom: 12px; }
+  td.c { font-weight: 600; white-space: nowrap; width: 1%; }
+  td.c small { display: block; font-weight: 400; font-size: 13px; color: var(--ink-3); margin-top: 2px; }
+  td.i { color: var(--ink-2); font-size: 15px; line-height: 1.5; max-width: 62ch; }
+  td.i b { color: var(--ink); font-weight: 600; }
+  td.s { width: 1%; white-space: nowrap; }
+  @media (max-width: 640px) {
+    table { min-width: 0; }
+    thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    tr { display: grid; grid-template-columns: 1fr auto; border-top: 1px solid var(--rule); padding: 16px 16px 18px; gap: 4px 12px; }
+    tbody tr:first-child { border-top: 0; }
+    td { display: block; border: 0; padding: 0; width: auto; white-space: normal; }
+    td.c { grid-column: 1; }
+    td.s { grid-column: 2; grid-row: 1; }
+    td.i { grid-column: 1 / -1; margin-top: 6px; }
+  }
+
+  /* Pull quote */
+  .pull { margin: 72px auto 0; max-width: 34ch; text-align: center; }
+  .pull p { font-family: var(--display); font-size: clamp(26px, 3.6vw, 42px); line-height: 1.2; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+  .pull p em { font-style: italic; color: var(--accent); }
+  .pull .mark { display: block; width: 40px; height: 2px; background: var(--danger); margin: 0 auto 28px; }
+
+  /* Act 3 */
+  .act3 { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+  @media (max-width: 800px) { .act3 { grid-template-columns: 1fr; gap: 28px; } }
+  .kicker {
+    background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+    border-radius: 10px; padding: 26px 28px;
+  }
+  .kicker .k-label { font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin: 0 0 10px; }
+  .kicker p { margin: 0; font-family: var(--display); font-size: clamp(22px, 2.4vw, 27px); line-height: 1.35; text-wrap: pretty; }
+  .todo { list-style: none; margin: 22px 0 0; padding: 0; }
+  .todo li { display: grid; grid-template-columns: 22px 1fr; gap: 12px; padding: 12px 0; border-top: 1px solid var(--rule); color: var(--ink-2); font-size: 15px; }
+  .todo li::before { content: ""; width: 12px; height: 12px; margin-top: 5px; border-radius: 50%; border: 1.5px dashed var(--ink-3); }
+  .todo li b { color: var(--ink); font-weight: 600; }
+
+  footer { border-top: 1px solid var(--rule); padding: 32px 0 48px; font-size: 13px; color: var(--ink-3); display: flex; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#top">Ariel Construction <span>· Paid media audit</span></a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#act1">Act 1</a>
+      <a href="#act2">Act 2</a>
+      <a href="#act3">Act 3</a>
+    </nav>
+  </div>
+</div>
+
+<main id="top">
+
+  <!-- SECTION 1: HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">Google Ads and CRM audit <b>·</b> Booked Builders for Penrose Growth</p>
+      <h1>General intent. Every market. No measurement.</h1>
+      <p class="lede">Any one of these drains a budget. Ariel runs all three. This isn't underperformance. It's the absence of a plan.</p>
+
+      <div class="stats" role="list" aria-label="August account figures">
+        <div class="stat" role="listitem">
+          <div class="n">$9.5K</div>
+          <div class="l">spent</div>
+        </div>
+        <div class="stat results" role="listitem">
+          <div class="n">324</div>
+          <div class="l"><q>results</q></div>
+        </div>
+        <div class="stat lead" role="listitem">
+          <div class="n">27</div>
+          <div class="l">real leads</div>
+        </div>
+        <div class="stat" role="listitem">
+          <div class="n">$72</div>
+          <div class="l">per real lead</div>
+        </div>
+      </div>
+      <p class="micro">August, four of seven campaigns sampled.</p>
+    </div>
+  </section>
+
+  <!-- SECTION 2: ACT 1 -->
+  <section id="act1">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow danger"><b>Act 1</b> · The instruments are dark</p>
+        <h2>The instruments are dark</h2>
+        <p class="frame">Before the first click was bought, the account had already lost the ability to learn from it.</p>
+      </div>
+
+      <div class="cards">
+        <article class="card">
+          <div class="top"><span class="where">Call tracking</span><span class="sev critical">Critical</span></div>
+          <h3>Call tracking is dead in all three metros.</h3>
+          <p>A custom number-swap script formats numbers with a +1 that the native tags don't recognize. Debug testing proved only Dallas ever swapped.</p>
+        </article>
+        <article class="card">
+          <div class="top"><span class="where">Conversion goals</span><span class="sev critical">Critical</span></div>
+          <h3>The only measured Sales goal is Page views.</h3>
+          <p>81 results, valued at $81. The account is optimizing toward people who looked.</p>
+        </article>
+        <article class="card">
+          <div class="top"><span class="where">Primary actions</span><span class="sev high">High</span></div>
+          <h3>Junk actions sit as Primary conversions.</h3>
+          <p>Directions, menu views, and engagement on account-default goals, teaching Smart Bidding the wrong lesson daily.</p>
+        </article>
+        <article class="card">
+          <div class="top"><span class="where">Closing the loop</span><span class="sev high">High</span></div>
+          <h3>Enhanced Conversions tag: paused. Offline imports: never connected.</h3>
+          <p>Three offline import actions were built and never wired up. The two mechanisms that would close the loop are both switched off.</p>
+        </article>
+        <article class="card">
+          <div class="top"><span class="where">Forms</span><span class="sev medium">Medium</span></div>
+          <h3>Form submissions are double-counted.</h3>
+          <p>Once through the tag, once through GA4. What little is measured is measured twice.</p>
+        </article>
+        <article class="card">
+          <div class="top"><span class="where">GoHighLevel</span><span class="sev high">High</span></div>
+          <h3>The CRM never talks back.</h3>
+          <p>20+ cloned IVR workflows, Dallas and Florida forwarding rules with empty phone filters, and no conversion data ever sent back to Google.</p>
+        </article>
+      </div>
+
+      <figure class="exhibit">
+        <div class="cap-head">
+          <span class="ex-n">Exhibit 1</span>
+          <span class="ex-t">Where the signal is cut between a lead and the bidding algorithm</span>
+        </div>
+        <div class="svg-wrap">
+          <svg class="diagram" viewBox="0 0 960 300" role="img" aria-label="A four-stage pipeline from Lead to Tracking layer to Google Ads to Bidding. Every connection is severed in red: call tracking is dead and forms are double-counted between Lead and Tracking; Enhanced Conversions are paused and offline imports are unconnected between Tracking and Google Ads; the only Sales goal is page views and junk actions are Primary between Google Ads and Bidding; and the return path from GoHighLevel back to Google Ads never sends anything.">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" class="arrowhead"></path>
+              </marker>
+            </defs>
+
+            <!-- nodes -->
+            <g>
+              <rect class="node" x="30" y="80" width="170" height="64" rx="8"></rect>
+              <text class="node-label" x="115" y="108" text-anchor="middle">Lead</text>
+              <text class="node-sub" x="115" y="127" text-anchor="middle">call or form, 3 metros</text>
+            </g>
+            <g>
+              <rect class="node" x="275" y="80" width="170" height="64" rx="8"></rect>
+              <text class="node-label" x="360" y="108" text-anchor="middle">Tracking layer</text>
+              <text class="node-sub" x="360" y="127" text-anchor="middle">number swap, tag, GA4</text>
+            </g>
+            <g>
+              <rect class="node" x="520" y="80" width="170" height="64" rx="8"></rect>
+              <text class="node-label" x="605" y="108" text-anchor="middle">Google Ads</text>
+              <text class="node-sub" x="605" y="127" text-anchor="middle">conversion goals</text>
+            </g>
+            <g>
+              <rect class="node" x="765" y="80" width="170" height="64" rx="8"></rect>
+              <text class="node-label" x="850" y="108" text-anchor="middle">Bidding</text>
+              <text class="node-sub" x="850" y="127" text-anchor="middle">Smart Bidding learns</text>
+            </g>
+
+            <!-- pipes, forward -->
+            <line class="pipe" x1="200" y1="112" x2="227" y2="112"></line>
+            <line class="pipe dead" x1="247" y1="112" x2="275" y2="112" marker-end="url(#arrow)"></line>
+            <line class="pipe" x1="445" y1="112" x2="472" y2="112"></line>
+            <line class="pipe dead" x1="492" y1="112" x2="520" y2="112" marker-end="url(#arrow)"></line>
+            <line class="pipe" x1="690" y1="112" x2="717" y2="112"></line>
+            <line class="pipe dead" x1="737" y1="112" x2="765" y2="112" marker-end="url(#arrow)"></line>
+
+            <!-- cuts, forward -->
+            <g>
+              <line class="cut" x1="231" y1="98" x2="243" y2="126"></line>
+              <line class="cut" x1="243" y1="98" x2="231" y2="126"></line>
+              <text class="cut-label" x="237" y="172" text-anchor="middle">Call tracking dead</text>
+              <text class="cut-sub" x="237" y="189" text-anchor="middle">Forms counted twice</text>
+            </g>
+            <g>
+              <line class="cut" x1="476" y1="98" x2="488" y2="126"></line>
+              <line class="cut" x1="488" y1="98" x2="476" y2="126"></line>
+              <text class="cut-label" x="482" y="172" text-anchor="middle">Enhanced Conversions paused</text>
+              <text class="cut-sub" x="482" y="189" text-anchor="middle">Offline imports never connected</text>
+            </g>
+            <g>
+              <line class="cut" x1="721" y1="98" x2="733" y2="126"></line>
+              <line class="cut" x1="733" y1="98" x2="721" y2="126"></line>
+              <text class="cut-label" x="727" y="172" text-anchor="middle">Only Sales goal: page views</text>
+              <text class="cut-sub" x="727" y="189" text-anchor="middle">Junk actions set as Primary</text>
+            </g>
+
+            <!-- return path from CRM -->
+            <path class="pipe dead" d="M850,144 V250 H620" fill="none"></path>
+            <line class="pipe" x1="600" y1="250" x2="576" y2="250"></line>
+            <line class="pipe dead" x1="576" y1="250" x2="360" y2="250"></line>
+            <line class="pipe dead" x1="360" y1="250" x2="360" y2="152" marker-end="url(#arrow)"></line>
+            <g>
+              <line class="cut" x1="604" y1="236" x2="616" y2="264"></line>
+              <line class="cut" x1="616" y1="236" x2="604" y2="264"></line>
+            </g>
+            <text class="cut-label" x="610" y="285" text-anchor="middle">GoHighLevel sends nothing back</text>
+            <text class="cut-sub" x="850" y="222" text-anchor="middle">closed-won, in the CRM</text>
+            <text class="cut-sub" x="360" y="235" text-anchor="middle">what a bid should learn from</text>
+          </svg>
+        </div>
+        <figcaption><p class="read"><b>Read:</b> the signal never arrives. Every hop between a real lead and the bidding algorithm is severed, and the one path that could bring a closed deal back into the account was never built.</p></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- SECTION 3: ACT 2 -->
+  <section id="act2">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow danger"><b>Act 2</b> · Everywhere is nowhere</p>
+        <h2>Everywhere is nowhere</h2>
+        <p class="frame">Given no signal, the algorithm did what algorithms do. It bought whatever was cheapest and called it a result.</p>
+      </div>
+
+      <figure class="exhibit" style="margin-top:0">
+        <div class="cap-head">
+          <span class="ex-n">Exhibit 2</span>
+          <span class="ex-t">What the 324 reported results actually were</span>
+        </div>
+        <div class="donut-grid">
+          <div class="donut" id="donut">
+            <svg viewBox="0 0 240 240" role="img" aria-label="Donut chart of 324 reported results: 212 engagement actions, 65 percent; 85 other non-lead actions, 26 percent; 27 real leads, 8 percent.">
+              <g transform="rotate(-90 120 120)">
+                <circle class="seg leads" data-name="Real leads" data-n="27" data-pct="8%" cx="120" cy="120" r="90" stroke-dasharray="45.12 520.37" stroke-dashoffset="-1"></circle>
+                <circle class="seg other" data-name="Other non-lead actions" data-n="85" data-pct="26%" cx="120" cy="120" r="90" stroke-dasharray="146.34 419.15" stroke-dashoffset="-48.12"></circle>
+                <circle class="seg engage" data-name="Engagement" data-n="212" data-pct="65%" cx="120" cy="120" r="90" stroke-dasharray="368.03 197.46" stroke-dashoffset="-196.46"></circle>
+              </g>
+            </svg>
+            <div class="center">
+              <div class="n">324</div>
+              <div class="l">reported results</div>
+            </div>
+          </div>
+          <ul class="legend" aria-label="Breakdown of reported results">
+            <li class="engage">
+              <span class="sw engage"></span>
+              <span class="name">Engagement<small>scrolls, clicks, time on page</small></span>
+              <span class="val">212</span>
+              <span class="pct">65%</span>
+            </li>
+            <li class="other">
+              <span class="sw other"></span>
+              <span class="name">Other non-lead actions<small>directions, menu views, page views</small></span>
+              <span class="val">85</span>
+              <span class="pct">26%</span>
+            </li>
+            <li class="leads">
+              <span class="sw leads"></span>
+              <span class="name">Real leads<small>a call or a form from a person</small></span>
+              <span class="val">27</span>
+              <span class="pct">8%</span>
+            </li>
+          </ul>
+        </div>
+        <figcaption><p class="read"><b>Read:</b> the thin blue slice is the only thing that rang a phone. Everything else was counted as a win.</p></figcaption>
+      </figure>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th scope="col">Campaign</th><th scope="col">Issue</th><th scope="col">Severity</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="c">PMax<small>Performance Max</small></td>
+              <td class="i"><b>94% of spend on Search</b>, doing a Search campaign's job with none of the control. Learned audiences: DIY and home decor. Search terms: staffing agencies, residential jobs, competitor names.</td>
+              <td class="s"><span class="sev high">High</span></td>
+            </tr>
+            <tr>
+              <td class="c">ALL_Exact<small>Search, exact match</small></td>
+              <td class="i"><b>Target CPA $650 against a $530 daily budget.</b> The campaign is asked to average a number it cannot afford in a day. Thirteen locations stacked in one budget. No negatives. CPCs to $139.</td>
+              <td class="s"><span class="sev high">High</span></td>
+            </tr>
+            <tr>
+              <td class="c">Phrase_Dallas<small>Search, phrase match</small></td>
+              <td class="i"><b>AI Max on</b>, keywords optional, no guardrails.</td>
+              <td class="s"><span class="sev medium">Medium</span></td>
+            </tr>
+            <tr>
+              <td class="c">Account-wide<small>All campaigns</small></td>
+              <td class="i"><b>One landing page for three metros</b>, call assets disapproved, every ad group carries the same name.</td>
+              <td class="s"><span class="sev medium">Medium</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pull">
+        <span class="mark" aria-hidden="true"></span>
+        <p>Every ad group in this account is named <em>“General Intent.”</em> Google was told exactly what to do. It did it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 4: ACT 3 -->
+  <section id="act3">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow"><b>Act 3</b> · Focus is the strategy</p>
+        <h2>Focus is the strategy</h2>
+        <p class="frame">Phases 3 and 4 in progress. The CRM funnel, the unit economics, and the ranked fixes with a 30/60/90.</p>
+      </div>
+      <div class="act3">
+        <div class="kicker">
+          <p class="k-label">The thesis</p>
+          <p>Same budget. One metro per campaign, one intent per ad group, one number the account can trust. Materially more leads before a single ad is rewritten.</p>
+        </div>
+        <div>
+          <p class="read"><b>Coming in the next release of this report.</b></p>
+          <ul class="todo">
+            <li><span><b>Phase 3, the CRM funnel.</b> What happens to a lead after it enters GoHighLevel, and where it stalls.</span></li>
+            <li><span><b>Phase 3, the unit economics.</b> Cost per real lead by metro, and what a qualified lead is worth against a design-build contract.</span></li>
+            <li><span><b>Phase 4, the ranked fixes.</b> Every finding above, ordered by impact and effort, on a 30/60/90 plan.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Booked Builders for Penrose Growth. Prepared September 2026.</span>
+    <span>Figures from the Ariel Construction Google Ads account and GoHighLevel, August 2026.</span>
+  </div>
+</footer>
+
+<div class="tip" id="tip" role="status" aria-live="polite"></div>
+
+<script>
+  (function () {
+    var tip = document.getElementById('tip');
+    var donut = document.getElementById('donut');
+    if (!tip || !donut) return;
+    var segs = donut.querySelectorAll('.seg');
+    function move(e) {
+      tip.style.left = (e.clientX + 14) + 'px';
+      tip.style.top = (e.clientY - 34) + 'px';
+    }
+    Array.prototype.forEach.call(segs, function (s) {
+      s.addEventListener('pointerenter', function (e) {
+        tip.textContent = s.dataset.name + ': ' + s.dataset.n + ' (' + s.dataset.pct + ')';
+        tip.classList.add('on');
+        move(e);
+      });
+      s.addEventListener('pointermove', move);
+      s.addEventListener('pointerleave', function () { tip.classList.remove('on'); });
+    });
+  })();
+</script>
+
+</body>
+</html>
