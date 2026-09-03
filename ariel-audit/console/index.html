@@ -88,6 +88,10 @@
     .ticker { display: none; }
     .readout { font-size: 11px; flex-basis: 100%; text-align: left; }
     .hint { font-size: 11px; }
+    .lbl .t { font-size: 13px; }
+    .lbl .s { font-size: 9px; }
+    .lbl.cluster .t { font-size: 20px; }
+    .lbl.fault .t { font-size: 10px; }
   }
 
   /* progress bar under top hud */
@@ -629,14 +633,14 @@
 
   /* ---------- act 3: three metros ---------- */
   var g3 = new THREE.Group(); world.add(g3); g3.visible = false;
-  var METROS = [{ t: 'New York', x: -4.2 }, { t: 'Dallas', x: 0 }, { t: 'Florida', x: 4.2 }];
+  var METROS = [{ t: 'New York', x: -4.8 }, { t: 'Dallas', x: 0 }, { t: 'Florida', x: 4.8 }];
   METROS.forEach(function (m) {
     var ring = new THREE.Mesh(new THREE.RingGeometry(1.35, 1.42, 64), new THREE.MeshBasicMaterial({ color: C.cyan, transparent: true, opacity: 0.7, side: THREE.DoubleSide }));
     ring.position.set(m.x, 0, 0); g3.add(ring);
     var ring2 = new THREE.Mesh(new THREE.RingGeometry(1.7, 1.72, 64), new THREE.MeshBasicMaterial({ color: C.cyan, transparent: true, opacity: 0.25, side: THREE.DoubleSide }));
     ring2.position.set(m.x, 0, 0); g3.add(ring2);
     var o = new THREE.Object3D(); o.position.set(m.x, -2.1, 0); g3.add(o);
-    var L = addLabel(o, 'metro', m.t, 'one campaign · one intent · one number', 0); L.group = g3;
+    var L = addLabel(o, 'metro', m.t, 'one campaign · one intent', 0); L.group = g3;
   });
 
   /* ---------- interaction ---------- */
@@ -682,7 +686,8 @@
   }
   function setAct(n) { Array.prototype.forEach.call(document.querySelectorAll('.acts button'), function (b) { b.classList.toggle('on', +b.dataset.act === n); }); }
   var camBase = new THREE.Vector3(0, 1.2, 15);
-  function camFit() { return Math.max(1, 1.8 / camera.aspect); }
+  function camFit() { return Math.min(1.35, Math.max(1, 1.8 / camera.aspect)); }
+  function narrow() { return camera.aspect < 1; }
   function moveCam(x, y, z, lx, ly, lz) { camBase.set(x, y, z); camTarget.set(x, y, z * camFit()); lookTarget.set(lx || 0, ly || 0, lz || 0); }
 
   function goBoot() {
@@ -693,7 +698,7 @@
   function goAct1(intro) {
     state = 'l1'; hideAll(); setAct(1); doSweep();
     g1.visible = true; g2.visible = false; g3.visible = false;
-    moveCam(0, 0.6, 13.5, 0, -0.6, 0); tYaw = 0.12; tPitch = 0.08;
+    moveCam(0, 0.6, 13.5, 0, -0.6, 0); tYaw = narrow() ? 0.7 : 0.12; tPitch = 0.08;
     if (intro) show($('intro1'), true);
     updateL1();
   }
@@ -797,7 +802,7 @@
       return new THREE.Vector3(METROS[m].x + Math.cos(a) * r, Math.sin(a) * r, (idx % 7) * 0.08 - 0.25);
     });
     setColors({ leads: C.cyan, other: C.cyan, engage: C.blue });
-    var sx = window.innerWidth > 720 ? -3.4 : 0; moveCam(sx, 0.3, 14.5, sx, -0.2, 0); tYaw = 0; tPitch = 0.02;
+    var sx = window.innerWidth > 720 ? -5.6 : 0; moveCam(sx, 0.3, 16.5, sx, -0.2, 0); tYaw = 0; tPitch = 0.02;
     setReadout('Same budget · <b>3 metros</b> · one intent each'); setProg(0.85);
     setHint('Drag to orbit · <kbd>Enter</kbd> complete the audit');
     show(act3El, true);
@@ -845,7 +850,7 @@
   /* ---------- loop ---------- */
   function resize() {
     var w = canvas.clientWidth, h = canvas.clientHeight;
-    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); camTarget.set(camBase.x, camBase.y, camBase.z * camFit());
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); camTarget.set(camBase.x, camBase.y, camBase.z * camFit()); world.scale.setScalar(narrow() ? 0.62 : 1);
     if (state === 'l2-cards') layoutCards();
   }
   window.addEventListener('resize', resize); resize();
