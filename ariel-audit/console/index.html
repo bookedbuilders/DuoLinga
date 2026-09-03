@@ -1,0 +1,881 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ariel Audit Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --void: #050a12;
+    --glass: rgba(95, 211, 255, 0.06);
+    --glass-2: rgba(95, 211, 255, 0.12);
+    --edge: rgba(95, 211, 255, 0.35);
+    --edge-2: rgba(95, 211, 255, 0.7);
+    --cyan: #5fd3ff;
+    --blue: #2b7fff;
+    --ink: #e6f6ff;
+    --ink-2: #9cc3d8;
+    --ink-3: #5f8399;
+    --danger: #ff3b4e;
+    --danger-soft: rgba(255, 59, 78, 0.14);
+    --display: "Rajdhani", "Barlow", "Helvetica Neue", Arial, sans-serif;
+    --body: "Barlow", "Helvetica Neue", Arial, sans-serif;
+    --mono: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: var(--void); color: var(--ink);
+    font-family: var(--body); font-size: 16px; line-height: 1.5;
+    overflow: hidden; -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+  a { color: var(--cyan); }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+
+  #app { position: fixed; inset: 0; }
+  #c { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #vignette { position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(5, 10, 18, 0.85) 100%); }
+  #scanlines { position: absolute; inset: 0; pointer-events: none; opacity: 0.35;
+    background: repeating-linear-gradient(0deg, transparent 0 3px, rgba(0, 0, 0, 0.18) 3px 4px); }
+
+  /* projected 3D labels */
+  #labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .lbl { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); text-align: center; white-space: nowrap;
+    will-change: transform; transition: opacity 200ms; }
+  .lbl .t { font-family: var(--display); font-weight: 600; font-size: 17px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); }
+  .lbl .s { font-family: var(--mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.04em; }
+  .lbl.fault .t { color: var(--danger); font-size: 12px; letter-spacing: 0.14em; }
+  .lbl.fault .s { color: var(--ink-2); }
+  .lbl.fault.done .t { color: var(--ink-3); }
+  .lbl.cluster .t { font-size: 26px; font-family: var(--mono); font-weight: 500; letter-spacing: 0; text-transform: none; }
+  .lbl.cluster.leads .t { color: var(--cyan); }
+  .lbl.cluster .s { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-2); }
+  .lbl.metro .t { font-size: 15px; }
+
+  /* HUD */
+  .hud { position: absolute; left: 0; right: 0; padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; pointer-events: none; z-index: 5; }
+  .hud > * { pointer-events: auto; }
+  .hud.top { top: 0; }
+  .hud.bottom { bottom: 0; align-items: flex-end; }
+  .hud-brand { font-family: var(--display); font-weight: 600; font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-2); }
+  .hud-brand b { color: var(--ink); font-weight: 600; }
+  .acts { display: flex; gap: 6px; }
+  .acts button { background: transparent; border: 1px solid var(--edge); color: var(--ink-3); border-radius: 3px; padding: 5px 10px;
+    font-family: var(--display); font-weight: 600; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; }
+  .acts button:hover { color: var(--ink); border-color: var(--edge-2); }
+  .acts button.on { color: var(--void); background: var(--cyan); border-color: var(--cyan); }
+  .readout { font-family: var(--mono); font-size: 12px; color: var(--ink-2); letter-spacing: 0.04em; text-align: right; }
+  .readout b { color: var(--cyan); font-weight: 500; }
+  .readout .warn { color: var(--danger); }
+  .hint { font-family: var(--display); font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+  .hint kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--edge); border-radius: 3px; padding: 1px 5px; color: var(--ink-2); text-transform: none; letter-spacing: 0; }
+  .ticker { display: flex; gap: 22px; font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+  .ticker span b { color: var(--ink); font-weight: 500; }
+  .ticker span.lead b { color: var(--cyan); }
+  .acts button { white-space: nowrap; }
+  @media (max-width: 720px) {
+    .hud { padding: 12px 14px; }
+    .hud.top { flex-wrap: wrap; row-gap: 8px; }
+    .hud-brand { font-size: 12px; white-space: nowrap; }
+    .hud-brand span { display: none; }
+    .ticker { display: none; }
+    .readout { font-size: 11px; flex-basis: 100%; text-align: left; }
+    .hint { font-size: 11px; }
+  }
+
+  /* progress bar under top hud */
+  #prog { position: absolute; left: 0; top: 0; height: 2px; width: 0; background: var(--cyan); z-index: 6; transition: width 500ms ease; box-shadow: 0 0 12px var(--cyan); }
+
+  /* glass panels */
+  .glass { background: var(--glass); border: 1px solid var(--edge); backdrop-filter: blur(8px); position: relative; }
+  .glass::before, .glass::after { content: ""; position: absolute; width: 14px; height: 14px; border-color: var(--edge-2); border-style: solid; }
+  .glass::before { left: -1px; top: -1px; border-width: 1px 0 0 1px; }
+  .glass::after { right: -1px; bottom: -1px; border-width: 0 1px 1px 0; }
+
+  .btn { display: inline-flex; align-items: center; gap: 10px; background: transparent; border: 1px solid var(--cyan); color: var(--cyan);
+    padding: 11px 20px; border-radius: 3px; cursor: pointer; font-family: var(--display); font-weight: 600; font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase;
+    transition: background 150ms, color 150ms, box-shadow 150ms; }
+  .btn:hover { background: var(--cyan); color: var(--void); box-shadow: 0 0 24px rgba(95, 211, 255, 0.4); }
+  .btn.ghost { border-color: var(--edge); color: var(--ink-2); }
+  .btn.ghost:hover { background: var(--glass-2); color: var(--ink); box-shadow: none; }
+  .btn.sm { padding: 7px 12px; font-size: 12px; }
+
+  /* overlays */
+  .overlay { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; padding: 64px 24px 72px; z-index: 8; }
+  .overlay.on { display: flex; }
+  .overlay.dim { background: rgba(5, 10, 18, 0.55); }
+  .sheet { width: min(760px, 100%); padding: 36px 44px; max-height: calc(100vh - 136px); overflow: auto; }
+  @media (max-width: 640px) { .sheet { padding: 26px 20px; } }
+  .eyebrow { font-family: var(--display); font-weight: 600; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--cyan); margin: 0 0 14px; }
+  .eyebrow.danger { color: var(--danger); }
+  h1, h2 { font-family: var(--display); font-weight: 500; margin: 0; text-wrap: balance; line-height: 1.05; letter-spacing: 0.01em; }
+  h1 { font-size: clamp(34px, 5vw, 56px); }
+  h2 { font-size: clamp(26px, 4vw, 40px); }
+  .lede { color: var(--ink-2); font-size: clamp(16px, 2vw, 19px); margin: 16px 0 0; max-width: 46ch; text-wrap: pretty; }
+  .frame { font-family: var(--display); font-size: clamp(20px, 2.6vw, 26px); font-weight: 500; line-height: 1.3; margin: 14px 0 0; max-width: 34ch; color: var(--ink); text-wrap: pretty; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 28px; }
+
+  .strip { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 30px; border: 1px solid var(--edge); }
+  .strip > div { padding: 14px 16px; border-left: 1px solid var(--edge); }
+  .strip > div:first-child { border-left: 0; }
+  .strip .n { font-family: var(--mono); font-size: clamp(22px, 3vw, 32px); line-height: 1; color: var(--ink); }
+  .strip .l { font-family: var(--display); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); margin-top: 8px; }
+  .strip .lead .n { color: var(--cyan); }
+  .strip .dim .n { color: var(--ink-3); }
+  @media (max-width: 560px) { .strip { grid-template-columns: 1fr 1fr; } .strip > div:nth-child(3) { border-left: 0; } .strip > div:nth-child(n+3) { border-top: 1px solid var(--edge); } }
+  .micro { font-family: var(--mono); font-size: 11px; color: var(--ink-3); margin: 10px 0 0; letter-spacing: 0.04em; }
+
+  /* severity */
+  .sev { display: inline-flex; align-items: center; gap: 6px; font-family: var(--display); font-weight: 600; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 3px 8px; border: 1px solid; border-radius: 2px; line-height: 1.3; flex: none; }
+  .sev::before { content: ""; width: 6px; height: 6px; background: currentColor; }
+  .sev.critical { color: var(--void); background: var(--danger); border-color: var(--danger); }
+  .sev.high { color: var(--danger); border-color: var(--danger); background: var(--danger-soft); }
+  .sev.medium { color: var(--ink-2); border-color: var(--edge); }
+
+  /* side panel (act 1) */
+  #panel { position: absolute; top: 72px; right: 24px; bottom: 96px; width: min(420px, calc(100% - 48px)); padding: 26px 26px 22px; display: none; flex-direction: column; gap: 18px; overflow: auto; z-index: 7;
+    transform: translateX(20px); opacity: 0; transition: transform 250ms ease, opacity 250ms ease; }
+  #panel.on { display: flex; }
+  #panel.in { transform: none; opacity: 1; }
+  #panel .p-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  #panel .p-where { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--ink-3); text-transform: uppercase; }
+  #panel h2 { font-size: 24px; margin-top: 6px; }
+  .finding { display: flex; flex-direction: column; gap: 8px; padding-top: 16px; border-top: 1px solid var(--edge); }
+  .finding .f-top { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+  .finding .f-where { font-family: var(--display); font-weight: 600; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+  .finding h3 { margin: 0; font-family: var(--body); font-weight: 600; font-size: 16px; line-height: 1.35; }
+  .finding p { margin: 0; font-size: 14px; color: var(--ink-2); line-height: 1.5; }
+  .close { background: transparent; border: 1px solid var(--edge); color: var(--ink-2); width: 30px; height: 30px; border-radius: 3px; cursor: pointer; font-family: var(--mono); flex: none; }
+  .close:hover { color: var(--ink); border-color: var(--edge-2); }
+  @media (max-width: 720px) { #panel { top: auto; bottom: 0; right: 0; left: 0; width: 100%; max-height: 62vh; border-left: 0; border-right: 0; border-bottom: 0; } }
+
+  /* guess controls (act 2) */
+  #guess { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); width: min(560px, calc(100% - 32px)); padding: 22px 26px; display: none; z-index: 7; }
+  #guess.on { display: block; }
+  #guess .q { font-family: var(--display); font-size: 20px; font-weight: 500; margin: 0; line-height: 1.3; }
+  #guess .q b { color: var(--cyan); font-weight: 600; }
+  #guess .g-row { display: grid; grid-template-columns: 1fr auto; gap: 18px; align-items: center; margin-top: 16px; }
+  #guess .g-val { font-family: var(--mono); font-size: 34px; line-height: 1; color: var(--cyan); min-width: 3.2ch; text-align: right; }
+  #guess .g-val small { display: block; font-size: 11px; color: var(--ink-3); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; text-align: right; }
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 2px; background: var(--edge-2); outline: none; margin: 14px 0; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--void); border: 2px solid var(--cyan); box-shadow: 0 0 14px rgba(95, 211, 255, 0.6); cursor: pointer; }
+  input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--void); border: 2px solid var(--cyan); cursor: pointer; }
+  #guess .scale { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+
+  /* scan result (act 2) */
+  #result { position: absolute; left: 24px; bottom: 96px; width: min(440px, calc(100% - 48px)); padding: 22px 24px; display: none; z-index: 7; }
+  #result.on { display: block; }
+  #result .r-line { display: grid; grid-template-columns: 1fr auto auto; gap: 14px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--edge); font-size: 15px; }
+  #result .r-line:first-of-type { border-top: 0; }
+  #result .r-line .n { font-family: var(--mono); font-size: 20px; }
+  #result .r-line .p { font-family: var(--mono); font-size: 12px; color: var(--ink-3); min-width: 4ch; text-align: right; }
+  #result .r-line.leads { color: var(--cyan); }
+  #result .r-line.guess { color: var(--ink-2); }
+  #result .r-line.guess .n { color: var(--ink-2); }
+  #result .read { font-size: 14px; color: var(--ink-2); margin: 14px 0 0; }
+  #result .read b { color: var(--ink); }
+  #result .verdict { font-family: var(--display); font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cyan); margin: 0 0 8px; }
+  @media (max-width: 720px) { #result { left: 16px; right: 16px; width: auto; bottom: 80px; max-height: 55vh; overflow: auto; } }
+
+  /* findings carousel (act 2) */
+  #cards { position: absolute; inset: 64px 0 90px; display: none; perspective: 1400px; z-index: 7; }
+  #cards.on { display: block; }
+  .card { position: absolute; left: 50%; top: 50%; width: min(520px, calc(100% - 48px)); padding: 28px 30px; transform-style: preserve-3d;
+    transition: transform 500ms cubic-bezier(0.2, 0.7, 0.2, 1), opacity 400ms; cursor: pointer; }
+  .card .c-top { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+  .card .c-name { font-family: var(--display); font-weight: 600; font-size: 22px; letter-spacing: 0.04em; }
+  .card .c-name small { display: block; font-family: var(--mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px; font-weight: 400; }
+  .card p { margin: 16px 0 0; font-size: 16px; line-height: 1.55; color: var(--ink-2); }
+  .card p b { color: var(--ink); font-weight: 600; }
+  .card .c-idx { position: absolute; right: 18px; bottom: 12px; font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+  .card.seen .c-idx::before { content: "reviewed  "; color: var(--cyan); }
+  #cardnav { position: absolute; left: 50%; bottom: 100px; transform: translateX(-50%); display: none; gap: 10px; z-index: 8; }
+  #cardnav.on { display: flex; }
+
+  /* pull quote */
+  #quote .sheet { text-align: center; }
+  #quote .mark { width: 40px; height: 2px; background: var(--danger); margin: 0 auto 28px; box-shadow: 0 0 12px var(--danger); }
+  #quote p { font-family: var(--display); font-size: clamp(28px, 4.2vw, 46px); font-weight: 500; line-height: 1.2; margin: 0; text-wrap: balance; }
+  #quote p em { font-style: normal; color: var(--cyan); }
+
+  /* act 3 */
+  #act3 { position: absolute; left: 24px; top: 80px; width: min(460px, calc(100% - 48px)); padding: 26px 28px; display: none; z-index: 7; }
+  #act3.on { display: block; }
+  #act3 .kick { margin-top: 18px; padding: 16px 18px; border-left: 2px solid var(--cyan); background: var(--glass-2); font-family: var(--display); font-size: 20px; font-weight: 500; line-height: 1.35; }
+  #act3 ul { list-style: none; margin: 18px 0 0; padding: 0; }
+  #act3 li { display: grid; grid-template-columns: 18px 1fr; gap: 10px; padding: 9px 0; border-top: 1px solid var(--edge); font-size: 14px; color: var(--ink-2); }
+  #act3 li::before { content: ""; width: 10px; height: 10px; margin-top: 5px; border: 1.5px dashed var(--ink-3); }
+  #act3 li b { color: var(--ink); }
+  #act3 .note { font-family: var(--mono); font-size: 11px; color: var(--ink-3); margin: 14px 0 0; }
+  @media (max-width: 720px) { #act3 { top: 64px; left: 16px; right: 16px; width: auto; max-height: 60vh; overflow: auto; } }
+
+  /* end */
+  .score { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid var(--edge); margin-top: 26px; }
+  .score > div { padding: 14px 16px; border-left: 1px solid var(--edge); }
+  .score > div:first-child { border-left: 0; }
+  .score .n { font-family: var(--mono); font-size: 26px; color: var(--cyan); }
+  .score .l { font-family: var(--display); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); margin-top: 6px; }
+  @media (max-width: 560px) { .score { grid-template-columns: 1fr; } .score > div { border-left: 0; border-top: 1px solid var(--edge); } .score > div:first-child { border-top: 0; } }
+
+  /* sweep transition */
+  #sweep { position: absolute; top: 0; bottom: 0; left: -12%; width: 12%; pointer-events: none; z-index: 9; opacity: 0;
+    background: linear-gradient(90deg, transparent, rgba(95, 211, 255, 0.28), transparent); }
+  #sweep.go { animation: sweep 700ms ease-in-out; }
+  @keyframes sweep { 0% { left: -12%; opacity: 1; } 100% { left: 100%; opacity: 1; } }
+
+  /* cursor */
+  #cur { position: absolute; width: 26px; height: 26px; border: 1px solid var(--cyan); border-radius: 50%; pointer-events: none; z-index: 20;
+    transform: translate(-50%, -50%); transition: width 120ms, height 120ms, border-color 120ms; mix-blend-mode: screen; display: none; }
+  #cur::after { content: ""; position: absolute; left: 50%; top: 50%; width: 3px; height: 3px; background: var(--cyan); border-radius: 50%; transform: translate(-50%, -50%); }
+  #cur.hot { width: 40px; height: 40px; border-color: var(--danger); }
+  @media (hover: hover) and (pointer: fine) { #cur { display: block; } }
+
+  #toast { position: absolute; left: 50%; top: 64px; transform: translateX(-50%); padding: 8px 14px; font-family: var(--mono); font-size: 12px; color: var(--cyan); background: var(--glass-2); border: 1px solid var(--edge); z-index: 9; opacity: 0; transition: opacity 250ms; pointer-events: none; white-space: nowrap; }
+  #toast.on { opacity: 1; }
+
+  @media (prefers-reduced-motion: reduce) {
+    #sweep.go { animation: none; }
+    .card { transition: none; }
+    #panel { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="c"></canvas>
+  <div id="vignette"></div>
+  <div id="scanlines"></div>
+  <div id="labels"></div>
+  <div id="prog"></div>
+
+  <div class="hud top">
+    <div class="hud-brand"><b>Ariel Construction</b> <span>· Paid media audit</span></div>
+    <div class="acts" role="tablist" aria-label="Acts">
+      <button data-act="1">Act 1</button>
+      <button data-act="2">Act 2</button>
+      <button data-act="3">Act 3</button>
+    </div>
+    <div class="readout" id="readout">Standby</div>
+  </div>
+
+  <div class="hud bottom">
+    <div class="hint" id="hint">Drag to orbit</div>
+    <div class="ticker">
+      <span><b>$9.5K</b> spent</span>
+      <span><b>324</b> results</span>
+      <span class="lead"><b>27</b> real leads</span>
+      <span><b>$72</b> per real lead</span>
+    </div>
+  </div>
+
+  <!-- Act 1 side panel -->
+  <aside id="panel" class="glass" aria-live="polite">
+    <div class="p-head">
+      <div>
+        <div class="p-where" id="p-where"></div>
+        <h2 id="p-title"></h2>
+      </div>
+      <button class="close" id="p-close" aria-label="Close">×</button>
+    </div>
+    <div id="p-body"></div>
+  </aside>
+
+  <!-- Act 2 guess -->
+  <div id="guess" class="glass">
+    <p class="q">Google reported <b>324 results</b> in August. How many of them rang a phone or filled a form?</p>
+    <div class="g-row">
+      <div>
+        <input type="range" id="slider" min="0" max="324" value="162" aria-label="Your estimate of real leads">
+        <div class="scale"><span>0</span><span>162</span><span>324</span></div>
+      </div>
+      <div class="g-val"><span id="g-val">162</span><small>your call</small></div>
+    </div>
+    <div class="row" style="margin-top:14px"><button class="btn" id="scan">Scan the results</button></div>
+  </div>
+
+  <!-- Act 2 result -->
+  <div id="result" class="glass">
+    <p class="verdict" id="verdict"></p>
+    <div class="r-line guess"><span>Your call</span><span class="n" id="r-guess">0</span><span class="p" id="r-guess-p"></span></div>
+    <div class="r-line"><span>Engagement</span><span class="n">212</span><span class="p">65%</span></div>
+    <div class="r-line"><span>Other non-lead actions</span><span class="n">85</span><span class="p">26%</span></div>
+    <div class="r-line leads"><span>Real leads</span><span class="n">27</span><span class="p">8%</span></div>
+    <p class="read"><b>Read:</b> the thin blue cluster is the only thing that rang a phone. Everything else was counted as a win.</p>
+    <div class="row" style="margin-top:16px"><button class="btn" id="to-cards">Review the findings</button></div>
+  </div>
+
+  <!-- Act 2 findings -->
+  <div id="cards" aria-label="Findings"></div>
+  <div id="cardnav">
+    <button class="btn ghost sm" id="prev" aria-label="Previous finding">← Prev</button>
+    <button class="btn ghost sm" id="next" aria-label="Next finding">Next →</button>
+    <button class="btn sm" id="to-quote" style="display:none">Continue</button>
+  </div>
+
+  <!-- Act 2 quote -->
+  <div id="quote" class="overlay dim">
+    <div class="sheet glass">
+      <div class="mark"></div>
+      <p>Every ad group in this account is named <em>“General Intent.”</em> Google was told exactly what to do. It did it.</p>
+      <div class="row" style="justify-content:center"><button class="btn" id="to-act3">Act 3: focus is the strategy</button></div>
+    </div>
+  </div>
+
+  <!-- Act 3 -->
+  <div id="act3" class="glass">
+    <p class="eyebrow">Act 3 · Focus is the strategy</p>
+    <h2>Focus is the strategy</h2>
+    <p class="frame" style="font-size:18px">Phases 3 and 4 in progress. The CRM funnel, the unit economics, and the ranked fixes with a 30/60/90.</p>
+    <div class="kick">Same budget. One metro per campaign, one intent per ad group, one number the account can trust. Materially more leads before a single ad is rewritten.</div>
+    <ul>
+      <li><span><b>Phase 3, the CRM funnel.</b> What happens to a lead after it enters GoHighLevel, and where it stalls.</span></li>
+      <li><span><b>Phase 3, the unit economics.</b> Cost per real lead by metro, and what a qualified lead is worth.</span></li>
+      <li><span><b>Phase 4, the ranked fixes.</b> Every finding, ordered by impact and effort, on a 30/60/90 plan.</span></li>
+    </ul>
+    <p class="note">The three columns are illustrative. Phases 3 and 4 put numbers on them.</p>
+    <div class="row" style="margin-top:18px"><button class="btn" id="finish">Complete the audit</button></div>
+  </div>
+
+  <!-- Boot -->
+  <div id="boot" class="overlay on">
+    <div class="sheet glass">
+      <p class="eyebrow">Google Ads and CRM audit · Booked Builders for Penrose Growth</p>
+      <h1>General intent. Every market. No measurement.</h1>
+      <p class="lede">Any one of these drains a budget. Ariel runs all three. This isn't underperformance. It's the absence of a plan.</p>
+      <div class="strip">
+        <div><div class="n">$9.5K</div><div class="l">spent</div></div>
+        <div class="dim"><div class="n">324</div><div class="l">“results”</div></div>
+        <div class="lead"><div class="n">27</div><div class="l">real leads</div></div>
+        <div><div class="n">$72</div><div class="l">per real lead</div></div>
+      </div>
+      <p class="micro">August, four of seven campaigns sampled.</p>
+      <div class="row">
+        <button class="btn" id="begin">Enter the account</button>
+        <span class="hint">Drag to orbit · Click to inspect · <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> jump acts</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Act 1 intro -->
+  <div id="intro1" class="overlay dim">
+    <div class="sheet glass">
+      <p class="eyebrow danger">Act 1 · The instruments are dark</p>
+      <h2>The instruments are dark</h2>
+      <p class="frame">Before the first click was bought, the account had already lost the ability to learn from it.</p>
+      <p class="lede">Four connections carry a lead to the bidding algorithm. All four are cut. Find each fault and read the diagnosis.</p>
+      <div class="row"><button class="btn" id="go1">Trace the signal</button></div>
+    </div>
+  </div>
+
+  <!-- Act 2 intro -->
+  <div id="intro2" class="overlay dim">
+    <div class="sheet glass">
+      <p class="eyebrow danger">Act 2 · Everywhere is nowhere</p>
+      <h2>Everywhere is nowhere</h2>
+      <p class="frame">Given no signal, the algorithm did what algorithms do. It bought whatever was cheapest and called it a result.</p>
+      <div class="row"><button class="btn" id="go2">See what it bought</button></div>
+    </div>
+  </div>
+
+  <!-- End -->
+  <div id="end" class="overlay dim">
+    <div class="sheet glass">
+      <p class="eyebrow">Audit complete</p>
+      <h2>No performance problem. No strategy.</h2>
+      <p class="lede">The account targets generic intent, blends three metros into one budget, and cannot measure a single outcome. Phases 3 and 4 price what focus is worth.</p>
+      <div class="score">
+        <div><div class="n" id="s-faults">4 / 4</div><div class="l">faults diagnosed</div></div>
+        <div><div class="n" id="s-guess">·</div><div class="l">your call vs 27 real leads</div></div>
+        <div><div class="n" id="s-cards">4 / 4</div><div class="l">findings reviewed</div></div>
+      </div>
+      <div class="row">
+        <button class="btn" id="replay">Run it again</button>
+        <a class="btn ghost" id="report-link" href="../index.html">Open the written report</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="sweep"></div>
+  <div id="toast"></div>
+  <div id="cur"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  if (!window.THREE) { document.getElementById('hint').textContent = '3D engine failed to load'; return; }
+
+  /* ---------- data (all figures from the audit) ---------- */
+  var FAULTS = [
+    { key: 'A', where: 'Lead → Tracking layer', title: 'The lead never reaches the tracking layer', pos: [-4.0, 0, 0],
+      lbl: 'Fault A', sub: 'call tracking · forms',
+      findings: [
+        { where: 'Call tracking', sev: 'critical', h: 'Call tracking is dead in all three metros.', p: 'A custom number-swap script formats numbers with a +1 that the native tags don’t recognize. Debug testing proved only Dallas ever swapped.' },
+        { where: 'Forms', sev: 'medium', h: 'Form submissions are double-counted.', p: 'Once through the tag, once through GA4. What little is measured is measured twice.' }
+      ] },
+    { key: 'B', where: 'Tracking layer → Google Ads', title: 'The loop is switched off', pos: [0, 0, 0],
+      lbl: 'Fault B', sub: 'enhanced conversions · imports',
+      findings: [
+        { where: 'Closing the loop', sev: 'high', h: 'Enhanced Conversions tag: paused. Offline imports: never connected.', p: 'Three offline import actions were built and never wired up. The two mechanisms that would close the loop are both switched off.' }
+      ] },
+    { key: 'C', where: 'Google Ads → Bidding', title: 'Bidding learns the wrong lesson', pos: [4.0, 0, 0],
+      lbl: 'Fault C', sub: 'goals · primary actions',
+      findings: [
+        { where: 'Conversion goals', sev: 'critical', h: 'The only measured Sales goal is Page views.', p: '81 results, valued at $81. The account is optimizing toward people who looked.' },
+        { where: 'Primary actions', sev: 'high', h: 'Junk actions sit as Primary conversions.', p: 'Directions, menu views, and engagement on account-default goals, teaching Smart Bidding the wrong lesson daily.' }
+      ] },
+    { key: 'D', where: 'GoHighLevel → Google Ads', title: 'The CRM never talks back', pos: [2.0, -2.6, 0],
+      lbl: 'Fault D', sub: 'crm return path',
+      findings: [
+        { where: 'GoHighLevel', sev: 'high', h: 'No conversion data is ever sent back to Google.', p: '20+ cloned IVR workflows, and Dallas and Florida forwarding rules with empty phone filters. Closed deals stay in the CRM.' }
+      ] }
+  ];
+  var CARDS = [
+    { name: 'PMax', sub: 'Performance Max', sev: 'high', p: '<b>94% of spend on Search</b>, doing a Search campaign’s job with none of the control. Learned audiences: DIY and home decor. Search terms: staffing agencies, residential jobs, competitor names.' },
+    { name: 'ALL_Exact', sub: 'Search, exact match', sev: 'high', p: '<b>Target CPA $650 against a $530 daily budget.</b> The campaign is asked to average a number it cannot afford in a day. Thirteen locations stacked in one budget. No negatives. CPCs to $139.' },
+    { name: 'Phrase_Dallas', sub: 'Search, phrase match', sev: 'medium', p: '<b>AI Max on</b>, keywords optional, no guardrails.' },
+    { name: 'Account-wide', sub: 'All campaigns', sev: 'medium', p: '<b>One landing page for three metros</b>, call assets disapproved, every ad group carries the same name.' }
+  ];
+  var N_TOTAL = 324, N_ENG = 212, N_OTHER = 85, N_LEADS = 27;
+
+  /* ---------- dom ---------- */
+  var $ = function (id) { return document.getElementById(id); };
+  var canvas = $('c'), labelsEl = $('labels'), readout = $('readout'), hint = $('hint'), prog = $('prog');
+  var panel = $('panel'), guessEl = $('guess'), resultEl = $('result'), cardsEl = $('cards'), cardnav = $('cardnav'), act3El = $('act3');
+  var cur = $('cur'), toast = $('toast'), sweep = $('sweep');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function show(el, on) { el.classList.toggle('on', !!on); }
+  function setHint(t) { hint.innerHTML = t; }
+  function setReadout(t) { readout.innerHTML = t; }
+  function setProg(p) { prog.style.width = (p * 100) + '%'; }
+  function say(t) { toast.textContent = t; toast.classList.add('on'); clearTimeout(say._t); say._t = setTimeout(function () { toast.classList.remove('on'); }, 1800); }
+  function doSweep() { sweep.classList.remove('go'); void sweep.offsetWidth; sweep.classList.add('go'); }
+  function ease(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+
+  /* ---------- three ---------- */
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  var scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x050a12);
+  scene.fog = new THREE.FogExp2(0x050a12, 0.035);
+  var camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
+  camera.position.set(0, 1.2, 15);
+  var camTarget = new THREE.Vector3(0, 1.2, 15);
+  var lookAt = new THREE.Vector3(0, 0, 0), lookTarget = new THREE.Vector3(0, 0, 0);
+  var world = new THREE.Group(); scene.add(world);
+
+  var C = { cyan: 0x5fd3ff, blue: 0x2b7fff, danger: 0xff3b4e, dim: 0x1d3a55, steel: 0x2f5f8f, grey: 0x3a4652, mid: 0x6b7c8f, edge: 0x2a6f8f };
+
+  // ambient grid + stars
+  var grid = new THREE.GridHelper(60, 60, 0x143a55, 0x0d2538); grid.position.y = -4; scene.add(grid);
+  (function () {
+    var n = 700, pos = new Float32Array(n * 3);
+    for (var i = 0; i < n; i++) { pos[i * 3] = (Math.random() - 0.5) * 80; pos[i * 3 + 1] = (Math.random() - 0.2) * 40; pos[i * 3 + 2] = -10 - Math.random() * 60; }
+    var g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0x3f7fa8, size: 0.06, transparent: true, opacity: 0.7 })));
+  })();
+
+  // labels projected from 3D
+  var labels = [];
+  function addLabel(obj, cls, t, s, dy) {
+    var el = document.createElement('div'); el.className = 'lbl ' + (cls || '');
+    el.innerHTML = '<div class="t">' + t + '</div>' + (s ? '<div class="s">' + s + '</div>' : '');
+    labelsEl.appendChild(el);
+    var L = { obj: obj, el: el, dy: dy || 0, group: null };
+    labels.push(L); return L;
+  }
+  var _v = new THREE.Vector3();
+  function updateLabels() {
+    var w = canvas.clientWidth, h = canvas.clientHeight;
+    for (var i = 0; i < labels.length; i++) {
+      var L = labels[i];
+      var visible = L.group ? L.group.visible : true;
+      if (!visible || L.hidden) { L.el.style.opacity = 0; continue; }
+      L.obj.getWorldPosition(_v); _v.y += L.dy; _v.project(camera);
+      if (_v.z > 1) { L.el.style.opacity = 0; continue; }
+      L.el.style.opacity = 1;
+      L.el.style.transform = 'translate(-50%,-50%) translate(' + ((_v.x + 1) / 2 * w).toFixed(1) + 'px,' + ((1 - _v.y) / 2 * h).toFixed(1) + 'px)';
+    }
+  }
+
+  /* ---------- act 1: pipeline ---------- */
+  var g1 = new THREE.Group(); world.add(g1);
+  var NODES = [
+    { t: 'Lead', s: 'call or form · 3 metros', x: -6 },
+    { t: 'Tracking layer', s: 'number swap · tag · GA4', x: -2 },
+    { t: 'Google Ads', s: 'conversion goals', x: 2 },
+    { t: 'Bidding', s: 'smart bidding learns', x: 6 }
+  ];
+  var glassMat = new THREE.MeshBasicMaterial({ color: C.cyan, transparent: true, opacity: 0.07, side: THREE.DoubleSide, depthWrite: false });
+  var edgeMat = new THREE.LineBasicMaterial({ color: C.cyan, transparent: true, opacity: 0.65 });
+  var pipeMat = new THREE.LineBasicMaterial({ color: C.edge, transparent: true, opacity: 0.9 });
+  var deadMat = new THREE.LineDashedMaterial({ color: C.edge, dashSize: 0.16, gapSize: 0.14, transparent: true, opacity: 0.6 });
+  NODES.forEach(function (n) {
+    var geo = new THREE.PlaneGeometry(2.6, 1.3);
+    var m = new THREE.Mesh(geo, glassMat);
+    var e = new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat);
+    var grp = new THREE.Group(); grp.add(m); grp.add(e); grp.position.x = n.x; g1.add(grp);
+    var L = addLabel(grp, '', n.t, n.s, 0); L.group = g1;
+  });
+  function line(pts, mat) {
+    var g = new THREE.BufferGeometry().setFromPoints(pts.map(function (p) { return new THREE.Vector3(p[0], p[1], p[2] || 0); }));
+    var l = new THREE.Line(g, mat); if (mat === deadMat) l.computeLineDistances(); g1.add(l); return l;
+  }
+  // forward pipes: live until the cut, dashed after
+  line([[-4.7, 0], [-4.25, 0]], pipeMat); line([[-3.75, 0], [-3.3, 0]], deadMat);
+  line([[-0.7, 0], [-0.25, 0]], pipeMat); line([[0.25, 0], [0.7, 0]], deadMat);
+  line([[3.3, 0], [3.75, 0]], pipeMat); line([[4.25, 0], [4.7, 0]], deadMat);
+  // return path from Bidding to Google Ads via CRM
+  line([[6, -0.65], [6, -2.6], [2.35, -2.6]], deadMat);
+  line([[1.65, -2.6], [-2, -2.6], [-2, -0.65]], deadMat);
+  var crmL = addLabel((function () { var o = new THREE.Object3D(); o.position.set(6, -2.6, 0); g1.add(o); return o; })(), '', '', 'closed-won stays in the CRM', -0.4); crmL.group = g1;
+
+  // fault markers
+  var faultMeshes = [], faultObjs = [];
+  var redMat = new THREE.MeshBasicMaterial({ color: C.danger });
+  var ringMat = new THREE.MeshBasicMaterial({ color: C.danger, transparent: true, opacity: 0.8, side: THREE.DoubleSide });
+  FAULTS.forEach(function (f, i) {
+    var grp = new THREE.Group(); grp.position.set(f.pos[0], f.pos[1], f.pos[2]);
+    var core = new THREE.Mesh(new THREE.SphereGeometry(0.11, 16, 16), redMat.clone());
+    var ring = new THREE.Mesh(new THREE.RingGeometry(0.26, 0.29, 40), ringMat.clone());
+    var hit = new THREE.Mesh(new THREE.SphereGeometry(0.55, 8, 8), new THREE.MeshBasicMaterial({ visible: false }));
+    hit.userData.fault = i;
+    grp.add(core); grp.add(ring); grp.add(hit); g1.add(grp);
+    var L = addLabel(grp, 'fault', f.lbl, f.sub, -0.62); L.group = g1;
+    faultMeshes.push(hit); faultObjs.push({ grp: grp, core: core, ring: ring, label: L, done: false });
+  });
+  // signal particles: leave Lead, die at fault A
+  var NP = 18, pT = [], pGeo = new THREE.BufferGeometry(), pPos = new Float32Array(NP * 3);
+  for (var i = 0; i < NP; i++) pT.push(Math.random());
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+  var particles = new THREE.Points(pGeo, new THREE.PointsMaterial({ color: C.cyan, size: 0.12, transparent: true, opacity: 0.9 }));
+  g1.add(particles);
+  function tickParticles(dt) {
+    for (var i = 0; i < NP; i++) {
+      pT[i] += dt * 0.45; if (pT[i] > 1) pT[i] -= 1;
+      var t = pT[i]; var x = -4.75 + t * 0.75; // from Lead's edge to fault A at -4.0
+      pPos[i * 3] = x; pPos[i * 3 + 1] = (Math.sin(t * 30 + i) * 0.03); pPos[i * 3 + 2] = 0.02;
+    }
+    pGeo.attributes.position.needsUpdate = true;
+  }
+
+  /* ---------- act 2: results cloud ---------- */
+  var g2 = new THREE.Group(); world.add(g2); g2.visible = false;
+  var orbGeo = new THREE.SphereGeometry(0.1, 10, 10);
+  var orbMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  var orbs = new THREE.InstancedMesh(orbGeo, orbMat, N_TOTAL);
+  g2.add(orbs);
+  var oPos = [], oFrom = [], oTo = [], oCol = [], oPhase = [], oKind = [];
+  var _m = new THREE.Matrix4(), _c = new THREE.Color();
+  function rnd(r) { return (Math.random() - 0.5) * 2 * r; }
+  function inSphere(cx, cy, cz, r) {
+    var v = new THREE.Vector3(rnd(1), rnd(1), rnd(1)); while (v.lengthSq() > 1) v.set(rnd(1), rnd(1), rnd(1));
+    return v.multiplyScalar(r).add(new THREE.Vector3(cx, cy, cz));
+  }
+  for (var k = 0; k < N_TOTAL; k++) {
+    oKind.push(k < N_LEADS ? 'leads' : (k < N_LEADS + N_OTHER ? 'other' : 'engage'));
+    oPos.push(inSphere(0, 0, 0, 4.6)); oFrom.push(oPos[k].clone()); oTo.push(oPos[k].clone());
+    oCol.push(new THREE.Color(C.steel)); oPhase.push(Math.random() * Math.PI * 2);
+  }
+  // shuffle order so leads aren't spatially grouped by index
+  for (var s = N_TOTAL - 1; s > 0; s--) { var j = Math.floor(Math.random() * (s + 1)); var tmp = oKind[s]; oKind[s] = oKind[j]; oKind[j] = tmp; }
+  var morph = { t: 1, dur: 2.2, fromCol: null, toCol: null };
+  function paintOrbs() {
+    for (var k = 0; k < N_TOTAL; k++) orbs.setColorAt(k, oCol[k]);
+    orbs.instanceColor.needsUpdate = true;
+  }
+  paintOrbs();
+  function setTargets(fn) {
+    for (var k = 0; k < N_TOTAL; k++) { oFrom[k].copy(oPos[k]); oTo[k].copy(fn(k, oKind[k])); }
+    morph.t = 0;
+  }
+  var colTargets = null;
+  function setColors(map) { colTargets = []; for (var k = 0; k < N_TOTAL; k++) colTargets.push(new THREE.Color(map[oKind[k]])); morph.colFrom = oCol.map(function (c) { return c.clone(); }); }
+  function tickOrbs(dt, time) {
+    var p = 1;
+    if (morph.t < 1) { morph.t = Math.min(1, morph.t + dt / (reduce ? 0.01 : morph.dur)); p = ease(morph.t); }
+    for (var k = 0; k < N_TOTAL; k++) {
+      if (morph.t < 1) {
+        oPos[k].lerpVectors(oFrom[k], oTo[k], p);
+        if (colTargets) oCol[k].copy(morph.colFrom[k]).lerp(colTargets[k], p);
+      }
+      var bob = Math.sin(time * 0.8 + oPhase[k]) * 0.05;
+      _m.makeTranslation(oPos[k].x, oPos[k].y + bob, oPos[k].z);
+      orbs.setMatrixAt(k, _m);
+    }
+    orbs.instanceMatrix.needsUpdate = true;
+    if (morph.t < 1 && colTargets) paintOrbs();
+  }
+  // cluster anchors + labels (hidden until scan)
+  function anchor(x, y, z) { var o = new THREE.Object3D(); o.position.set(x, y, z); g2.add(o); return o; }
+  var CL = {
+    engage: { c: anchor(-1.6, 0.2, -3.2), r: 3.2, label: addLabel(null, 'cluster', '212', 'engagement · 65%', 3.6) },
+    other: { c: anchor(2.8, -1.0, -0.8), r: 1.6, label: addLabel(null, 'cluster', '85', 'other non-lead · 26%', -2.1) },
+    leads: { c: anchor(1.4, 1.5, 3.2), r: 0.75, label: addLabel(null, 'cluster leads', '27', 'real leads · 8%', 1.3) }
+  };
+  Object.keys(CL).forEach(function (k) { CL[k].label.obj = CL[k].c; CL[k].label.group = g2; CL[k].label.hidden = true; });
+  var leadGlow = new THREE.Mesh(new THREE.SphereGeometry(1.15, 24, 24), new THREE.MeshBasicMaterial({ color: C.cyan, transparent: true, opacity: 0.08, depthWrite: false }));
+  leadGlow.position.copy(CL.leads.c.position); leadGlow.visible = false; g2.add(leadGlow);
+
+  /* ---------- act 3: three metros ---------- */
+  var g3 = new THREE.Group(); world.add(g3); g3.visible = false;
+  var METROS = [{ t: 'New York', x: -4.2 }, { t: 'Dallas', x: 0 }, { t: 'Florida', x: 4.2 }];
+  METROS.forEach(function (m) {
+    var ring = new THREE.Mesh(new THREE.RingGeometry(1.35, 1.42, 64), new THREE.MeshBasicMaterial({ color: C.cyan, transparent: true, opacity: 0.7, side: THREE.DoubleSide }));
+    ring.position.set(m.x, 0, 0); g3.add(ring);
+    var ring2 = new THREE.Mesh(new THREE.RingGeometry(1.7, 1.72, 64), new THREE.MeshBasicMaterial({ color: C.cyan, transparent: true, opacity: 0.25, side: THREE.DoubleSide }));
+    ring2.position.set(m.x, 0, 0); g3.add(ring2);
+    var o = new THREE.Object3D(); o.position.set(m.x, -2.1, 0); g3.add(o);
+    var L = addLabel(o, 'metro', m.t, 'one campaign · one intent · one number', 0); L.group = g3;
+  });
+
+  /* ---------- interaction ---------- */
+  var yaw = 0, pitch = 0, tYaw = 0, tPitch = 0, dragging = false, moved = false, lx = 0, ly = 0, idle = 0;
+  var ray = new THREE.Raycaster(), ptr = new THREE.Vector2(), hover = null;
+  var isTouch = window.matchMedia('(hover: none)').matches;
+  function onDown(e) { if (e.target !== canvas) return; dragging = true; moved = false; lx = e.clientX; ly = e.clientY; }
+  function onMove(e) {
+    cur.style.transform = 'translate(-50%,-50%) translate(' + e.clientX + 'px,' + e.clientY + 'px)';
+    ptr.x = (e.clientX / canvas.clientWidth) * 2 - 1; ptr.y = -(e.clientY / canvas.clientHeight) * 2 + 1;
+    if (dragging) {
+      var dx = e.clientX - lx, dy = e.clientY - ly; lx = e.clientX; ly = e.clientY;
+      if (Math.abs(dx) + Math.abs(dy) > 2) moved = true;
+      tYaw += dx * 0.005; tPitch = Math.max(-0.55, Math.min(0.55, tPitch + dy * 0.004)); idle = 0;
+    }
+  }
+  function onUp(e) {
+    if (!dragging) return; dragging = false;
+    if (!moved && e.target === canvas) click();
+  }
+  window.addEventListener('pointerdown', onDown);
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', function () { dragging = false; });
+  function pick() {
+    if (state !== 'l1') return null;
+    ray.setFromCamera(ptr, camera);
+    var hits = ray.intersectObjects(faultMeshes, false);
+    return hits.length ? hits[0].object.userData.fault : null;
+  }
+  function click() {
+    var f = pick();
+    if (f !== null) openFault(f);
+  }
+
+  /* ---------- state ---------- */
+  var state = 'boot', faultsDone = 0, guess = null, cardIdx = 0, cardsSeen = 0;
+  var seen = CARDS.map(function () { return false; });
+  var overlays = ['boot', 'intro1', 'intro2', 'quote', 'end'];
+  function hideAll() {
+    overlays.forEach(function (id) { show($(id), false); });
+    show(panel, false); panel.classList.remove('in'); show(guessEl, false); show(resultEl, false); show(cardsEl, false); show(cardnav, false); show(act3El, false);
+  }
+  function setAct(n) { Array.prototype.forEach.call(document.querySelectorAll('.acts button'), function (b) { b.classList.toggle('on', +b.dataset.act === n); }); }
+  var camBase = new THREE.Vector3(0, 1.2, 15);
+  function camFit() { return Math.max(1, 1.8 / camera.aspect); }
+  function moveCam(x, y, z, lx, ly, lz) { camBase.set(x, y, z); camTarget.set(x, y, z * camFit()); lookTarget.set(lx || 0, ly || 0, lz || 0); }
+
+  function goBoot() {
+    state = 'boot'; hideAll(); show($('boot'), true); setAct(0); setProg(0);
+    g1.visible = true; g2.visible = false; g3.visible = false;
+    moveCam(0, 1.2, 15); setReadout('Standby'); setHint('Drag to orbit');
+  }
+  function goAct1(intro) {
+    state = 'l1'; hideAll(); setAct(1); doSweep();
+    g1.visible = true; g2.visible = false; g3.visible = false;
+    moveCam(0, 0.6, 13.5, 0, -0.6, 0); tYaw = 0.12; tPitch = 0.08;
+    if (intro) show($('intro1'), true);
+    updateL1();
+  }
+  function updateL1() {
+    setReadout('Faults diagnosed <b>' + faultsDone + ' / 4</b>' + (faultsDone < 4 ? ' · <span class="warn">signal not arriving</span>' : ' · <span class="warn">signal never arrives</span>'));
+    setProg((faultsDone / 4) * 0.33);
+    setHint(faultsDone < 4 ? 'Click a red fault to diagnose it · Drag to orbit' : 'All four cuts diagnosed · <kbd>Enter</kbd> Act 2');
+  }
+  function openFault(i) {
+    var f = FAULTS[i]; var fo = faultObjs[i];
+    $('p-where').textContent = f.where; $('p-title').textContent = f.title;
+    $('p-body').innerHTML = f.findings.map(function (x) {
+      return '<div class="finding"><div class="f-top"><span class="f-where">' + x.where + '</span><span class="sev ' + x.sev + '">' + x.sev + '</span></div><h3>' + x.h + '</h3><p>' + x.p + '</p></div>';
+    }).join('') + (faultsDone + (fo.done ? 0 : 1) >= 4 ? '<div class="row"><button class="btn" id="p-next">Act 2: everywhere is nowhere</button></div>' : '');
+    show(panel, true); requestAnimationFrame(function () { panel.classList.add('in'); });
+    if (!fo.done) {
+      fo.done = true; faultsDone++;
+      fo.core.material.color.set(0x7a2a33); fo.ring.material.color.set(0x7a2a33); fo.label.el.classList.add('done');
+      say('Fault ' + f.key + ' logged');
+      updateL1();
+    }
+    var nb = $('p-next'); if (nb) nb.addEventListener('click', function () { goAct2(true); });
+  }
+  $('p-close').addEventListener('click', function () { panel.classList.remove('in'); setTimeout(function () { show(panel, false); }, 220); });
+
+  function goAct2(intro) {
+    state = 'l2-guess'; hideAll(); setAct(2); doSweep();
+    g1.visible = false; g2.visible = true; g3.visible = false;
+    Object.keys(CL).forEach(function (k) { CL[k].label.hidden = true; }); leadGlow.visible = false;
+    // reset cloud
+    setTargets(function () { return inSphere(0, 0, 0, 4.6); });
+    setColors({ leads: C.steel, other: C.steel, engage: C.steel });
+    moveCam(0, 0.4, 14, 0, 0, 0); tYaw = -0.1; tPitch = 0.05;
+    setReadout('Reported results <b>324</b> · unresolved');
+    setProg(0.33); setHint('Every dot is one result Google reported · Drag to orbit');
+    if (intro) show($('intro2'), true); else show(guessEl, true);
+  }
+  $('slider').addEventListener('input', function () { $('g-val').textContent = this.value; });
+  $('scan').addEventListener('click', function () {
+    guess = +$('slider').value; state = 'l2-scan'; show(guessEl, false); doSweep();
+    setTargets(function (k, kind) { var c = CL[kind]; return inSphere(c.c.position.x, c.c.position.y, c.c.position.z, c.r); });
+    setColors({ leads: C.cyan, other: C.mid, engage: C.grey });
+    setHint('Scanning · Drag to orbit');
+    setReadout('Scanning <b>324</b> results…');
+    setTimeout(function () {
+      Object.keys(CL).forEach(function (k) { CL[k].label.hidden = false; }); leadGlow.visible = true;
+      $('r-guess').textContent = guess; $('r-guess-p').textContent = Math.round(guess / N_TOTAL * 100) + '%';
+      var d = guess - N_LEADS, v;
+      if (Math.abs(d) <= 5) v = 'Close. Actual: 27.';
+      else if (d > 0) v = 'Generous by ' + d + '. Actual: 27.';
+      else v = 'Under by ' + (-d) + '. Actual: 27.';
+      $('verdict').textContent = v;
+      show(resultEl, true);
+      setReadout('Real leads <b>27 / 324</b> · <span class="warn">92% noise</span>');
+      setProg(0.5); setHint('Drag to orbit · Hover the clusters');
+    }, reduce ? 200 : 2300);
+  });
+  $('to-cards').addEventListener('click', function () {
+    state = 'l2-cards'; show(resultEl, false); show(cardsEl, true); show(cardnav, true);
+    setHint('<kbd>←</kbd> <kbd>→</kbd> sweep the findings · click a card to bring it forward');
+    layoutCards(); updateCardsReadout();
+  });
+  // build cards
+  CARDS.forEach(function (c, i) {
+    var el = document.createElement('div'); el.className = 'card glass'; el.dataset.i = i;
+    el.innerHTML = '<div class="c-top"><div class="c-name">' + c.name + '<small>' + c.sub + '</small></div><span class="sev ' + c.sev + '">' + c.sev + '</span></div><p>' + c.p + '</p><div class="c-idx">' + (i + 1) + ' / ' + CARDS.length + '</div>';
+    el.addEventListener('click', function () { cardIdx = i; layoutCards(); });
+    cardsEl.appendChild(el);
+  });
+  function layoutCards() {
+    var els = cardsEl.children, narrow = window.innerWidth < 720;
+    for (var i = 0; i < els.length; i++) {
+      var d = i - cardIdx, el = els[i];
+      var tx = d * (narrow ? 88 : 62), rot = -d * 32, tz = -Math.abs(d) * 220, op = Math.abs(d) > 2 ? 0 : 1 - Math.abs(d) * 0.35;
+      el.style.transform = 'translate(-50%,-50%) translateX(' + tx + '%) translateZ(' + tz + 'px) rotateY(' + rot + 'deg)';
+      el.style.opacity = op; el.style.zIndex = 10 - Math.abs(d); el.style.pointerEvents = Math.abs(d) > 2 ? 'none' : 'auto';
+      if (d === 0 && !seen[i]) { seen[i] = true; cardsSeen++; el.classList.add('seen'); }
+    }
+    updateCardsReadout();
+  }
+  function updateCardsReadout() {
+    setReadout('Findings reviewed <b>' + cardsSeen + ' / 4</b>');
+    setProg(0.5 + (cardsSeen / 4) * 0.2);
+    $('to-quote').style.display = cardsSeen >= 4 ? '' : 'none';
+    $('prev').disabled = cardIdx === 0; $('next').disabled = cardIdx === CARDS.length - 1;
+  }
+  $('prev').addEventListener('click', function () { if (cardIdx > 0) { cardIdx--; layoutCards(); } });
+  $('next').addEventListener('click', function () { if (cardIdx < CARDS.length - 1) { cardIdx++; layoutCards(); } });
+  $('to-quote').addEventListener('click', function () { state = 'l2-quote'; show(cardsEl, false); show(cardnav, false); show($('quote'), true); setProg(0.72); });
+  $('to-act3').addEventListener('click', function () { goAct3(); });
+
+  function goAct3() {
+    state = 'l3'; hideAll(); setAct(3); doSweep();
+    g1.visible = false; g2.visible = true; g3.visible = true;
+    Object.keys(CL).forEach(function (k) { CL[k].label.hidden = true; }); leadGlow.visible = false;
+    // regroup the same results into three focused columns
+    var per = Math.ceil(N_TOTAL / 3);
+    setTargets(function (k) {
+      var m = Math.min(2, Math.floor(k / per)), idx = k - m * per;
+      var a = (idx / per) * Math.PI * 2 * 5, r = 0.25 + (idx / per) * 1.0;
+      return new THREE.Vector3(METROS[m].x + Math.cos(a) * r, Math.sin(a) * r, (idx % 7) * 0.08 - 0.25);
+    });
+    setColors({ leads: C.cyan, other: C.cyan, engage: C.blue });
+    var sx = window.innerWidth > 720 ? -3.4 : 0; moveCam(sx, 0.3, 14.5, sx, -0.2, 0); tYaw = 0; tPitch = 0.02;
+    setReadout('Same budget · <b>3 metros</b> · one intent each'); setProg(0.85);
+    setHint('Drag to orbit · <kbd>Enter</kbd> complete the audit');
+    show(act3El, true);
+  }
+  $('finish').addEventListener('click', function () {
+    state = 'end'; hideAll(); show($('end'), true); setProg(1); doSweep();
+    $('s-faults').textContent = faultsDone + ' / 4';
+    $('s-guess').textContent = guess === null ? 'skipped' : guess + ' vs 27';
+    $('s-cards').textContent = cardsSeen + ' / 4';
+    setReadout('Audit complete'); setHint('<kbd>R</kbd> run it again');
+  });
+  function reset() {
+    faultsDone = 0; guess = null; cardIdx = 0; cardsSeen = 0; seen = CARDS.map(function () { return false; });
+    faultObjs.forEach(function (fo) { fo.done = false; fo.core.material.color.set(C.danger); fo.ring.material.color.set(C.danger); fo.label.el.classList.remove('done'); });
+    Array.prototype.forEach.call(cardsEl.children, function (el) { el.classList.remove('seen'); });
+    $('slider').value = 162; $('g-val').textContent = '162';
+  }
+  $('replay').addEventListener('click', function () { reset(); goBoot(); });
+  $('begin').addEventListener('click', function () { goAct1(true); });
+  $('go1').addEventListener('click', function () { show($('intro1'), false); });
+  $('go2').addEventListener('click', function () { show($('intro2'), false); show(guessEl, true); });
+  Array.prototype.forEach.call(document.querySelectorAll('.acts button'), function (b) {
+    b.addEventListener('click', function () { var a = +b.dataset.act; if (a === 1) goAct1(false); else if (a === 2) goAct2(false); else goAct3(); });
+  });
+  window.addEventListener('keydown', function (e) {
+    if (e.target.tagName === 'INPUT') return;
+    if (e.key === '1') goAct1(false); else if (e.key === '2') goAct2(false); else if (e.key === '3') goAct3();
+    else if (e.key === 'r' || e.key === 'R') { reset(); goBoot(); }
+    else if (e.key === 'ArrowLeft' && state === 'l2-cards') $('prev').click();
+    else if (e.key === 'ArrowRight' && state === 'l2-cards') $('next').click();
+    else if (e.key === 'Enter' || e.key === ' ') {
+      if (state === 'boot') $('begin').click();
+      else if ($('intro1').classList.contains('on')) $('go1').click();
+      else if ($('intro2').classList.contains('on')) $('go2').click();
+      else if (state === 'l1' && faultsDone >= 4) goAct2(true);
+      else if (state === 'l2-guess') $('scan').click();
+      else if (state === 'l2-scan' && resultEl.classList.contains('on')) $('to-cards').click();
+      else if (state === 'l2-cards' && cardsSeen >= 4) $('to-quote').click();
+      else if (state === 'l2-quote') $('to-act3').click();
+      else if (state === 'l3') $('finish').click();
+      else if (state === 'end') $('replay').click();
+    } else if (e.key === 'Escape') { $('p-close').click(); }
+  });
+
+  /* ---------- loop ---------- */
+  function resize() {
+    var w = canvas.clientWidth, h = canvas.clientHeight;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); camTarget.set(camBase.x, camBase.y, camBase.z * camFit());
+    if (state === 'l2-cards') layoutCards();
+  }
+  window.addEventListener('resize', resize); resize();
+  var clock = new THREE.Clock(), time = 0;
+  function frame() {
+    var dt = Math.min(clock.getDelta(), 0.05); time += dt;
+    // camera + orbit
+    camera.position.lerp(camTarget, 0.05); lookAt.lerp(lookTarget, 0.05); camera.lookAt(lookAt);
+    if (!dragging) { idle += dt; if (idle > 2.5 && !reduce) tYaw += dt * 0.03; }
+    yaw += (tYaw - yaw) * 0.08; pitch += (tPitch - pitch) * 0.08;
+    world.rotation.y = yaw; world.rotation.x = pitch;
+    // act 1 animation
+    if (g1.visible) {
+      tickParticles(dt);
+      faultObjs.forEach(function (fo, i) {
+        var s = fo.done ? 1 : 1 + Math.sin(time * 3 + i) * 0.25;
+        fo.ring.scale.set(s, s, 1); fo.ring.material.opacity = fo.done ? 0.35 : 0.5 + Math.sin(time * 3 + i) * 0.3;
+        fo.grp.lookAt(camera.position);
+      });
+      var h = pick(); if (h !== hover) { hover = h; cur.classList.toggle('hot', h !== null); canvas.style.cursor = h !== null ? 'pointer' : 'grab'; }
+    }
+    if (g2.visible) tickOrbs(dt, time);
+    if (g3.visible) g3.children.forEach(function (o) { if (o.isMesh) o.lookAt(camera.position); });
+    updateLabels();
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+  canvas.style.cursor = 'grab';
+  goBoot(); frame();
+})();
+</script>
+</body>
+</html>
