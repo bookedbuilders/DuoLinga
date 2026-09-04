@@ -1,8 +1,4 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>The Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;500;600&family=Familjen+Grotesk:wght@400;500;600&display=swap">
@@ -193,7 +189,14 @@ input[type=number] { width: 84px; }
 .tank .lock { position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font-size: 9px; color: var(--sand); }
 .tank.off { opacity: .45; }
 .tank.past { opacity: .35; pointer-events: none; }
+.tank.sel { outline: 2px solid var(--accent); outline-offset: 1px; }
 .tank-legend { font-size: 11px; color: var(--ink-2); padding: 4px 0 0; }
+.tank-editor { display: flex; align-items: center; gap: 10px; padding: 8px 0 2px; font-size: 13px; }
+.tank-editor .ed-m { font-weight: 600; }
+.tank-editor .ed-k { font-family: "Martian Mono", monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--sand); }
+.tank-editor .ed-rate { display: inline-flex; align-items: center; gap: 4px; font-family: "Martian Mono", monospace; font-size: 12px; color: var(--ink-2); }
+.tank-editor .ed-rate input { width: 78px; color: var(--ink); }
+.tank-editor .ed-un { margin-left: auto; font-size: 11px; }
 
 /* drawer */
 details.adv summary { list-style: none; cursor: pointer; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); padding: 12px 0; display: flex; justify-content: space-between; }
@@ -212,8 +215,7 @@ details.adv[open] summary::after { content: "–"; }
   .fader input::-webkit-slider-thumb, .switch::after, .tank .fill, .key, .answer { transition: none !important; }
 }
 </style>
-</head>
-<body>
+</head><body>
 <div class="board">
   <section class="deck">
     <div class="tabs" id="tabs">
@@ -257,7 +259,8 @@ details.adv[open] summary::after { content: "–"; }
     <div class="grp" id="g-house">
       <div class="grp-lab"><span>The house</span><span class="mono" id="house-total"></span></div>
       <div class="tanks" id="tanks"></div>
-      <div class="tank-legend">Sand is signed and locked. Tap an open month to book it at the open rate, or let the occupancy fader fill it.</div>
+      <div class="tank-editor" id="tank-editor" hidden></div>
+      <div class="tank-legend">Sand is signed. Tap an open month to book it, tap any booked month to set its rate or let it go. The occupancy fader fills whatever is left.</div>
       <div id="house-rows"></div>
     </div>
 
@@ -305,7 +308,8 @@ function baseScenario() {
     // signed leases: cash in the month it lands
     signedRent: { 0: 3000, 1: 3000, 2: 600, 4: 3867, 5: 3867, 6: 3866 },
     signedMonths: [0,1,2,4,5,6],
-    bookedOpen: [],            // open months he assumes he fills at openRate
+    bookedOpen: [],            // open months he has booked
+    bookedRates: {},           // month -> rate for booked open months (falls back to openRate)
     occupancy: 0,              // 0..0.9, applied to open, unbooked months
     openRate: 3000,
     turnover: 300,             // per move-out (end of a booked run)
@@ -396,7 +400,7 @@ function simulate(s) {
 
     let rent = 0, rentKind = 'none';
     if (isSigned(s, m)) { rent = s.signedRent[m] || 0; rentKind = 'signed'; }
-    else if (isBookedOpen(s, m)) { rent = s.openRate * hair; rentKind = 'booked'; }
+    else if (isBookedOpen(s, m)) { rent = ((s.bookedRates && s.bookedRates[m] != null) ? s.bookedRates[m] : s.openRate) * hair; rentKind = 'booked'; }
     else if (s.occupancy > 0) { rent = Math.round(s.openRate * s.occupancy * hair); rentKind = 'occupancy'; }
 
     const income = retainers + rent;
@@ -575,6 +579,8 @@ function load() {
   const a = baseScenario(); const b = baseScenario(); b.name = 'Slot 2'; const c = baseScenario(); c.name = 'Slot 3';
   return { slots: [a, b, c], active: 0, horizon: 12, celebrated: false };
 }
+// migrate older saves
+state.slots.forEach(s => { if (!s.bookedRates) s.bookedRates = {}; });
 function save() { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {} }
 const cur = () => state.slots[state.active];
 
@@ -675,18 +681,46 @@ function buildGrowth() {
 }
 
 // ---- house
+let tankSel = null;
 function buildHouse() {
   const tanks = $('#tanks'); tanks.innerHTML = '';
+  const ed = $('#tank-editor');
+  const rateOf = (s, m) => isSigned(s, m) ? (s.signedRent[m] || 0) : ((s.bookedRates[m] != null) ? s.bookedRates[m] : s.openRate);
   MONTH_LABELS.forEach((l, m) => {
     const t = document.createElement('button'); t.className = 'tank'; t.setAttribute('aria-label', MONTH_FULL[m]);
     t.innerHTML = `<div class="fill"></div><div class="m">${l}</div><div class="lock"></div>`;
-    t.addEventListener('click', () => { const s = cur(); if (isSigned(s, m)) return; const k = s.bookedOpen.indexOf(m); if (k >= 0) s.bookedOpen.splice(k, 1); else s.bookedOpen.push(m); render({ anim: true }); });
+    t.addEventListener('click', () => {
+      const s = cur();
+      if (isSigned(s, m) || isBookedOpen(s, m)) { tankSel = tankSel === m ? null : m; render({}); return; }
+      s.bookedOpen.push(m); if (s.bookedRates[m] == null) s.bookedRates[m] = s.openRate; tankSel = m;
+      if (navigator.vibrate) navigator.vibrate(8);
+      render({ anim: true });
+    });
     tanks.appendChild(t);
     painters.push(() => {
       const s = cur(); const signed = isSigned(s, m), booked = isBookedOpen(s, m);
-      t.classList.toggle('signed', signed); t.classList.toggle('booked', booked); t.classList.toggle('off', m >= s.horizon);
+      t.classList.toggle('signed', signed); t.classList.toggle('booked', booked); t.classList.toggle('off', m >= s.horizon); t.classList.toggle('sel', tankSel === m);
       $('.fill', t).style.setProperty('--h', signed || booked ? '100%' : Math.round(s.occupancy * 100) + '%');
-      $('.lock', t).textContent = signed ? fmt(s.signedRent[m]) : (booked ? fmt(s.openRate) : (s.occupancy > 0 ? Math.round(s.occupancy * 100) + '%' : ''));
+      $('.lock', t).textContent = signed || booked ? fmt(rateOf(s, m)) : (s.occupancy > 0 ? Math.round(s.occupancy * 100) + '%' : '');
+    });
+  });
+  // editor for the selected month
+  painters.push(() => {
+    const s = cur();
+    if (tankSel == null || !(isSigned(s, tankSel) || isBookedOpen(s, tankSel))) { ed.hidden = true; tankSel = null; return; }
+    const m = tankSel, signed = isSigned(s, m);
+    ed.hidden = false;
+    ed.innerHTML = `<span class="ed-m">${MONTH_FULL[m].split(' ')[0]}</span><span class="ed-k">${signed ? 'signed' : 'booked'}</span>
+      <label class="ed-rate">$ <input type="number" step="100" min="0" value="${rateOf(s, m)}" aria-label="Rent for ${MONTH_FULL[m]}"> /mo</label>
+      <button class="key ed-un">${signed ? 'Unsign' : 'Unbook'}</button>`;
+    const inp = $('input', ed);
+    const commit = () => { const v = Math.max(0, +inp.value || 0); if (signed) s.signedRent[m] = v; else s.bookedRates[m] = v; render({ anim: true }); };
+    inp.addEventListener('change', commit);
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); inp.blur(); } });
+    $('.ed-un', ed).addEventListener('click', () => {
+      if (signed) { s.signedMonths = s.signedMonths.filter(x => x !== m); delete s.signedRent[m]; }
+      else { s.bookedOpen = s.bookedOpen.filter(x => x !== m); }
+      tankSel = null; render({ anim: true });
     });
   });
   const host = $('#house-rows');
@@ -953,6 +987,4 @@ function render(opt = {}) {
 buildTabs(); buildClients(); buildGrowth(); buildHouse(); buildOut(); buildCredit(); buildModes(); buildAdvanced(); bindChart();
 render({});
 if (!REDUCED) { const c = $('.curve', svg); if (c) { const L = c.getTotalLength(); c.style.strokeDasharray = L; c.style.strokeDashoffset = L; c.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: 700, easing: 'ease-out' }).onfinish = () => { c.style.strokeDasharray = ''; c.style.strokeDashoffset = ''; }; } }
-</script>
-</body>
-</html>
+</script></body></html>

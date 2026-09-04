@@ -69,3 +69,5 @@ or a field in the Advanced drawer.
 - Structural surplus is retainers minus fixed, business and card payments,
   excluding rent. Rent covers the house; it is not profit.
 - Sweep mode pays anything above floor plus buffer into the cards at month end.
+- Tap an open month to book it. Tap a booked or signed month to set that
+  month's rent or let it go. Booked months without a rate use the open rate.
