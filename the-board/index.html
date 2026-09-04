@@ -1,4 +1,8 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;500;600&family=Familjen+Grotesk:wght@400;500;600&display=swap">
@@ -198,6 +202,26 @@ input[type=number] { width: 84px; }
 .tank-editor .ed-rate input { width: 78px; color: var(--ink); }
 .tank-editor .ed-un { margin-left: auto; font-size: 11px; }
 
+/* bills */
+.bills-sub { font-size: 11px; color: var(--ink-2); margin: -4px 0 10px; }
+.bills-sub b { color: var(--ink); font-weight: 500; }
+.bill-head, .bill { display: grid; grid-template-columns: minmax(90px, 1.4fr) 104px 92px 66px 92px 30px; gap: 6px; align-items: center; }
+.bill-head { font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); padding: 0 0 4px; }
+.bill { padding: 4px 0; }
+.bill .b-name { width: 100%; font-family: "Familjen Grotesk", sans-serif; font-size: 13px; font-weight: 600; }
+.bill .b-amt { display: inline-flex; align-items: center; gap: 3px; font-family: "Martian Mono", monospace; font-size: 12px; color: var(--ink-2); }
+.bill .b-amt input { width: 84px; }
+.bill select { width: 100%; padding: 4px 2px; }
+.bill .b-del { min-width: 30px; padding: 0; height: 28px; color: var(--ink-2); }
+.bill-add { margin: 8px 0 2px; font-size: 12px; }
+@media (max-width: 480px) {
+  .bill-head { display: none; }
+  .bill { grid-template-columns: 1fr 1fr 1fr 30px; padding: 6px 0; border-bottom: 1px solid var(--rule); }
+  .bill .b-name { grid-column: 1 / 3; } .bill .b-amt { grid-column: 3; } .bill .b-del { grid-column: 4; }
+  .bill .b-kind { grid-column: 1; } .bill .b-start { grid-column: 2; } .bill .b-end { grid-column: 3 / 5; }
+  .bill .b-amt input { width: 100%; }
+}
+
 /* drawer */
 details.adv summary { list-style: none; cursor: pointer; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); padding: 12px 0; display: flex; justify-content: space-between; }
 details.adv summary::-webkit-details-marker { display: none; }
@@ -215,7 +239,8 @@ details.adv[open] summary::after { content: "–"; }
   .fader input::-webkit-slider-thumb, .switch::after, .tank .fill, .key, .answer { transition: none !important; }
 }
 </style>
-</head><body>
+</head>
+<body>
 <div class="board">
   <section class="deck">
     <div class="tabs" id="tabs">
@@ -264,6 +289,15 @@ details.adv[open] summary::after { content: "–"; }
       <div id="house-rows"></div>
     </div>
 
+    <div class="grp" id="g-bills">
+      <div class="grp-lab"><span>Bills</span><span class="mono" id="bills-total"></span></div>
+      <div class="bills-sub mono" id="bills-sub"></div>
+      <div class="bill-head mono"><span>name</span><span>per month</span><span>kind</span><span>from</span><span>until</span><span></span></div>
+      <div id="bill-rows"></div>
+      <button class="key bill-add" id="bill-add">+ Add a bill</button>
+      <p class="note">Anything fixed goes here: housing, loans, rent, software, insurance. Set a start month for something that begins later and an end month for something that goes away.</p>
+    </div>
+
     <div class="grp" id="g-out">
       <div class="grp-lab"><span>Money out</span><span class="mono" id="out-total"></span></div>
       <div id="out-rows"></div>
@@ -301,9 +335,16 @@ function baseScenario() {
     horizon: 12,
     startCash: 10000,
     floor: 3000,
-    // house
-    housing: 3000,
-    utilities: 250,
+    // bills: name, amount per month, start month index, end month index (null = ongoing), kind
+    bills: [
+      { id: 'mortgage', name: 'Mortgage',        amount: 1800, start: 0, end: null, kind: 'house' },
+      { id: 'hoa',      name: 'HOA',             amount: 400,  start: 0, end: null, kind: 'house' },
+      { id: 'heloc',    name: 'HELOC',           amount: 500,  start: 0, end: null, kind: 'house' },
+      { id: 'util',     name: 'House utilities', amount: 250,  start: 0, end: null, kind: 'house' },
+      { id: 'loan',     name: 'Bank loan',       amount: 300,  start: 0, end: null, kind: 'life' },
+      { id: 'mexico',   name: 'Hermosillo rent', amount: 1000, start: 1, end: null, kind: 'life' },
+      { id: 'software', name: 'Software',        amount: 1000, start: 0, end: null, kind: 'business' },
+    ],
     hoaArrears: 1200,
     // signed leases: cash in the month it lands
     signedRent: { 0: 3000, 1: 3000, 2: 600, 4: 3867, 5: 3867, 6: 3866 },
@@ -314,8 +355,6 @@ function baseScenario() {
     openRate: 3000,
     turnover: 300,             // per move-out (end of a booked run)
     // life
-    mexicoRent: 1000,
-    mexicoStart: 1,
     personal: 1000,
     // debt
     ccBalance: 30000,
@@ -323,7 +362,6 @@ function baseScenario() {
     ccPayment: 1000,
     sweep: false,
     sweepBuffer: 1000,
-    loan: 300,
     locDraw: 0,
     locMonth: 3,
     locFee: 0.30,
@@ -335,7 +373,6 @@ function baseScenario() {
     cardIntroMonths: 6,
     cardApr: 0.30,
     // business
-    subs: 1000,
     agency: true,
     agencyFee: 500,
     adsPerDay: 50,
@@ -364,6 +401,12 @@ function clientIncome(c, m) {
   return (c.amounts && c.amounts[m] != null) ? c.amounts[m] : c.amount;
 }
 
+function billsAt(s, m, kind) {
+  let t = 0;
+  for (const b of s.bills) if ((!kind || b.kind === kind) && m >= b.start && (b.end == null || m < b.end)) t += (+b.amount || 0);
+  return t;
+}
+function houseCarry(s) { return billsAt(s, 0, 'house'); }
 function isSigned(s, m) { return s.signedMonths.indexOf(m) >= 0; }
 function isBookedOpen(s, m) { return s.bookedOpen.indexOf(m) >= 0; }
 
@@ -409,7 +452,7 @@ function simulate(s) {
     const ads = s.adsPerDay * 30;
     const va = Math.round(s.vaHours * WEEKS_PER_MONTH * s.vaRate);
     const agency = s.agency ? s.agencyFee : 0;
-    const mexico = m >= s.mexicoStart ? s.mexicoRent : 0;
+    const bills = billsAt(s, m);
     const arrears = m === 0 ? s.hoaArrears : 0;
     // turnover: month where a booked/signed run ends and next month is not booked
     const occNow = isSigned(s, m) || isBookedOpen(s, m);
@@ -443,7 +486,7 @@ function simulate(s) {
     }
     const locPay = Math.round(locSched[m]);
 
-    const fixed = s.housing + s.utilities + mexico + s.personal + s.loan + s.subs;
+    const fixed = bills + s.personal;
     const business = ads + va + agency;
     const debt = ccPay + locPay + cardPay;
     const expenses = fixed + business + debt + arrears + turnover;
@@ -467,7 +510,7 @@ function simulate(s) {
       m, label: MONTH_LABELS[m], full: MONTH_FULL[m],
       retainers: Math.round(retainers), rent: Math.round(rent), rentKind, income: Math.round(income),
       fixed, business, debt, arrears, turnover, expenses: Math.round(expenses),
-      ads, va, agency, mexico, ccPay, locPay, locIn, cardPay, swept,
+      ads, va, agency, bills, ccPay, locPay, locIn, cardPay, swept,
       net: Math.round(income - expenses + locIn - swept),
       cash: Math.round(cash), cc: Math.round(cc), card: Math.round(card),
       adClients: adActive, adsStartingLater: adStarts.slice(m + 1).reduce((a,b)=>a+b,0),
@@ -580,7 +623,16 @@ function load() {
   return { slots: [a, b, c], active: 0, horizon: 12, celebrated: false };
 }
 // migrate older saves
-state.slots.forEach(s => { if (!s.bookedRates) s.bookedRates = {}; });
+state.slots.forEach(s => {
+  if (!s.bookedRates) s.bookedRates = {};
+  if (!s.bills) {
+    const seed = baseScenario().bills;
+    const pick = (id, v) => { const b = seed.find(x => x.id === id); if (v != null) b.amount = v; return b; };
+    s.bills = [pick('mortgage'), pick('hoa'), pick('heloc'), pick('util', s.utilities), pick('loan', s.loan), pick('mexico', s.mexicoRent), pick('software', s.subs)];
+    if (s.mexicoStart != null) s.bills.find(b => b.id === 'mexico').start = s.mexicoStart;
+    delete s.housing; delete s.utilities; delete s.loan; delete s.mexicoRent; delete s.mexicoStart; delete s.subs;
+  }
+});
 function save() { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {} }
 const cur = () => state.slots[state.active];
 
@@ -732,21 +784,61 @@ function buildHouse() {
   painters.push(faderRow(host, {
     label: 'Open rate', small: 'per month, unsigned', min: 2000, max: 5000, step: 250, tick: 500,
     get: s => s.openRate, set: (s, v) => { s.openRate = v; },
-    read: (s, v) => [fmtK(v), `carry cost ${fmtK(s.housing + s.utilities)}`],
+    read: (s, v) => [fmtK(v), `carry cost ${fmtK(houseCarry(s))}`],
   }).paint);
+}
+
+// ---- bills
+function buildBills() {
+  const host = $('#bill-rows');
+  const monthOpts = MONTH_LABELS.map((l, k) => ({ v: k, t: l }));
+  const endOpts = [{ v: '', t: 'ongoing' }].concat(MONTH_LABELS.slice(1).map((l, k) => ({ v: k + 1, t: 'until ' + l })));
+  let lastCount = -1;
+  const rebuild = () => {
+    host.innerHTML = '';
+    cur().bills.forEach((b, i) => {
+      const row = document.createElement('div'); row.className = 'bill';
+      row.innerHTML = `<input class="b-name" type="text" value="" aria-label="Bill name" maxlength="28">
+        <label class="b-amt">$ <input type="number" step="50" min="0" aria-label="Amount per month"></label>
+        <select class="b-kind" aria-label="Kind"><option value="house">house</option><option value="life">life</option><option value="business">business</option></select>
+        <select class="b-start" aria-label="Starts"></select><select class="b-end" aria-label="Ends"></select>
+        <button class="key b-del" aria-label="Delete bill">×</button>`;
+      const name = $('.b-name', row), amt = $('.b-amt input', row), kind = $('.b-kind', row), st = $('.b-start', row), en = $('.b-end', row);
+      monthSelect(st, monthOpts); monthSelect(en, endOpts);
+      name.value = b.name; amt.value = b.amount; kind.value = b.kind || 'life'; st.value = b.start; en.value = b.end == null ? '' : b.end;
+      name.addEventListener('change', () => { cur().bills[i].name = name.value.trim() || 'Bill'; render({}); });
+      amt.addEventListener('change', () => { cur().bills[i].amount = Math.max(0, +amt.value || 0); render({ anim: true }); });
+      amt.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); amt.blur(); } });
+      kind.addEventListener('change', () => { cur().bills[i].kind = kind.value; render({}); });
+      st.addEventListener('change', () => { cur().bills[i].start = +st.value; render({ anim: true }); });
+      en.addEventListener('change', () => { cur().bills[i].end = en.value === '' ? null : +en.value; render({ anim: true }); });
+      $('.b-del', row).addEventListener('click', () => { cur().bills.splice(i, 1); lastCount = -1; render({ anim: true }); });
+      host.appendChild(row);
+    });
+  };
+  $('#bill-add').addEventListener('click', () => {
+    cur().bills.push({ id: 'b' + Date.now(), name: 'New bill', amount: 0, start: 0, end: null, kind: 'life' });
+    lastCount = -1; render({});
+    const last = $$('.bill .b-name', host).pop(); if (last) { last.focus(); last.select(); }
+  });
+  painters.push(() => {
+    const s = cur();
+    if (s.bills.length !== lastCount || host._slot !== state.active) { rebuild(); lastCount = s.bills.length; host._slot = state.active; }
+    const H = s.horizon; const m1 = Math.min(1, H - 1);
+    $('#bills-total').textContent = `${fmt(billsAt(s, m1))}/mo from ${MONTH_LABELS[m1]}`;
+    $('#bills-sub').innerHTML = `house <b>${fmt(billsAt(s, m1, 'house'))}</b> · life <b>${fmt(billsAt(s, m1, 'life'))}</b> · business <b>${fmt(billsAt(s, m1, 'business'))}</b>`;
+  });
 }
 
 // ---- money out
 function buildOut() {
   const host = $('#out-rows');
-  painters.push(faderRow(host, { label: 'Hermosillo', small: 'rent from Oct', min: 500, max: 2000, step: 100, tick: 100, get: s => s.mexicoRent, set: (s, v) => { s.mexicoRent = v; }, read: (s, v) => [fmtK(v), ''] }).paint);
   painters.push(faderRow(host, { label: 'Living', small: 'food, travel, life', min: 500, max: 3000, step: 250, tick: 250, get: s => s.personal, set: (s, v) => { s.personal = v; }, read: (s, v) => [fmtK(v), v >= 2000 ? 'splurge mode' : v <= 750 ? 'tight' : ''] }).paint);
   painters.push(faderRow(host, {
     label: 'Cards', small: 'payment on the 30k', min: 0, max: 3000, step: 250, tick: 250,
     get: s => s.ccPayment, set: (s, v) => { s.ccPayment = v; },
     read: (s, v) => { const int = s.ccBalance * s.ccApr / 12; return [fmtK(v), v <= int ? `interest alone is ${fmtK(int)}` : `${fmtK(v - int)} hits principal`]; },
   }).paint);
-  painters.push(faderRow(host, { label: 'Software', small: 'subscriptions', min: 0, max: 2500, step: 100, tick: 250, get: s => s.subs, set: (s, v) => { s.subs = v; }, read: (s, v) => [fmtK(v), ''] }).paint);
 }
 
 // ---- credit
@@ -785,9 +877,9 @@ function buildModes() {
 function buildAdvanced() {
   const grid = $('#adv-grid');
   const fields = [
-    ['startCash', 'Cash today'], ['floor', 'Floor'], ['housing', 'Mortgage + HOA + HELOC'], ['utilities', 'House utilities (you pay)'],
+    ['startCash', 'Cash today'], ['floor', 'Floor'],
     ['costPerClient', 'Ad cost per client'], ['lagMonths', 'Lag to first invoice (mo)'], ['ccBalance', 'Card balance'], ['ccApr', 'Card APR (0.24 = 24%)'],
-    ['sweepBuffer', 'Sweep buffer'], ['loan', 'Bank loan payment'], ['hoaArrears', 'HOA arrears (Sept)'], ['turnover', 'Turnover per move-out'],
+    ['sweepBuffer', 'Sweep buffer'], ['hoaArrears', 'HOA arrears (Sept)'], ['turnover', 'Turnover per move-out'], ['agencyFee', 'Agency fee'], ['vaRate', 'VA hourly rate'],
   ];
   for (const [k, l] of fields) {
     const lab = document.createElement('label'); lab.innerHTML = `${l}<input type="number" step="any" data-k="${k}">`;
@@ -911,7 +1003,7 @@ function bindChart() {
     hoverM = Math.max(0, Math.min(H - 1, m));
     const r = simulate(cur()).rows[hoverM]; const prev = hoverM ? simulate(cur()).rows[hoverM - 1].cash : cur().startCash;
     const d = r.cash - prev;
-    tip.innerHTML = `<b>${r.label}</b> · <b>${fmt(r.cash)}</b> · ${d >= 0 ? 'up' : 'down'} <b>${fmt(Math.abs(d))}</b><br><span class="why">in ${fmt(r.income)} · out ${fmt(r.expenses)}${r.swept ? ` · swept ${fmt(r.swept)} to cards` : ''}<br>${reason(r, cur())}</span>`;
+    tip.innerHTML = `<b>${r.label}</b> · <b>${fmt(r.cash)}</b> · ${d >= 0 ? 'up' : 'down'} <b>${fmt(Math.abs(d))}</b><br><span class="why">in ${fmt(r.income)} · out ${fmt(r.expenses)} (bills ${fmt(r.bills)})${r.swept ? ` · swept ${fmt(r.swept)} to cards` : ''}<br>${reason(r, cur())}</span>`;
     tip.style.display = 'block';
     const tx = Math.min(rect.width - 230, Math.max(0, svg._x(hoverM) + 10)); tip.style.left = tx + 'px'; tip.style.top = '8px';
     render({ drag: true });
@@ -978,13 +1070,15 @@ function render(opt = {}) {
   const r0 = sim.rows[Math.min(2, H - 1)];
   $('#clients-total').textContent = `${fmt(r0.retainers)}/mo by ${r0.label}`;
   $('#house-total').textContent = `${fmt(sim.rows.reduce((a, r) => a + r.rent, 0))} rent over ${H} mo`;
-  $('#out-total').textContent = `${fmt(sim.rows[Math.min(1, H - 1)].expenses)}/mo from Oct`;
+  $('#out-total').textContent = `${fmt(sim.rows[Math.min(1, H - 1)].expenses)}/mo all in from ${MONTH_LABELS[Math.min(1, H - 1)]}`;
   $('#credit-total').textContent = sim.borrowCost ? `costs ${fmt(sim.borrowCost)}` : 'untouched';
   save();
 }
 
 // ---------- boot ----------
-buildTabs(); buildClients(); buildGrowth(); buildHouse(); buildOut(); buildCredit(); buildModes(); buildAdvanced(); bindChart();
+buildTabs(); buildClients(); buildGrowth(); buildHouse(); buildBills(); buildOut(); buildCredit(); buildModes(); buildAdvanced(); bindChart();
 render({});
 if (!REDUCED) { const c = $('.curve', svg); if (c) { const L = c.getTotalLength(); c.style.strokeDasharray = L; c.style.strokeDashoffset = L; c.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: 700, easing: 'ease-out' }).onfinish = () => { c.style.strokeDasharray = ''; c.style.strokeDashoffset = ''; }; } }
-</script></body></html>
+</script>
+</body>
+</html>

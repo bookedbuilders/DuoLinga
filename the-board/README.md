@@ -40,15 +40,17 @@ or a field in the Advanced drawer.
 |---|---|
 | Cash today | 10,000 |
 | Floor | 3,000 (one month of housing) |
-| Housing (mortgage + HOA + HELOC) | 3,000 / mo |
-| House utilities, owner-paid | 250 / mo (verify) |
+| Bills: Mortgage | 1,800 / mo |
+| Bills: HOA | 400 / mo |
+| Bills: HELOC | 500 / mo |
+| Bills: House utilities, owner-paid | 250 / mo (verify) |
+| Bills: Bank loan | 300 / mo |
+| Bills: Hermosillo rent | 1,000 / mo from Oct |
+| Bills: Software | 1,000 / mo |
 | HOA arrears | 1,200 in Sept |
 | Signed rent | 3,000 Sept, 3,000 Oct, 600 Nov, 3,867 Jan to Mar |
-| Hermosillo rent | 1,000 / mo from Oct |
 | Living | 1,000 / mo |
 | Credit cards | 30,000 balance, 24% APR, 1,000 / mo payment |
-| Bank loan | 300 / mo |
-| Software | 1,000 / mo |
 | Agency | 500 / mo |
 | Ads | 50 / day, one client per 2,000 spent, two-month lag |
 | VA | 45 hrs / wk at 5.50 |
@@ -69,5 +71,7 @@ or a field in the Advanced drawer.
 - Structural surplus is retainers minus fixed, business and card payments,
   excluding rent. Rent covers the house; it is not profit.
 - Sweep mode pays anything above floor plus buffer into the cards at month end.
+- Bills are an editable list: name, amount, kind (house, life, business), start
+  month and optional end month. Add or delete rows on the page.
 - Tap an open month to book it. Tap a booked or signed month to set that
   month's rent or let it go. Booked months without a rate use the open rate.
