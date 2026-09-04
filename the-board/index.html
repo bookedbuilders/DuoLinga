@@ -5,323 +5,364 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;500;600&family=Familjen+Grotesk:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
 <style>
 :root {
   color-scheme: dark;
-  --ground: #15120F; --ground-2: #1C1814; --groove: #2A241E; --rule: #2E2822;
-  --ink: #F1EBE1; --ink-2: #8F877B; --ink-3: #5E574D;
-  --accent: #5CE0C6; --accent-dim: rgba(92,224,198,.14); --accent-glow: rgba(92,224,198,.35);
-  --sand: #C9B79C; --sand-dim: rgba(201,183,156,.22);
-  --warn: #F2A33A; --warn-dim: rgba(242,163,58,.22);
-  --crit: #E5484D; --crit-dim: rgba(229,72,77,.24);
-  --ghost: #8683A0;
-  --key: #221D18; --key-edge: #3A332B;
+  --ground: #0B0D10; --card: #15181D; --raised: #1E2229; --rule: #262B33; --ink: #F2F4F6; --ink-2: #8B929C; --ink-3: #4E555F;
+  --accent: #C9F53A; --accent-ink: #0B0D10; --accent-dim: rgba(201,245,58,.14); --accent-glow: rgba(201,245,58,.35);
+  --floor: #6FC7FF; --floor-dim: rgba(111,199,255,.18);
+  --warn: #FFB020; --warn-dim: rgba(255,176,32,.2);
+  --crit: #FF4D4D; --crit-dim: rgba(255,77,77,.22);
+  --ghost: rgba(139,146,156,.45);
 }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
     color-scheme: light;
-    --ground: #E8EAE4; --ground-2: #DFE2DB; --groove: #C9CDC4; --rule: #CBCFC6;
-    --ink: #17191B; --ink-2: #5E635F; --ink-3: #8A8F8A;
-    --accent: #0E8C78; --accent-dim: rgba(14,140,120,.16); --accent-glow: rgba(14,140,120,.3);
-    --sand: #7A6F5C; --sand-dim: rgba(122,111,92,.22);
-    --warn: #B86E0C; --warn-dim: rgba(184,110,12,.2);
-    --crit: #B8262C; --crit-dim: rgba(184,38,44,.2);
-    --ghost: #8E8FA8;
-    --key: #F2F4EE; --key-edge: #BFC3BA;
+    --ground: #F3F4F2; --card: #FFFFFF; --raised: #E9EBE6; --rule: #DDE0DA; --ink: #101214; --ink-2: #5F6670; --ink-3: #A2A8AE;
+    --accent: #7FB300; --accent-ink: #FFFFFF; --accent-dim: rgba(127,179,0,.14); --accent-glow: rgba(127,179,0,.3);
+    --floor: #1A8FD6; --floor-dim: rgba(26,143,214,.16);
+    --warn: #C27A00; --warn-dim: rgba(194,122,0,.18);
+    --crit: #D63131; --crit-dim: rgba(214,49,49,.18);
+    --ghost: rgba(95,102,112,.5);
   }
 }
 :root[data-theme="light"] {
   color-scheme: light;
-  --ground: #E8EAE4; --ground-2: #DFE2DB; --groove: #C9CDC4; --rule: #CBCFC6;
-  --ink: #17191B; --ink-2: #5E635F; --ink-3: #8A8F8A;
-  --accent: #0E8C78; --accent-dim: rgba(14,140,120,.16); --accent-glow: rgba(14,140,120,.3);
-  --sand: #7A6F5C; --sand-dim: rgba(122,111,92,.22);
-  --warn: #B86E0C; --warn-dim: rgba(184,110,12,.2);
-  --crit: #B8262C; --crit-dim: rgba(184,38,44,.2);
-  --ghost: #8E8FA8;
-  --key: #F2F4EE; --key-edge: #BFC3BA;
+  --ground: #F3F4F2; --card: #FFFFFF; --raised: #E9EBE6; --rule: #DDE0DA; --ink: #101214; --ink-2: #5F6670; --ink-3: #A2A8AE;
+  --accent: #7FB300; --accent-ink: #FFFFFF; --accent-dim: rgba(127,179,0,.14); --accent-glow: rgba(127,179,0,.3);
+  --floor: #1A8FD6; --floor-dim: rgba(26,143,214,.16);
+  --warn: #C27A00; --warn-dim: rgba(194,122,0,.18);
+  --crit: #D63131; --crit-dim: rgba(214,49,49,.18);
+  --ghost: rgba(95,102,112,.5);
 }
 * { box-sizing: border-box; }
-html, body { height: 100%; }
-body {
-  margin: 0; background: var(--ground); color: var(--ink);
-  font-family: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif; font-size: 15px; line-height: 1.4;
-  -webkit-font-smoothing: antialiased; overflow-x: hidden;
-}
-.mono, .num { font-family: "Martian Mono", "SF Mono", Menlo, monospace; font-variant-numeric: tabular-nums; }
+body { margin: 0; background: var(--ground); color: var(--ink); font-family: Inter, "Helvetica Neue", Arial, sans-serif; font-size: 14px; line-height: 1.4; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+.num, .disp { font-variant-numeric: tabular-nums; }
+.disp { font-family: "Space Grotesk", Inter, sans-serif; font-weight: 700; letter-spacing: -.03em; }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
-button:focus-visible, input:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+svg.ic { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.micro { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); font-weight: 500; }
+input[type=number], input[type=text], select { font: inherit; font-size: 13px; color: var(--ink); background: var(--raised); border: 1px solid var(--rule); border-radius: 10px; padding: 6px 8px; font-variant-numeric: tabular-nums; }
+input[type=number] { width: 88px; }
 
-/* ---------- frame ---------- */
-.board { display: grid; grid-template-columns: 1fr; min-height: 100vh; }
-.deck { position: sticky; top: 0; z-index: 5; background: var(--ground); padding: 8px 8px 6px; border-bottom: 1px solid var(--rule); }
-.rack { padding: 6px 12px 80px; }
-@media (min-width: 900px) {
-  .board { grid-template-columns: 58fr 42fr; max-width: 1180px; margin: 0 auto; column-gap: 28px; padding: 0 20px; }
-  .deck { position: sticky; top: 0; height: 100vh; padding: 22px 0 0 0; border-bottom: 0; align-self: start; overflow: hidden; }
-  .rack { padding: 22px 0 120px; }
+/* ---------- shell ---------- */
+.shell { display: grid; grid-template-columns: 64px 1fr; min-height: 100vh; }
+.rail { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 0; border-right: 1px solid var(--rule); background: var(--ground); z-index: 20; }
+.rail .logo { width: 36px; height: 36px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; margin-bottom: 14px; }
+.tab { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; color: var(--ink-2); }
+.tab[aria-current="true"] { background: var(--raised); color: var(--accent); }
+.tab:hover { color: var(--ink); }
+.main { max-width: 1280px; width: 100%; margin: 0 auto; padding: 18px 24px 120px; }
+.grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 20px; }
+.w input, .w select { min-width: 0; max-width: 100%; }
+.main { min-width: 0; }
+.w { background: var(--card); border-radius: 22px; padding: 18px 20px; min-width: 0; position: relative; }
+.w-h { display: flex; align-items: center; gap: 8px; color: var(--ink-2); margin-bottom: 10px; }
+.w-h .sp { flex: 1; }
+.w-h .r { font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.c12 { grid-column: span 12; } .c8 { grid-column: span 8; } .c6 { grid-column: span 6; } .c5 { grid-column: span 5; } .c4 { grid-column: span 4; } .c3 { grid-column: span 3; }
+.sec { scroll-margin-top: 110px; }
+@media (max-width: 899px) {
+  .shell { grid-template-columns: 1fr; }
+  .rail { position: fixed; top: auto; bottom: 0; left: 0; right: 0; height: 64px; flex-direction: row; justify-content: space-around; padding: 6px 10px calc(6px + env(safe-area-inset-bottom)); border-right: 0; border-top: 1px solid var(--rule); }
+  .rail .logo { display: none; }
+  .main { padding: 12px 12px 110px; }
+  .grid { gap: 12px; }
+  .c8, .c6, .c5, .c4, .c3 { grid-column: span 12; }
+  .sec { scroll-margin-top: 84px; }
 }
 
-/* ---------- deck: tabs ---------- */
-.tabs { display: flex; align-items: center; gap: 2px; margin-bottom: 8px; }
-.tab { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding: 5px 9px; color: var(--ink-2); border: 1px solid transparent; border-radius: 2px; }
-.tab[aria-selected="true"] { color: var(--ink); border-color: var(--rule); background: var(--ground-2); }
-.tab.ghost1[aria-selected="false"], .tab.ghost2[aria-selected="false"] { color: var(--ghost); }
-.tab-dot { display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:6px; vertical-align:middle; background: var(--accent); }
-.tab.ghost1 .tab-dot, .tab.ghost2 .tab-dot { background: var(--ghost); }
-.tabs .spacer { flex: 1; }
-.horizon { display: flex; border: 1px solid var(--rule); border-radius: 2px; overflow: hidden; }
-.horizon button { font-size: 11px; padding: 4px 8px; color: var(--ink-2); }
-.horizon button[aria-pressed="true"] { color: var(--ground); background: var(--ink-2); }
-.tab-edit { font-size: 11px; color: var(--ink-3); padding: 4px 6px; }
+/* ---------- header ---------- */
+.hdr { display: flex; align-items: center; gap: 12px; padding: 4px 0 10px; }
+.hdr .av { width: 44px; height: 44px; border-radius: 14px; background: var(--raised); display: grid; place-items: center; color: var(--ink-2); }
+.hdr .nm { font-weight: 600; font-size: 15px; }
+.hdr .lv { font-size: 12px; color: var(--ink-2); }
+.hdr .sp { flex: 1; }
+.hdr .bell { position: relative; width: 44px; height: 44px; border-radius: 14px; background: var(--raised); display: grid; place-items: center; color: var(--ink-2); }
+.hdr .bell .n { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; border-radius: 9px; background: var(--crit); color: #fff; font-size: 11px; font-weight: 600; display: grid; place-items: center; padding: 0 4px; }
+.hdr .bell .n[hidden] { display: none; }
+.hz { display: flex; background: var(--raised); border-radius: 12px; padding: 3px; }
+.hz button { font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 9px; color: var(--ink-2); }
+.hz button[aria-pressed="true"] { background: var(--card); color: var(--ink); }
 
-/* ---------- deck: hero ---------- */
-.hero { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 8px; margin-bottom: 4px; }
-.hero .cap { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 2px; }
-.hero .val { font-family: "Martian Mono", "SF Mono", Menlo, monospace; font-variant-numeric: tabular-nums; font-weight: 500; font-size: clamp(22px, 7.5vw, 40px); line-height: 1.05; letter-spacing: -.02em; white-space: nowrap; }
-.hero .sub { font-size: 11px; color: var(--ink-2); margin-top: 3px; }
-.hero .val.warn { color: var(--warn); } .hero .val.crit { color: var(--crit); } .hero .val.good { color: var(--accent); }
-@media (min-width: 900px) { .hero .val { font-size: 56px; } .hero .cap { font-size: 12px; } .hero { gap: 18px; margin-bottom: 10px; } }
+/* ---------- chips ---------- */
+body.strip-on .chips-wrap { top: 52px; }
+.chips-wrap { position: sticky; top: 0; transition: top .15s; z-index: 15; background: var(--ground); padding: 8px 0 12px; margin: 0 -4px; }
+.chips { display: flex; gap: 8px; overflow-x: auto; padding: 0 4px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px 8px 10px; border-radius: 999px; background: var(--card); border: 1px solid var(--rule); font-size: 13px; font-weight: 600; white-space: nowrap; color: var(--ink); transition: transform .08s, background .15s; }
+.chip svg.ic { width: 18px; height: 18px; }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.chip[disabled] { opacity: .4; cursor: not-allowed; }
+.chip:active { transform: scale(.96); }
 
-/* ---------- chart ---------- */
-.chart { position: relative; height: 28vh; min-height: 170px; margin: 0 -2px; touch-action: pan-y; }
-@media (min-width: 900px) { .chart { height: 420px; margin: 0; } }
+/* ---------- hero ---------- */
+.hero { min-height: 244px; display: flex; flex-direction: column; justify-content: flex-end; }
+.hero svg.fillnum { width: 100%; height: auto; display: block; overflow: hidden; }
+.hero .lbl { display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px; }
+.hero .lbl .m { font-weight: 600; }
+.fillnum .outline { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+.fillnum .outline.crit { stroke: var(--crit); }
+.fillnum .fill { fill: var(--accent); }
+.fillnum .fill.warn { fill: var(--warn); }
+.fillnum .hair { stroke: var(--floor); stroke-width: 1; }
+.fillnum .hair.pulse { animation: hp .3s 2; }
+@keyframes hp { 50% { stroke: var(--warn); stroke-width: 3; } }
+.hero-strip { position: fixed; top: 0; left: 0; right: 0; z-index: 30; background: var(--ground); border-bottom: 1px solid var(--rule); padding: 8px 14px; display: none; align-items: center; gap: 12px; }
+.hero-strip.on { display: flex; }
+.hero-strip .v { font-size: 26px; }
+.hero-strip .bar { flex: 1; height: 6px; border-radius: 3px; background: var(--raised); position: relative; overflow: hidden; }
+.hero-strip .bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); width: var(--p, 0%); }
+.hero-strip .bar b { position: absolute; left: 40%; top: 0; bottom: 0; width: 1px; background: var(--floor); }
+
+/* ---------- dial widget ---------- */
+.gauge { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-height: 244px; }
+.gauge svg { width: 100%; max-width: 240px; height: auto; overflow: visible; }
+.gauge .tick { stroke: var(--ink-3); stroke-width: 1; }
+.gauge .tick.major { stroke: var(--ink-2); stroke-width: 2; }
+.gauge .lab { font-size: 11px; fill: var(--ink-2); font-family: Inter, sans-serif; }
+.gauge .needle { stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; transition: transform .22s cubic-bezier(.2,1.4,.4,1); transform-origin: 110px 110px; }
+.gauge .needle.warn { stroke: var(--warn); } .gauge .needle.crit { stroke: var(--crit); }
+.gauge .hub { fill: var(--accent); }
+.gauge .ro { font-size: 30px; line-height: 1; margin-top: -8px; }
+.gauge .ro.never { color: var(--accent); }
+.gauge .sub { font-size: 12px; color: var(--ink-2); margin-top: 4px; }
+
+/* ---------- tiles ---------- */
+.tiles { display: grid; grid-template-rows: 1fr 1fr; gap: 20px; }
+.tile { display: flex; flex-direction: column; justify-content: space-between; min-height: 112px; }
+.tile .v { font-size: 34px; line-height: 1; }
+.tile .v.crit { color: var(--crit); } .tile .v.warn { color: var(--warn); } .tile .v.good { color: var(--accent); }
+.tile .bar { height: 6px; border-radius: 3px; background: var(--raised); overflow: hidden; margin-top: 10px; }
+.tile .bar i { display: block; height: 100%; width: var(--p, 0%); background: var(--accent); transition: width .24s ease-out; }
+.tile .s { font-size: 12px; color: var(--ink-2); margin-top: 6px; }
+@media (max-width: 899px) { .tiles { grid-template-columns: 1fr 1fr; grid-template-rows: auto; gap: 12px; } }
+
+/* ---------- curve ---------- */
+.curve { min-height: 260px; }
+.chart { position: relative; height: 220px; touch-action: pan-y; }
 .chart svg { width: 100%; height: 100%; display: block; overflow: visible; }
-.chart .axis text { font-family: "Martian Mono", monospace; font-size: 10px; fill: var(--ink-2); }
+.chart .axis text { font-size: 11px; fill: var(--ink-2); font-family: Inter, sans-serif; font-variant-numeric: tabular-nums; }
 .chart .grid line { stroke: var(--rule); stroke-width: 1; }
 .chart .zero { stroke: var(--ink-3); stroke-width: 1; }
-.chart .floor { stroke: var(--sand); stroke-width: 1; stroke-dasharray: 3 4; }
-.chart .floor-lab { font-family: "Martian Mono", monospace; font-size: 10px; fill: var(--sand); }
-.chart .curve { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; filter: drop-shadow(0 0 6px var(--accent-glow)); }
-.chart .ghost { fill: none; stroke: var(--ghost); stroke-width: 1; stroke-dasharray: 4 3; }
-.chart .ghost-lab { font-family: "Martian Mono", monospace; font-size: 9px; letter-spacing: .06em; text-transform: uppercase; fill: var(--ghost); }
+.chart .floor { stroke: var(--floor); stroke-width: 1; }
+.chart .floor-lab { font-size: 11px; fill: var(--floor); font-family: Inter, sans-serif; }
+.chart .line { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.chart .ghost { fill: none; stroke: var(--ghost); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.chart .ruler { stroke: var(--ink-2); stroke-width: 1.5; stroke-dasharray: 2 5; stroke-linecap: round; }
+.chart .dot { fill: #fff; stroke: var(--ground); stroke-width: 2; }
 .chart .lowring { fill: none; stroke-width: 2; }
-.chart .lowstem { stroke-width: 1; }
-.chart .lowlab { font-family: "Martian Mono", monospace; font-size: 10px; fill: var(--ink); }
-.chart .tip-line { stroke: var(--ink-2); stroke-width: 1; }
-.chart .flare { fill: none; stroke: var(--sand); stroke-width: 2; opacity: 0; }
-.chart .throw { fill: none; stroke: var(--accent); stroke-width: 1.2; opacity: .9; }
-.tip { position: absolute; pointer-events: none; background: var(--ground-2); border: 1px solid var(--rule); padding: 6px 8px; font-size: 11px; line-height: 1.45; min-width: 150px; max-width: 220px; z-index: 6; display: none; }
-.tip b { font-family: "Martian Mono", monospace; font-weight: 500; }
-.tip .why { color: var(--ink-2); }
-
-/* ---------- secondary strip ---------- */
-.strip { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 6px 2px 0; font-family: "Martian Mono", monospace; font-size: 11px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
-.strip b { color: var(--ink); font-weight: 500; }
-.strip .good { color: var(--accent); }
-@media (min-width: 900px) { .strip { font-size: 12px; padding-top: 10px; } }
+.pill { position: absolute; transform: translate(-50%, -100%); background: var(--raised); color: var(--ink); border-radius: 12px; padding: 6px 10px; font-size: 12px; white-space: nowrap; pointer-events: none; box-shadow: 0 4px 14px rgba(0,0,0,.3); }
+.pill b { font-weight: 600; }
+.pill .w { color: var(--ink-2); display: block; font-size: 11px; background: none; padding: 0; border-radius: 0; }
+.pill::after { content: ""; position: absolute; left: 50%; bottom: -5px; width: 10px; height: 10px; background: var(--raised); transform: translateX(-50%) rotate(45deg); }
 
 /* ---------- answers ---------- */
-.answers { margin: 10px 0 6px; }
-.answers .lead { font-size: 15px; line-height: 1.45; margin: 0 0 8px; max-width: 60ch; text-wrap: balance; }
-.answers .lead .num { font-weight: 500; }
-.answers .lead.warn .num { color: var(--warn); } .answers .lead.crit .num { color: var(--crit); }
-.answer { display: flex; align-items: baseline; gap: 10px; width: 100%; text-align: left; padding: 9px 0; border-top: 1px solid var(--rule); font-size: 15px; line-height: 1.4; transition: color .2s; }
-.answer:last-child { border-bottom: 1px solid var(--rule); }
-.answer .k { font-family: "Martian Mono", monospace; font-size: 10px; color: var(--ink-3); width: 14px; flex: none; }
-.answer .t { flex: 1; }
-.answer .c { font-family: "Martian Mono", monospace; font-size: 11px; color: var(--ink-2); white-space: nowrap; }
-.answer .c.full { color: var(--accent); }
-.answer:hover .t, .answer.lit .t { color: var(--accent); }
-@media (min-width: 900px) { .answers .lead { font-size: 17px; } .answer { font-size: 16px; } }
+.answers { display: flex; flex-direction: column; min-height: 260px; }
+.answers .lead { margin: 0 0 8px; font-size: 14px; line-height: 1.45; }
+.answers .lead b { font-weight: 600; }
+.answers .lead.warn b { color: var(--warn); } .answers .lead.crit b { color: var(--crit); }
+.answers .list { overflow: auto; flex: 1; }
+.ans { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 10px 0; border-top: 1px solid var(--rule); font-size: 14px; }
+.ans .t { flex: 1; }
+.ans .c { font-size: 12px; color: var(--ink-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ans .c.full { color: var(--accent); font-weight: 600; }
+.ans:hover .t { color: var(--accent); }
 
-/* ---------- rack ---------- */
-.grp { padding: 14px 0 6px; border-top: 1px solid var(--rule); }
-.grp:first-child { border-top: 0; padding-top: 4px; }
-.grp-lab { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 10px; display: flex; justify-content: space-between; }
-.grp-lab .mono { color: var(--ink-3); letter-spacing: 0; text-transform: none; }
-.row { display: grid; grid-template-columns: minmax(84px, 120px) 1fr auto; align-items: center; gap: 10px; padding: 7px 0; }
-.row .lab { font-size: 14px; font-weight: 600; }
-.row .lab small { display: block; font-weight: 400; font-size: 11px; color: var(--ink-2); }
-.row .out { font-family: "Martian Mono", monospace; font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; min-width: 78px; color: var(--ink); white-space: nowrap; }
-.row .out .why { display: block; font-size: 10px; color: var(--ink-2); }
-.row.dragging .out { color: var(--accent); }
+/* ---------- rotary dials ---------- */
+.dials { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.dial { display: flex; flex-direction: column; align-items: center; gap: 4px; touch-action: none; user-select: none; -webkit-user-select: none; }
+.dial svg { width: 96px; height: 96px; cursor: ns-resize; overflow: visible; }
+@media (max-width: 899px) { .dials { grid-template-columns: repeat(2, minmax(0, 1fr)); } .dial svg { width: 120px; height: 120px; cursor: grab; } }
+.dial .knob { fill: var(--raised); stroke: var(--rule); stroke-width: 1; }
+.dial .ring { fill: none; stroke: var(--rule); stroke-width: 4; }
+.dial .prog { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; }
+.dial .tk { stroke: var(--ink-3); stroke-width: 1; }
+.dial .ptr { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
+.dial .ico { color: var(--ink-2); fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.dial .ro { font-size: 22px; line-height: 1; margin-top: 2px; }
+.dial .u { font-size: 11px; color: var(--ink-2); }
+.dial .why { font-size: 11px; color: var(--ink-2); text-align: center; min-height: 14px; }
+.dial.active .ro { color: var(--accent); }
+.dial.bump svg { animation: bump .08s; }
+@keyframes bump { 50% { transform: scale(1.03); } }
 
-/* fader */
-.fader { position: relative; height: 28px; display: flex; align-items: center; }
-.fader input { -webkit-appearance: none; appearance: none; width: 100%; height: 28px; margin: 0; background: transparent; cursor: pointer; }
-.fader input::-webkit-slider-runnable-track { height: 6px; border-radius: 1px; background: linear-gradient(to right, var(--accent) 0, var(--accent) var(--p, 0%), var(--groove) var(--p, 0%), var(--groove) 100%); box-shadow: inset 0 1px 0 rgba(0,0,0,.45), inset 0 -1px 0 rgba(255,255,255,.04); }
-.fader input::-moz-range-track { height: 6px; border-radius: 1px; background: var(--groove); }
-.fader input::-moz-range-progress { height: 6px; background: var(--accent); }
-.fader input::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 18px; margin-top: -6px; border-radius: 2px; background: linear-gradient(var(--key-edge), var(--key)); border: 1px solid var(--key-edge); box-shadow: 0 2px 4px rgba(0,0,0,.5); position: relative; transition: transform .08s; }
-.fader input::-moz-range-thumb { width: 28px; height: 18px; border-radius: 2px; background: var(--key); border: 1px solid var(--key-edge); box-shadow: 0 2px 4px rgba(0,0,0,.5); }
-.fader input:active::-webkit-slider-thumb { transform: scale(1.06); }
-.fader .ticks { position: absolute; left: 14px; right: 14px; bottom: 1px; height: 4px; pointer-events: none; background-image: repeating-linear-gradient(to right, var(--ink-3) 0 1px, transparent 1px var(--tick, 10%)); background-size: calc(100% + 1px) 100%; opacity: .7; }
-.fader .cap-line { position: absolute; width: 1px; height: 10px; background: var(--ink-3); left: calc(14px + (100% - 28px) * var(--f, 0)); top: 9px; pointer-events: none; }
+/* ---------- ring ---------- */
+.ringw { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 244px; }
+.ring { position: relative; width: 160px; height: 160px; }
+.ring svg { width: 100%; height: 100%; overflow: visible; }
+.ring .trk { fill: none; stroke: var(--raised); stroke-width: 10; stroke-linecap: round; }
+.ring .prg { fill: none; stroke: var(--accent); stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset .3s ease-out; }
+.ring .cost { fill: none; stroke: var(--warn); stroke-width: 3; stroke-linecap: round; }
+.ring .c { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.ring .c .v { font-size: 26px; line-height: 1; }
+.ring .c .s { font-size: 11px; color: var(--ink-2); margin-top: 4px; text-align: center; }
+.ring-sub { font-size: 12px; color: var(--ink-2); margin-top: 10px; display: flex; gap: 14px; }
 
-/* keys + stepper */
-.key { font-family: "Martian Mono", monospace; font-size: 13px; min-width: 34px; height: 30px; padding: 0 10px; background: linear-gradient(var(--key-edge), var(--key)); border: 1px solid var(--key-edge); border-radius: 2px; box-shadow: 0 2px 0 rgba(0,0,0,.4); transition: transform .05s, box-shadow .05s; }
-.key:active, .key.down { transform: translateY(1px); box-shadow: inset 0 2px 3px rgba(0,0,0,.5); }
+/* ---------- tanks ---------- */
+.tanks { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 8px; }
+.tank { position: relative; height: 96px; max-width: 56px; width: 100%; margin: 0 auto; border-radius: 999px; background: var(--raised); overflow: hidden; cursor: pointer; border: 1px solid transparent; }
+.tank .f { position: absolute; left: 0; right: 0; bottom: 0; height: var(--h, 0%); background: var(--accent); transition: height .24s ease-out; }
+.tank.occ .f { background: repeating-linear-gradient(0deg, var(--accent) 0 3px, transparent 3px 7px); opacity: .8; }
+.tank.signed .f { background: var(--floor); }
+.tank.sel { border-color: var(--accent); }
+.tank .v { position: absolute; top: 8px; left: 0; right: 0; text-align: center; font-size: 11px; color: var(--ink-2); }
+.tank .lk { position: absolute; bottom: 8px; left: 0; right: 0; display: grid; place-items: center; color: var(--ground); }
+.tank .lk svg.ic { width: 14px; height: 14px; stroke-width: 2.5; }
+.tank.off { opacity: .35; pointer-events: none; }
+.tank-m { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 8px; margin-top: 6px; text-align: center; font-size: 11px; color: var(--ink-2); }
+.tank-ed { display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+.tank-ed .nm { font-weight: 600; min-width: 80px; }
+.key { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 8px 12px; border-radius: 12px; background: var(--raised); border: 1px solid var(--rule); color: var(--ink); }
+.key.sm { padding: 5px 9px; font-size: 12px; }
+.key:active { transform: translateY(1px); }
+.key.acc { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.key.danger { color: var(--crit); }
+
+/* ---------- scrub ruler ---------- */
+.scrub { flex: 1; min-width: 180px; }
+.scrub .top { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
+.scrub .top b { font-size: 16px; color: var(--ink); font-weight: 700; font-family: "Space Grotesk", sans-serif; }
+.scrub .strip { position: relative; height: 34px; border-radius: 10px; background: var(--raised); overflow: hidden; cursor: ew-resize; touch-action: pan-y; user-select: none; }
+.scrub .ticks { position: absolute; inset: 0; background-image: repeating-linear-gradient(to right, var(--ink-3) 0 1px, transparent 1px 10px), repeating-linear-gradient(to right, var(--ink-2) 0 1px, transparent 1px 50px); background-size: 100% 10px, 100% 18px; background-repeat: repeat-x; background-position: var(--o, 0px) bottom, var(--o, 0px) bottom; }
+.scrub .mk { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: var(--accent); transform: translateX(-1px); }
+.scrub.active .strip { outline: 1px solid var(--accent); }
+
+/* ---------- clusters ---------- */
+.clusters { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; align-items: end; height: 170px; }
+.cl { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+.cl .p { font-size: 10px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.cl .p.neg { color: var(--warn); }
+.cl .bars { display: flex; gap: 3px; align-items: flex-end; height: 120px; }
+.cl .b { width: 3px; border-radius: 2px; background: var(--accent); height: var(--h, 0%); transition: height .24s ease-out; }
+.cl .b.out { background: var(--ink-2); }
+.cl .b.neg { background: var(--warn); }
+.cl-m { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; text-align: center; font-size: 10px; color: var(--ink-2); margin-top: 6px; }
+
+/* ---------- rows / lists ---------- */
+.row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--rule); }
+.row:first-of-type { border-top: 0; }
+.row .ic { color: var(--ink-2); }
+.row .nm { font-weight: 600; flex: 1; min-width: 0; }
+.row .nm small { display: block; font-weight: 400; font-size: 11px; color: var(--ink-2); }
+.row.dead .nm { opacity: .4; text-decoration: line-through; }
+.row select { padding: 5px 6px; font-size: 12px; }
+.pt { position: relative; width: 44px; height: 26px; border-radius: 13px; background: var(--raised); border: 1px solid var(--rule); flex: none; transition: background .15s; }
+.pt::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--ink-2); transition: transform .12s, background .12s; }
+.pt[aria-checked="true"] { background: var(--accent-dim); border-color: var(--accent); }
+.pt[aria-checked="true"]::after { transform: translateX(18px); background: var(--accent); }
 .stepper { display: inline-flex; align-items: center; gap: 6px; }
-.stepper .n { font-family: "Martian Mono", monospace; font-size: 18px; font-weight: 500; min-width: 36px; text-align: center; }
-.inline-sel { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2); }
-select, input[type=number], input[type=text] { font: inherit; font-family: "Martian Mono", monospace; font-size: 12px; color: var(--ink); background: var(--ground-2); border: 1px solid var(--rule); border-radius: 2px; padding: 4px 6px; }
-input[type=number] { width: 84px; }
-
-/* toggle switch */
-.switch { position: relative; width: 40px; height: 22px; border-radius: 2px; background: var(--groove); border: 1px solid var(--key-edge); box-shadow: inset 0 1px 2px rgba(0,0,0,.5); flex: none; }
-.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 2px; background: linear-gradient(var(--key-edge), var(--key)); box-shadow: 0 1px 2px rgba(0,0,0,.5); transition: transform .12s; }
-.switch[aria-checked="true"] { background: var(--accent-dim); border-color: var(--accent); }
-.switch[aria-checked="true"]::after { transform: translateX(18px); background: var(--accent); }
-.row.sw { grid-template-columns: 1fr auto auto; }
-.row.sw .lab { font-weight: 500; }
-
-/* client rows */
-.client { grid-template-columns: 1fr auto auto; }
-.client.dead .lab { opacity: .35; text-decoration: line-through; }
-.client .end { font-size: 11px; color: var(--ink-2); }
-
-/* lose key */
-.lose { display: flex; align-items: center; gap: 14px; padding: 8px 0; }
-.lose .btn { position: relative; width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--crit); background: radial-gradient(circle at 50% 40%, var(--key-edge), var(--key)); box-shadow: 0 2px 0 rgba(0,0,0,.4); flex: none; }
-.lose .btn::before { content: ""; position: absolute; inset: -6px; border-radius: 50%; background: conic-gradient(var(--crit) calc(var(--ring, 0) * 1%), transparent 0); -webkit-mask: radial-gradient(circle, transparent 60%, #000 61%); mask: radial-gradient(circle, transparent 60%, #000 61%); }
-.lose .btn:active { transform: translateY(1px); }
-.lose .txt { font-size: 13px; color: var(--ink-2); max-width: 32ch; }
-.lose .txt b { color: var(--ink); font-weight: 600; }
-.undo { font-family: "Martian Mono", monospace; font-size: 12px; color: var(--accent); border: 1px solid var(--accent); padding: 4px 10px; border-radius: 2px; }
-
-/* month tanks */
-.tanks { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; padding: 4px 0 2px; }
-.tank { position: relative; height: 46px; border: 1px solid var(--key-edge); border-radius: 2px; background: var(--ground-2); overflow: hidden; cursor: pointer; }
-.tank .fill { position: absolute; left: 0; right: 0; bottom: 0; height: var(--h, 0%); background: var(--accent-dim); border-top: 1px solid var(--accent); transition: height .25s ease-out; }
-.tank.signed { background: var(--sand-dim); border-color: var(--sand); cursor: default; }
-.tank.signed .fill { height: 100%; background: transparent; border-top: 0; }
-.tank.booked .fill { background: var(--accent-dim); }
-.tank .m { position: absolute; top: 3px; left: 0; right: 0; text-align: center; font-family: "Martian Mono", monospace; font-size: 9px; color: var(--ink-2); }
-.tank.signed .m { color: var(--sand); }
-.tank .lock { position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font-size: 9px; color: var(--sand); }
-.tank.off { opacity: .45; }
-.tank.past { opacity: .35; pointer-events: none; }
-.tank.sel { outline: 2px solid var(--accent); outline-offset: 1px; }
-.tank-legend { font-size: 11px; color: var(--ink-2); padding: 4px 0 0; }
-.tank-editor { display: flex; align-items: center; gap: 10px; padding: 8px 0 2px; font-size: 13px; }
-.tank-editor .ed-m { font-weight: 600; }
-.tank-editor .ed-k { font-family: "Martian Mono", monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--sand); }
-.tank-editor .ed-rate { display: inline-flex; align-items: center; gap: 4px; font-family: "Martian Mono", monospace; font-size: 12px; color: var(--ink-2); }
-.tank-editor .ed-rate input { width: 78px; color: var(--ink); }
-.tank-editor .ed-un { margin-left: auto; font-size: 11px; }
-
-/* bills */
-.bills-sub { font-size: 11px; color: var(--ink-2); margin: -4px 0 10px; }
-.bills-sub b { color: var(--ink); font-weight: 500; }
-.bill-head, .bill { display: grid; grid-template-columns: minmax(90px, 1.4fr) 104px 92px 66px 92px 30px; gap: 6px; align-items: center; }
-.bill-head { font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); padding: 0 0 4px; }
-.bill { padding: 4px 0; }
-.bill .b-name { width: 100%; font-family: "Familjen Grotesk", sans-serif; font-size: 13px; font-weight: 600; }
-.bill .b-amt { display: inline-flex; align-items: center; gap: 3px; font-family: "Martian Mono", monospace; font-size: 12px; color: var(--ink-2); }
-.bill .b-amt input { width: 84px; }
-.bill select { width: 100%; padding: 4px 2px; }
-.bill .b-del { min-width: 30px; padding: 0; height: 28px; color: var(--ink-2); }
-.bill-add { margin: 8px 0 2px; font-size: 12px; }
-@media (max-width: 480px) {
-  .bill-head { display: none; }
-  .bill { grid-template-columns: 1fr 1fr 1fr 30px; padding: 6px 0; border-bottom: 1px solid var(--rule); }
-  .bill .b-name { grid-column: 1 / 3; } .bill .b-amt { grid-column: 3; } .bill .b-del { grid-column: 4; }
-  .bill .b-kind { grid-column: 1; } .bill .b-start { grid-column: 2; } .bill .b-end { grid-column: 3 / 5; }
-  .bill .b-amt input { width: 100%; }
-}
-
-/* drawer */
-details.adv summary { list-style: none; cursor: pointer; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); padding: 12px 0; display: flex; justify-content: space-between; }
-details.adv summary::-webkit-details-marker { display: none; }
-details.adv summary::after { content: "+"; font-family: "Martian Mono", monospace; }
-details.adv[open] summary::after { content: "–"; }
-.adv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; padding-bottom: 12px; }
-.adv-grid label { font-size: 12px; color: var(--ink-2); display: flex; flex-direction: column; gap: 3px; }
+.stepper .k { width: 32px; height: 32px; border-radius: 10px; background: var(--raised); border: 1px solid var(--rule); display: grid; place-items: center; }
+.stepper .n { min-width: 34px; text-align: center; font-size: 18px; }
+.lose { display: flex; align-items: center; gap: 14px; padding: 12px 0 4px; }
+.lose .k { position: relative; width: 64px; height: 64px; border-radius: 18px; background: var(--raised); border: 1px solid var(--rule); display: grid; place-items: center; color: var(--crit); flex: none; }
+.lose .k::before { content: ""; position: absolute; inset: -5px; border-radius: 22px; background: conic-gradient(var(--crit) calc(var(--ring, 0) * 1%), transparent 0); -webkit-mask: radial-gradient(circle, transparent 66%, #000 67%); mask: radial-gradient(circle, transparent 66%, #000 67%); }
+.lose .t { font-size: 13px; color: var(--ink-2); }
+.lose .t b { color: var(--ink); font-weight: 600; }
+.undo { color: var(--accent); font-weight: 600; margin-left: 6px; }
+.va-row { flex-wrap: wrap; }
+.va-row .hrs { width: 64px; }
+.va-row .rate { width: 64px; }
+.va-row .nm { flex: 1 1 90px; }
+.bill { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 96px) minmax(0, 92px) minmax(0, 70px) minmax(0, 92px) 30px; gap: 6px; align-items: center; padding: 4px 0; }
+.bill .nm { width: 100%; font-weight: 600; }
+.bill .amt { width: 100%; }
+.bill select { width: 100%; padding: 6px 4px; }
+.bill .del { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; color: var(--ink-2); }
+.bill-tot { display: flex; gap: 14px; font-size: 12px; color: var(--ink-2); margin-bottom: 8px; }
+.bill-tot b { color: var(--ink); }
+@media (max-width: 480px) { .bill { grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 30px; border-bottom: 1px solid var(--rule); padding: 8px 0; } .bill .nm { grid-column: 1/3; } .bill .amt { grid-column: 3; } .bill .del { grid-column: 4; } .bill .kind { grid-column: 1; } .bill .st { grid-column: 2; } .bill .en { grid-column: 3/5; } }
+.note { font-size: 12px; color: var(--ink-2); margin: 8px 0 0; max-width: 60ch; }
+.adv summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; color: var(--ink-2); padding: 6px 0; }
+.adv summary::-webkit-details-marker { display: none; }
+.adv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px 12px; padding: 8px 0; }
+.adv-grid label { font-size: 11px; color: var(--ink-2); display: flex; flex-direction: column; gap: 3px; }
 .adv-grid input { width: 100%; }
-.adv .reset { font-family: "Martian Mono", monospace; font-size: 11px; color: var(--crit); padding: 6px 0; }
 
-.note { font-size: 12px; color: var(--ink-2); max-width: 52ch; margin: 6px 0 0; }
-.foot { font-size: 11px; color: var(--ink-3); margin-top: 28px; max-width: 60ch; }
-
-@media (prefers-reduced-motion: reduce) {
-  .fader input::-webkit-slider-thumb, .switch::after, .tank .fill, .key, .answer { transition: none !important; }
-}
+/* ---------- slots ---------- */
+.slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.slot { border-radius: 16px; background: var(--raised); padding: 12px 14px; text-align: left; border: 1px solid transparent; display: flex; flex-direction: column; gap: 6px; }
+.slot[aria-current="true"] { border-color: var(--accent); }
+.slot .n { font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.slot .v { font-size: 22px; }
+.slot .v.crit { color: var(--crit); } .slot .v.warn { color: var(--warn); } .slot .v.good { color: var(--accent); }
+.slot .s { font-size: 11px; color: var(--ink-2); }
+.slot .acts { display: flex; gap: 6px; margin-top: 4px; }
+@media (max-width: 899px) { .slots { grid-template-columns: 1fr; } }
+.celebrate { color: var(--accent); font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.foot { font-size: 11px; color: var(--ink-3); margin-top: 24px; max-width: 64ch; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
 </style>
 </head>
 <body>
-<div class="board">
-  <section class="deck">
-    <div class="tabs" id="tabs">
-      <button class="tab" data-slot="0" role="tab" aria-selected="true"><span class="tab-dot"></span><span class="tn">Base</span></button>
-      <button class="tab ghost1" data-slot="1" role="tab" aria-selected="false"><span class="tab-dot"></span><span class="tn">Slot 2</span></button>
-      <button class="tab ghost2" data-slot="2" role="tab" aria-selected="false"><span class="tab-dot"></span><span class="tn">Slot 3</span></button>
-      <button class="tab-edit" id="rename" title="Rename this scenario">rename</button>
-      <span class="spacer"></span>
-      <div class="horizon" role="group" aria-label="Horizon"><button data-h="6" aria-pressed="false">6 mo</button><button data-h="12" aria-pressed="true">12 mo</button></div>
-    </div>
-    <div class="hero">
-      <div><div class="cap">Lowest point</div><div class="val" id="h-low">–</div><div class="sub" id="h-low-sub"></div></div>
-      <div><div class="cap">To floor</div><div class="val" id="h-floor">–</div><div class="sub" id="h-floor-sub"></div></div>
-      <div><div class="cap" id="h-end-cap">Cash in Aug</div><div class="val" id="h-end">–</div><div class="sub" id="h-end-sub"></div></div>
-    </div>
-    <div class="chart" id="chart"><svg aria-label="Projected cash by month"></svg><div class="tip" id="tip"></div></div>
-    <div class="strip" id="strip"></div>
-  </section>
+<div class="hero-strip" id="hero-strip"><span class="disp num v" id="hs-v">–</span><div class="bar"><i id="hs-p"></i><b></b></div><span class="micro" id="hs-m"></span></div>
+<div class="shell">
+  <nav class="rail" aria-label="Sections">
+    <div class="logo" id="logo"></div>
+    <button class="tab" data-sec="s-home" aria-current="true" title="Home" data-ic="home"></button>
+    <button class="tab" data-sec="s-train" title="Train" data-ic="dumbbell"></button>
+    <button class="tab" data-sec="s-house" title="House" data-ic="key"></button>
+    <button class="tab" data-sec="s-load" title="Load" data-ic="kettlebell"></button>
+    <button class="tab" data-sec="s-plans" title="Plans" data-ic="clipboard"></button>
+  </nav>
+  <main class="main">
+    <header class="hdr">
+      <div class="av" data-ic="avatar"></div>
+      <div><div class="nm">The Board</div><div class="lv">Level: <span id="lv"></span></div></div>
+      <span class="sp"></span>
+      <div class="hz" role="group" aria-label="Horizon"><button data-h="6" aria-pressed="false">6</button><button data-h="12" aria-pressed="true">12</button></div>
+      <button class="bell" id="bell" title="Floor breaches" data-ic="bell"><span class="n" id="bell-n" hidden></span></button>
+    </header>
+    <div class="chips-wrap"><div class="chips" id="chips"></div></div>
 
-  <section class="rack">
-    <div class="answers" id="answers"></div>
-
-    <div class="grp" id="g-clients">
-      <div class="grp-lab"><span>Clients</span><span class="mono" id="clients-total"></span></div>
-      <div id="client-rows"></div>
-      <div class="row" style="grid-template-columns:auto 1fr">
-        <div class="stepper"><button class="key" id="add-minus" aria-label="Fewer clients">–</button><span class="n" id="add-n">0</span><button class="key" id="add-plus" aria-label="More clients">+</button></div>
-        <div class="inline-sel">more clients from <select id="add-start"></select> at <input type="number" id="add-amt" step="250" min="0"> /mo</div>
+    <div class="grid" id="s-home">
+      <section class="w c5 hero"><svg class="fillnum" id="fillnum" viewBox="0 0 600 190" aria-label="Lowest cash point"></svg><div class="lbl"><span class="micro">Low point</span><span class="m" id="hero-m"></span></div></section>
+      <section class="w c3 gauge" id="gauge"></section>
+      <div class="c4 tiles">
+        <section class="w tile"><span class="micro" id="t-end-l">Cash in Aug</span><div><div class="disp num v" id="t-end">–</div><div class="bar"><i id="t-end-p"></i></div><div class="s" id="t-end-s"></div></div></section>
+        <section class="w tile"><span class="micro">Gains, monthly, no rent</span><div><div class="disp num v" id="t-gain">–</div><div class="bar"><i id="t-gain-p"></i></div><div class="s" id="t-gain-s"></div></div></section>
       </div>
-      <div class="lose">
-        <button class="btn" id="lose" aria-label="Hold to lose a client"></button>
-        <div class="txt" id="lose-txt"><b>Hold to lose a client.</b> Your biggest one stops paying next month. No notice, like this year.</div>
-      </div>
+      <section class="w c8 curve"><div class="w-h"><span data-ic="compare"></span><span class="sp"></span><span class="r" id="curve-r"></span></div><div class="chart" id="chart"><svg aria-label="Projected cash by month"></svg><div class="pill" id="pill" hidden></div></div></section>
+      <section class="w c4 answers" id="answers"></section>
     </div>
 
-    <div class="grp" id="g-growth">
-      <div class="grp-lab"><span>Growth</span><span class="mono">ads make clients</span></div>
-      <div id="growth-rows"></div>
+    <div class="grid sec" id="s-train" style="margin-top:20px">
+      <section class="w c8"><div class="w-h"><span data-ic="dumbbell"></span><span class="micro">Turn these</span><span class="sp"></span><span class="r" id="dials-r"></span></div><div class="dials" id="dials"></div></section>
+      <section class="w c4 ringw"><div class="ring" id="ring"></div><div class="ring-sub" id="ring-sub"></div></section>
+      <section class="w c6"><div class="w-h"><span data-ic="hardhat"></span><span class="micro">Clients</span><span class="sp"></span><span class="r" id="clients-r"></span></div><div id="client-rows"></div>
+        <div class="row"><span data-ic="personplus" class="ic"></span><div class="stepper"><button class="k" id="add-minus" aria-label="Fewer">−</button><span class="n disp num" id="add-n">0</span><button class="k" id="add-plus" aria-label="More">+</button></div><span class="micro">from</span><select id="add-start"></select><span class="micro">at</span><input type="number" id="add-amt" step="250" min="0"></div>
+        <div class="lose"><button class="k" id="lose" aria-label="Hold to lose a client" data-ic="personminus"></button><div class="t" id="lose-t"><b>Hold to lose a client.</b> Your biggest one stops paying next month.</div></div>
+      </section>
+      <section class="w c6"><div class="w-h"><span data-ic="headset"></span><span class="micro">Assistants</span><span class="sp"></span><span class="r" id="va-r"></span></div><div id="va-rows"></div><button class="key sm" id="va-add" style="margin-top:8px"><span data-ic="plus"></span>Add a VA</button>
+        <div class="w-h" style="margin-top:14px"><span data-ic="megaphone"></span><span class="micro">Ads</span></div><div id="ads-rows"></div>
+      </section>
+      <section class="w c12"><div class="w-h"><span data-ic="filter"></span><span class="micro">In, out, net by month</span><span class="sp"></span><span class="r" id="cl-r"></span></div><div class="clusters" id="clusters"></div><div class="cl-m" id="cl-m"></div></section>
     </div>
 
-    <div class="grp" id="g-house">
-      <div class="grp-lab"><span>The house</span><span class="mono" id="house-total"></span></div>
-      <div class="tanks" id="tanks"></div>
-      <div class="tank-editor" id="tank-editor" hidden></div>
-      <div class="tank-legend">Sand is signed. Tap an open month to book it, tap any booked month to set its rate or let it go. The occupancy fader fills whatever is left.</div>
-      <div id="house-rows"></div>
+    <div class="grid sec" id="s-house" style="margin-top:20px">
+      <section class="w c12"><div class="w-h"><span data-ic="key"></span><span class="micro">The house</span><span class="sp"></span><span class="r" id="house-r"></span></div>
+        <div class="tanks" id="tanks"></div><div class="tank-m" id="tank-m"></div>
+        <div class="tank-ed" id="tank-ed"></div>
+        <div class="tank-ed" id="house-rows"></div>
+      </section>
     </div>
 
-    <div class="grp" id="g-bills">
-      <div class="grp-lab"><span>Bills</span><span class="mono" id="bills-total"></span></div>
-      <div class="bills-sub mono" id="bills-sub"></div>
-      <div class="bill-head mono"><span>name</span><span>per month</span><span>kind</span><span>from</span><span>until</span><span></span></div>
-      <div id="bill-rows"></div>
-      <button class="key bill-add" id="bill-add">+ Add a bill</button>
-      <p class="note">Anything fixed goes here: housing, loans, rent, software, insurance. Set a start month for something that begins later and an end month for something that goes away.</p>
+    <div class="grid sec" id="s-load" style="margin-top:20px">
+      <section class="w c6"><div class="w-h"><span data-ic="kettlebell"></span><span class="micro">Bills</span><span class="sp"></span><span class="r" id="bills-r"></span></div><div class="bill-tot" id="bills-tot"></div><div id="bill-rows"></div><button class="key sm" id="bill-add" style="margin-top:8px"><span data-ic="plus"></span>Add a bill</button></section>
+      <section class="w c6"><div class="w-h"><span data-ic="coin"></span><span class="micro">Credit</span><span class="sp"></span><span class="r" id="credit-r"></span></div><div id="credit-rows"></div>
+        <div class="w-h" style="margin-top:14px"><span data-ic="shield"></span><span class="micro">Modes</span></div><div id="mode-rows"></div>
+        <details class="adv"><summary><span data-ic="filter"></span><span class="micro">Fine tuning</span></summary><div class="adv-grid" id="adv-grid"></div><button class="key sm danger" id="reset">Reset this plan to the seed</button></details>
+      </section>
     </div>
 
-    <div class="grp" id="g-out">
-      <div class="grp-lab"><span>Money out</span><span class="mono" id="out-total"></span></div>
-      <div id="out-rows"></div>
+    <div class="grid sec" id="s-plans" style="margin-top:20px">
+      <section class="w c12"><div class="w-h"><span data-ic="clipboard"></span><span class="micro">Plans</span></div><div class="slots" id="slots"></div>
+        <p class="foot">Cash lands in the month it is collected. Deposits are not counted. Taxes are not modeled this year. Ads turn into clients at the cost per client with the lag you set, which is the most optimistic thing on this page, so try Conservative before you believe August.</p>
+      </section>
     </div>
-
-    <div class="grp" id="g-credit">
-      <div class="grp-lab"><span>Credit</span><span class="mono" id="credit-total"></span></div>
-      <div id="credit-rows"></div>
-      <p class="note">The credit line costs 30 cents on the dollar over six months, paid weekly. It is the most expensive money on this page and it shows up as a fee, not a rate.</p>
-    </div>
-
-    <div class="grp" id="g-modes">
-      <div class="grp-lab"><span>Modes</span></div>
-      <div id="mode-rows"></div>
-    </div>
-
-    <details class="adv">
-      <summary>Advanced</summary>
-      <div class="adv-grid" id="adv-grid"></div>
-      <button class="reset" id="reset">Reset this slot to the seed numbers</button>
-    </details>
-
-    <p class="foot">Cash lands in the month it is collected. Deposits are not counted. Taxes are not modeled this year. Ads turn into clients at the cost per client with the lag you set, which is the most optimistic thing on this page, so try Conservative before you believe August.</p>
-  </section>
+  </main>
 </div>
 <script>
 // ---- Cash engine (pure, no DOM) ----
@@ -380,8 +421,7 @@ function baseScenario() {
     costPerClient: 2000,
     lagMonths: 2,
     newRetainer: 2000,
-    vaHours: 45,
-    vaRate: 5.5,
+    vas: [ { id: 'va1', name: 'VA 1', hours: 45, rate: 5.5, start: 0, end: null } ],
     // clients
     clients: [
       { id: 'electrician', name: 'Electrician', on: true, start: 0, end: null, amounts: { 0: 2000 }, amount: 2000 },
@@ -407,6 +447,12 @@ function billsAt(s, m, kind) {
   return t;
 }
 function houseCarry(s) { return billsAt(s, 0, 'house'); }
+function vaCost(s, m) {
+  let t = 0;
+  for (const v of s.vas) if (m >= v.start && (v.end == null || m < v.end)) t += (+v.hours || 0) * WEEKS_PER_MONTH * (+v.rate || 0);
+  return Math.round(t);
+}
+function vaHoursAt(s, m) { let t = 0; for (const v of s.vas) if (m >= v.start && (v.end == null || m < v.end)) t += (+v.hours || 0); return t; }
 function isSigned(s, m) { return s.signedMonths.indexOf(m) >= 0; }
 function isBookedOpen(s, m) { return s.bookedOpen.indexOf(m) >= 0; }
 
@@ -450,7 +496,7 @@ function simulate(s) {
 
     // ---- expenses
     const ads = s.adsPerDay * 30;
-    const va = Math.round(s.vaHours * WEEKS_PER_MONTH * s.vaRate);
+    const va = vaCost(s, m);
     const agency = s.agency ? s.agencyFee : 0;
     const bills = billsAt(s, m);
     const arrears = m === 0 ? s.hoaArrears : 0;
@@ -571,8 +617,9 @@ function candidates(s, sim) {
   for (const m of open) push(`Rent the house in ${MONTH_FULL[m].split(' ')[0]}`, 0.6, t => { t.bookedOpen.push(m); });
   if (open.length >= 2) push(`Rent the house in ${open.slice(0,2).map(m=>MONTH_LABELS[m]).join(' and ')}`, 1.1, t => { t.bookedOpen.push(open[0], open[1]); });
   for (const occ of [0.5, 0.7, 0.9]) if (occ > s.occupancy) push(`Assume ${Math.round(occ*100)}% occupancy on open months`, 0.9 + occ, t => { t.occupancy = occ; });
-  // VA
-  for (const h of [30, 20, 10, 0]) if (h < s.vaHours) push(h === 0 ? 'Pause the VA' : `Cut the VA to ${h} hrs/week`, 0.5 + (s.vaHours - h) / s.vaHours, t => { t.vaHours = h; });
+  // VA: scale every VA active at the gap month
+  const vh = vaHoursAt(s, gm);
+  for (const h of [30, 20, 10, 0]) if (vh > 0 && h < vh) push(h === 0 ? 'Pause the VA' : `Cut VA hours to ${h}/week`, 0.5 + (vh - h) / vh, t => { const f = h / vh; t.vas.forEach(v => { v.hours = Math.round(v.hours * f / 5) * 5; }); });
   // ads
   for (const a of [25, 0]) if (a < s.adsPerDay) push(a === 0 ? 'Pause ads' : `Drop ads to $${a}/day`, 0.9 + (s.adsPerDay - a) / Math.max(1, s.adsPerDay), t => { t.adsPerDay = a; });
   if (s.agency) push('Drop the agency', 1.0, t => { t.agency = false; });
@@ -608,408 +655,276 @@ function headroom(s) {
   return r;
 }
 
-// ---------- app ----------
+// ---------- utils ----------
 const $ = (q, el = document) => el.querySelector(q);
 const $$ = (q, el = document) => Array.from(el.querySelectorAll(q));
 const fmt = n => (n < 0 ? '−' : '') + Math.abs(Math.round(n)).toLocaleString('en-US');
 const fmtK = n => (n < 0 ? '−' : '') + '$' + Math.abs(Math.round(n)).toLocaleString('en-US');
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const STORE = 'board.v1';
+const STORE = 'board.v2';
+const isPhone = () => innerWidth < 900;
 
+// ---------- icons (24px stroke) ----------
+const ICONS = {
+  home: 'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z',
+  dumbbell: 'M2 12h3M19 12h3M5 8v8M19 8v8M8 6v12M16 6v12M8 12h8',
+  key: 'M14 3a5 5 0 1 0 1.5 9.8L21 18v3h-3v-2h-2v-2h-2l-1.5-1.5A5 5 0 0 0 14 3zM13 9h.01',
+  kettlebell: 'M9 9V6a3 3 0 0 1 6 0v3M5 15a7 7 0 1 1 14 0 7 7 0 0 1-14 0z',
+  clipboard: 'M9 4h6v3H9zM7 6H6a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-1M8 12h8M8 16h5',
+  bell: 'M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0',
+  avatar: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
+  bolt: 'M13 2L4 14h7l-1 8 9-12h-7z',
+  wrench: 'M14 6a4 4 0 0 1 5 5l-9 9-3-3 9-9-2-2zM4 20l3-3',
+  magnifier: 'M10 4a6 6 0 1 0 0 12 6 6 0 0 0 0-12zM14.5 14.5L20 20',
+  megaphone: 'M3 10v4h3l8 5V5l-8 5zM17 9a4 4 0 0 1 0 6',
+  headset: 'M4 14v-2a8 8 0 0 1 16 0v2M4 14h3v5H5a1 1 0 0 1-1-1zM20 14h-3v5h2a1 1 0 0 0 1-1zM12 21h5',
+  fork: 'M6 3v7a2 2 0 0 0 2 2v9M8 3v6M10 3v6M17 3c-2 0-3 3-3 6v3h3v9',
+  carddown: 'M3 6h18v9H3zM3 10h18M12 17v4M9.5 19.5L12 22l2.5-2.5',
+  cardtap: 'M3 7h14v10H3zM3 11h14M20 8a4 4 0 0 1 0 8M22 5a8 8 0 0 1 0 14',
+  coin: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v6M12 16h.01',
+  broom: 'M14 3l7 7M11 6l7 7-6 3-4 5H3l3-6 3-3z',
+  shield: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z',
+  lock: 'M6 11h12v9H6zM8 11V7a4 4 0 0 1 8 0v4',
+  personminus: 'M10 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21a8 8 0 0 1 14-3M16 18h6',
+  personplus: 'M10 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21a8 8 0 0 1 14-3M19 15v6M16 18h6',
+  hardhat: 'M4 17h16v2H4zM5 17a7 7 0 0 1 14 0M10 10V6h4v4',
+  infinity: 'M8 9c-3 0-4 2-4 3s1 3 4 3 5-6 8-6 4 2 4 3-1 3-4 3-5-6-8-6z',
+  sparkle: 'M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z',
+  check: 'M5 12l4 4 10-10',
+  plus: 'M12 5v14M5 12h14',
+  x: 'M6 6l12 12M18 6L6 18',
+  filter: 'M4 6h16M7 12h10M10 18h4',
+  compare: 'M3 17c3 0 4-8 8-8s5 8 10 8M3 20c3 0 4-5 8-5s5 5 10 5',
+  double: 'M4 12l6-6v12zM12 12l6-6v12',
+  pause: 'M8 5v14M16 5v14',
+  storm: 'M6 16a4 4 0 0 1 0-8 6 6 0 0 1 11-1 4 4 0 0 1 1 8zM13 14l-2 5h3l-2 5',
+};
+const ic = (name, cls = 'ic') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[name]}"/></svg>`;
+$$('[data-ic]').forEach(el => { el.innerHTML = ic(el.dataset.ic) + el.innerHTML; });
+$('#logo').innerHTML = ic('sparkle');
+
+// ---------- haptics ----------
+const buzz = p => { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} };
+const H = { detent: 8, commit: 20, toggle: [12, 40, 12], chip: 15, loseTick: 6, loseFire: [30, 60, 30], down: [40, 50, 40, 50, 80], up: 20 };
+
+// ---------- state ----------
 let state = load();
 function load() {
-  try { const raw = localStorage.getItem(STORE); if (raw) { const st = JSON.parse(raw); if (st && st.slots && st.slots.length === 3) return st; } } catch (e) {}
-  const a = baseScenario(); const b = baseScenario(); b.name = 'Slot 2'; const c = baseScenario(); c.name = 'Slot 3';
+  try { const raw = localStorage.getItem(STORE) || localStorage.getItem('board.v1'); if (raw) { const st = JSON.parse(raw); if (st && st.slots && st.slots.length === 3) return st; } } catch (e) {}
+  const a = baseScenario(); const b = baseScenario(); b.name = 'Plan B'; const c = baseScenario(); c.name = 'Plan C';
   return { slots: [a, b, c], active: 0, horizon: 12, celebrated: false };
 }
-// migrate older saves
-state.slots.forEach(s => {
+function migrate(s) {
   if (!s.bookedRates) s.bookedRates = {};
   if (!s.bills) {
-    const seed = baseScenario().bills;
-    const pick = (id, v) => { const b = seed.find(x => x.id === id); if (v != null) b.amount = v; return b; };
+    const seed = baseScenario().bills; const pick = (id, v) => { const b = seed.find(x => x.id === id); if (v != null) b.amount = v; return b; };
     s.bills = [pick('mortgage'), pick('hoa'), pick('heloc'), pick('util', s.utilities), pick('loan', s.loan), pick('mexico', s.mexicoRent), pick('software', s.subs)];
     if (s.mexicoStart != null) s.bills.find(b => b.id === 'mexico').start = s.mexicoStart;
     delete s.housing; delete s.utilities; delete s.loan; delete s.mexicoRent; delete s.mexicoStart; delete s.subs;
   }
-});
+  if (!s.vas) { s.vas = [{ id: 'va1', name: 'VA 1', hours: s.vaHours != null ? s.vaHours : 45, rate: s.vaRate != null ? s.vaRate : 5.5, start: 0, end: null }]; delete s.vaHours; delete s.vaRate; }
+  if (!s.chips) s.chips = {};
+  if (s.name === 'Slot 2') s.name = 'Plan B'; if (s.name === 'Slot 3') s.name = 'Plan C';
+}
+state.slots.forEach(migrate);
 function save() { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {} }
 const cur = () => state.slots[state.active];
-
-// ---------- controls ----------
-function faderRow(host, spec) {
-  const row = document.createElement('div'); row.className = 'row';
-  row.innerHTML = `<div class="lab">${spec.label}${spec.small ? `<small>${spec.small}</small>` : ''}</div>
-    <div class="fader"><input type="range" min="${spec.min}" max="${spec.max}" step="${spec.step}" aria-label="${spec.label}"><div class="ticks" style="--tick:${100 / ((spec.max - spec.min) / (spec.tick || spec.step))}%"></div></div>
-    <div class="out"></div>`;
-  const input = $('input', row), out = $('.out', row);
-  const setP = v => { const p = (v - spec.min) / (spec.max - spec.min); input.style.setProperty('--p', (p * 100) + '%'); };
-  let dragging = false, startVal = null;
-  const paint = () => { const v = spec.get(cur()); input.value = v; setP(v); const [a, b] = spec.read(cur(), v); out.innerHTML = `${a}${b ? `<span class="why">${b}</span>` : ''}`; };
-  input.addEventListener('input', () => { spec.set(cur(), +input.value); setP(+input.value); if (navigator.vibrate && dragging) navigator.vibrate(4); render({ drag: true, only: row }); });
-  input.addEventListener('pointerdown', () => { dragging = true; startVal = spec.get(cur()); row.classList.add('dragging'); });
-  const end = () => { if (!dragging) return; dragging = false; row.classList.remove('dragging'); if (spec.onCommit && startVal !== spec.get(cur())) spec.onCommit(startVal, spec.get(cur())); render({ anim: true }); };
-  input.addEventListener('pointerup', end); input.addEventListener('pointercancel', end); input.addEventListener('keyup', () => render({ anim: true }));
-  host.appendChild(row);
-  return { paint };
-}
-function switchRow(host, spec) {
-  const row = document.createElement('div'); row.className = 'row sw';
-  row.innerHTML = `<div class="lab">${spec.label}${spec.small ? `<small>${spec.small}</small>` : ''}</div><div class="out"></div><button class="switch" role="switch" aria-checked="false" aria-label="${spec.label}"></button>`;
-  const sw = $('.switch', row), out = $('.out', row);
-  const paint = () => { const on = !!spec.get(cur()); sw.setAttribute('aria-checked', on); out.innerHTML = spec.read ? spec.read(cur(), on) : ''; };
-  sw.addEventListener('click', () => { spec.set(cur(), !spec.get(cur())); render({ anim: true }); if (navigator.vibrate) navigator.vibrate(8); });
-  host.appendChild(row); return { paint };
-}
-function monthSelect(sel, opts) {
-  sel.innerHTML = '';
-  for (const o of opts) { const op = document.createElement('option'); op.value = o.v; op.textContent = o.t; sel.appendChild(op); }
-}
 const painters = [];
+const monthOpts = (from = 0, prefix = '') => MONTH_LABELS.map((l, k) => ({ v: k, t: prefix + l })).slice(from);
+function fillSelect(sel, opts, val) { sel.innerHTML = ''; for (const o of opts) { const op = document.createElement('option'); op.value = o.v; op.textContent = o.t; sel.appendChild(op); } if (val != null) sel.value = val; }
 
-// ---- clients
-function buildClients() {
-  const host = $('#client-rows'); host.innerHTML = '';
-  cur().clients.forEach((c, i) => {
-    const row = document.createElement('div'); row.className = 'row client';
-    row.innerHTML = `<div class="lab">${c.name}<small class="amt"></small></div><select class="end" aria-label="${c.name} end month"></select><button class="switch" role="switch" aria-label="${c.name} on"></button>`;
-    const sel = $('.end', row), sw = $('.switch', row);
-    monthSelect(sel, [{ v: '', t: 'stays' }].concat(MONTH_LABELS.slice(1).map((l, k) => ({ v: k + 1, t: 'ends ' + l }))));
-    sel.addEventListener('change', () => { cur().clients[i].end = sel.value === '' ? null : +sel.value; render({ anim: true }); });
-    sw.addEventListener('click', () => { cur().clients[i].on = !cur().clients[i].on; render({ anim: true }); });
-    painters.push(() => { const cc = cur().clients[i]; sel.value = cc.end == null ? '' : cc.end; sw.setAttribute('aria-checked', cc.on); row.classList.toggle('dead', !cc.on || (cc.end != null && cc.end <= 1)); $('.amt', row).textContent = (cc.amounts && cc.amounts[0] != null && cc.amounts[0] !== cc.amount ? `${fmt(cc.amounts[0])} now, then ` : '') + `${fmt(cc.amount)}/mo` + (cc.start > 0 ? ` from ${MONTH_LABELS[cc.start]}` : ''); });
-    host.appendChild(row);
-  });
-  const addN = $('#add-n'), addStart = $('#add-start'), addAmt = $('#add-amt');
-  monthSelect(addStart, MONTH_LABELS.slice(1).map((l, k) => ({ v: k + 1, t: l })));
-  const bump = d => { const s = cur(); const before = s.addClients; s.addClients = Math.max(-3, Math.min(8, s.addClients + d)); if (d > 0 && s.addClients > before) throwArc(0, s.addStart); render({ anim: true }); };
-  holdRepeat($('#add-minus'), () => bump(-1)); holdRepeat($('#add-plus'), () => bump(1));
-  addStart.addEventListener('change', () => { cur().addStart = +addStart.value; render({ anim: true }); });
-  addAmt.addEventListener('change', () => { cur().newRetainer = Math.max(0, +addAmt.value || 0); render({ anim: true }); });
-  painters.push(() => { const s = cur(); addN.textContent = (s.addClients > 0 ? '+' : '') + s.addClients; addStart.value = s.addStart; addAmt.value = s.newRetainer; });
-  // lose key
-  const lose = $('#lose'); let t0 = null, raf = null, undoState = null;
-  const setRing = p => lose.style.setProperty('--ring', p * 100);
-  const tick = () => { const p = Math.min(1, (performance.now() - t0) / 400); setRing(p); if (p < 1) raf = requestAnimationFrame(tick); else fire(); };
-  const start = e => { e.preventDefault(); t0 = performance.now(); raf = requestAnimationFrame(tick); };
-  const cancel = () => { if (raf) cancelAnimationFrame(raf); raf = null; t0 = null; setRing(0); };
-  const fire = () => {
-    cancel(); const s = cur();
-    const active = s.clients.map((c, i) => ({ c, i, v: clientIncome(c, 1) })).filter(x => x.v > 0).sort((a, b) => b.v - a.v);
-    if (!active.length) { $('#lose-txt').innerHTML = '<b>Nobody left to lose.</b> That is its own kind of scenario.'; return; }
-    const victim = active[0]; undoState = { i: victim.i, end: victim.c.end, on: victim.c.on };
-    s.clients[victim.i].end = 1;
-    if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
-    $('#lose-txt').innerHTML = `<b>${victim.c.name} is gone from ${MONTH_LABELS[1]}.</b> That is ${fmtK(victim.v)} a month you were counting on. <button class="undo" id="undo">Undo</button>`;
-    $('#undo').addEventListener('click', () => { const u = undoState; if (!u) return; cur().clients[u.i].end = u.end; cur().clients[u.i].on = u.on; undoState = null; $('#lose-txt').innerHTML = '<b>Hold to lose a client.</b> Your biggest one stops paying next month. No notice, like this year.'; render({ anim: true }); });
-    render({ anim: true });
-  };
-  lose.addEventListener('pointerdown', start); lose.addEventListener('pointerup', cancel); lose.addEventListener('pointerleave', cancel); lose.addEventListener('pointercancel', cancel);
-  lose.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fire(); } });
+// ---------- generic controls ----------
+function toggleRow(host, spec) {
+  const row = document.createElement('div'); row.className = 'row';
+  row.innerHTML = `<span class="ic">${ic(spec.icon)}</span><div class="nm">${spec.label}<small></small></div><span class="r num" style="font-size:12px;color:var(--ink-2)"></span><button class="pt" role="switch" aria-checked="false" aria-label="${spec.label}"></button>`;
+  const sw = $('.pt', row), sm = $('small', row), r = $('.r', row);
+  sw.addEventListener('click', () => { spec.set(cur(), !spec.get(cur())); buzz(H.toggle); render({ anim: true }); });
+  painters.push(() => { const on = !!spec.get(cur()); sw.setAttribute('aria-checked', on); sm.textContent = spec.small ? spec.small(cur(), on) : ''; r.textContent = spec.read ? spec.read(cur(), on) : ''; });
+  host.appendChild(row); return row;
 }
 function holdRepeat(btn, fn) {
   let t = null, iv = null;
-  const stop = () => { clearTimeout(t); clearInterval(iv); t = iv = null; btn.classList.remove('down'); };
-  btn.addEventListener('pointerdown', e => { e.preventDefault(); btn.classList.add('down'); fn(); t = setTimeout(() => { iv = setInterval(fn, 160); }, 450); });
-  btn.addEventListener('pointerup', stop); btn.addEventListener('pointerleave', stop); btn.addEventListener('pointercancel', stop);
+  const stop = () => { clearTimeout(t); clearInterval(iv); t = iv = null; };
+  btn.addEventListener('pointerdown', e => { e.preventDefault(); fn(); t = setTimeout(() => { iv = setInterval(fn, 160); }, 450); });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => btn.addEventListener(ev, stop));
   btn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); } });
 }
 
-// ---- growth
-function buildGrowth() {
-  const host = $('#growth-rows');
-  painters.push(faderRow(host, {
-    label: 'Ads', small: 'per day', min: 0, max: 150, step: 5, tick: 10,
-    get: s => s.adsPerDay, set: (s, v) => { s.adsPerDay = v; },
-    read: (s, v) => { const cpc = s.conservative ? s.costPerClient * 2 : s.costPerClient; const per = s.adsProduceClients && v > 0 ? (v * 30) / cpc : 0; return [`$${v}/day`, per > 0 ? `${per.toFixed(2)} clients/mo · lands ${MONTH_LABELS[Math.min(11, Math.ceil(cpc / (v * 30)) - 1 + s.lagMonths)] || 'later'}` : 'no ads, no new clients']; },
-    onCommit: (a, b) => { if (b > a && cur().adsProduceClients) throwArc(0, cur().lagMonths + Math.max(0, Math.ceil((cur().conservative ? cur().costPerClient * 2 : cur().costPerClient) / (b * 30)) - 1)); },
-  }).paint);
-  painters.push(faderRow(host, {
-    label: 'VA', small: 'hours per week', min: 0, max: 50, step: 5, tick: 5,
-    get: s => s.vaHours, set: (s, v) => { s.vaHours = v; },
-    read: (s, v) => [`${v} hrs`, `${fmtK(v * WEEKS_PER_MONTH * s.vaRate)}/mo at $${s.vaRate}`],
-  }).paint);
-  painters.push(switchRow(host, { label: 'Ad agency', small: 'runs the campaigns', get: s => s.agency, set: (s, v) => { s.agency = v; }, read: s => `${fmt(s.agencyFee)}/mo` }).paint);
+// rotary dial
+function dial(host, spec) {
+  const el = document.createElement('div'); el.className = 'dial'; el.tabIndex = 0; el.setAttribute('role', 'slider'); el.setAttribute('aria-label', spec.label);
+  const R = 40, C = 50;
+  const pt = (th, r) => [C + r * Math.sin(th * Math.PI / 180), C - r * Math.cos(th * Math.PI / 180)];
+  const arc = (a, b, r) => { const [x1, y1] = pt(a, r), [x2, y2] = pt(b, r); return `M${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${b - a > 180 ? 1 : 0} 1 ${x2.toFixed(2)},${y2.toFixed(2)}`; };
+  const det = Math.round((spec.max - spec.min) / spec.step); const every = Math.ceil(det / 27);
+  let ticks = '';
+  for (let i = 0; i <= det; i += every) { const th = -135 + 270 * i / det; const [x1, y1] = pt(th, R + 4), [x2, y2] = pt(th, R + (i % (every * 5) === 0 ? 9 : 7)); ticks += `<line class="tk" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/>`; }
+  el.innerHTML = `<svg viewBox="0 0 100 100"><path class="ring" d="${arc(-135, 135, R)}"/><path class="prog" d=""/>${ticks}<circle class="knob" cx="50" cy="50" r="29"/><line class="ptr" x1="50" y1="30" x2="50" y2="22"/><g class="ico" transform="translate(40 40) scale(.8)"><path d="${ICONS[spec.icon]}"/></g></svg><div class="ro disp num"></div><div class="u micro">${spec.unit}</div><div class="why"></div>`;
+  const svg = $('svg', el), prog = $('.prog', el), ptr = $('.ptr', el), ro = $('.ro', el), why = $('.why', el);
+  const paint = () => {
+    const v = spec.get(cur()); const p = (v - spec.min) / (spec.max - spec.min); const th = -135 + 270 * p;
+    prog.setAttribute('d', p > 0.002 ? arc(-135, th, R) : ''); ptr.setAttribute('transform', `rotate(${th} 50 50)`);
+    const [a, b] = spec.read(cur(), v); ro.textContent = a; why.textContent = b || '';
+    el.setAttribute('aria-valuenow', v); el.setAttribute('aria-valuemin', spec.min); el.setAttribute('aria-valuemax', spec.max);
+  };
+  const setVal = (nv, drag) => { nv = clamp(Math.round(nv / spec.step) * spec.step, spec.min, spec.max); if (nv === spec.get(cur())) return false; spec.set(cur(), nv); buzz(H.detent); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); render(drag ? { drag: true } : { anim: true }); return true; };
+  let drag = null;
+  svg.addEventListener('pointerdown', e => { e.preventDefault(); svg.setPointerCapture(e.pointerId); const r = svg.getBoundingClientRect(); drag = { mode: e.pointerType === 'touch' ? 'angle' : 'v', y0: e.clientY, v0: spec.get(cur()), cx: r.left + r.width / 2, cy: r.top + r.height / 2 }; el.classList.add('active'); });
+  svg.addEventListener('pointermove', e => {
+    if (!drag) return;
+    if (drag.mode === 'v') setVal(drag.v0 + Math.round((drag.y0 - e.clientY) / 4) * spec.step, true);
+    else { let th = Math.atan2(e.clientX - drag.cx, drag.cy - e.clientY) * 180 / Math.PI; th = clamp(th, -135, 135); setVal(spec.min + (th + 135) / 270 * (spec.max - spec.min), true); }
+  });
+  const end = () => { if (!drag) return; drag = null; el.classList.remove('active'); buzz(H.commit); render({ anim: true }); };
+  svg.addEventListener('pointerup', end); svg.addEventListener('pointercancel', end);
+  svg.addEventListener('wheel', e => { e.preventDefault(); setVal(spec.get(cur()) + (e.deltaY < 0 ? 1 : -1) * spec.step * (e.shiftKey ? 5 : 1)); }, { passive: false });
+  el.addEventListener('keydown', e => { const v = spec.get(cur()); const k = e.shiftKey ? 10 : 1; if (e.key === 'ArrowUp' || e.key === 'ArrowRight') { e.preventDefault(); setVal(v + spec.step * k); } if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') { e.preventDefault(); setVal(v - spec.step * k); } if (e.key === 'Home') setVal(spec.min); if (e.key === 'End') setVal(spec.max); });
+  host.appendChild(el); painters.push(paint); return el;
 }
 
-// ---- house
-let tankSel = null;
-function buildHouse() {
-  const tanks = $('#tanks'); tanks.innerHTML = '';
-  const ed = $('#tank-editor');
-  const rateOf = (s, m) => isSigned(s, m) ? (s.signedRent[m] || 0) : ((s.bookedRates[m] != null) ? s.bookedRates[m] : s.openRate);
-  MONTH_LABELS.forEach((l, m) => {
-    const t = document.createElement('button'); t.className = 'tank'; t.setAttribute('aria-label', MONTH_FULL[m]);
-    t.innerHTML = `<div class="fill"></div><div class="m">${l}</div><div class="lock"></div>`;
-    t.addEventListener('click', () => {
-      const s = cur();
-      if (isSigned(s, m) || isBookedOpen(s, m)) { tankSel = tankSel === m ? null : m; render({}); return; }
-      s.bookedOpen.push(m); if (s.bookedRates[m] == null) s.bookedRates[m] = s.openRate; tankSel = m;
-      if (navigator.vibrate) navigator.vibrate(8);
+// scrub ruler
+function scrub(host, spec) {
+  const el = document.createElement('div'); el.className = 'scrub'; el.tabIndex = 0; el.setAttribute('role', 'slider'); el.setAttribute('aria-label', spec.label);
+  el.innerHTML = `<div class="top"><span>${spec.label}</span><b class="num"></b></div><div class="strip"><div class="ticks"></div><div class="mk"></div></div>`;
+  const strip = $('.strip', el), ticks = $('.ticks', el), b = $('b', el); const PX = 10;
+  const paint = () => { const v = spec.get(cur()); const W = strip.clientWidth || 200; ticks.style.setProperty('--o', (W / 2 - (v - spec.min) / spec.step * PX) + 'px'); b.textContent = spec.fmt ? spec.fmt(v, cur()) : fmt(v); el.setAttribute('aria-valuenow', v); };
+  const setVal = (nv, drag) => { nv = clamp(Math.round(nv / spec.step) * spec.step, spec.min, spec.max); if (nv === spec.get(cur())) return; spec.set(cur(), nv); buzz(H.detent); render(drag ? { drag: true } : { anim: true }); };
+  let d = null;
+  strip.addEventListener('pointerdown', e => { e.preventDefault(); strip.setPointerCapture(e.pointerId); d = { x0: e.clientX, v0: spec.get(cur()) }; el.classList.add('active'); });
+  strip.addEventListener('pointermove', e => { if (!d) return; setVal(d.v0 - Math.round((e.clientX - d.x0) / PX) * spec.step, true); });
+  const end = () => { if (!d) return; d = null; el.classList.remove('active'); buzz(H.commit); render({ anim: true }); };
+  strip.addEventListener('pointerup', end); strip.addEventListener('pointercancel', end);
+  strip.addEventListener('wheel', e => { e.preventDefault(); const dl = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : -e.deltaY; setVal(spec.get(cur()) + (dl > 0 ? 1 : -1) * spec.step); }, { passive: false });
+  el.addEventListener('keydown', e => { const v = spec.get(cur()); if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); setVal(v + spec.step); } if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); setVal(v - spec.step); } });
+  host.appendChild(el); painters.push(paint); return el;
+}
+
+// ---------- chips ----------
+const CHIPS = [
+  { id: 'lose-elec', icon: 'bolt', label: 'Lose the electrician', keys: s => ({ end: s.clients[0].end }), apply: s => { s.clients[0].end = 1; }, restore: (s, k) => { s.clients[0].end = k.end; } },
+  { id: 'rent-dec', icon: 'key', label: 'Rent December', keys: s => ({ b: s.bookedOpen.slice(), r: { ...s.bookedRates } }), apply: s => { if (!s.bookedOpen.includes(3)) s.bookedOpen.push(3); if (s.bookedRates[3] == null) s.bookedRates[3] = s.openRate; }, restore: (s, k) => { s.bookedOpen = k.b; s.bookedRates = k.r; } },
+  { id: 'double-ads', icon: 'double', label: 'Double ads', keys: s => ({ a: s.adsPerDay }), apply: s => { s.adsPerDay = Math.min(150, s.adsPerDay * 2 || 50); }, restore: (s, k) => { s.adsPerDay = k.a; } },
+  { id: 'pause-va', icon: 'pause', label: 'Pause the VA', keys: s => ({ v: s.vas.map(v => v.hours) }), apply: s => { s.vas.forEach(v => v.hours = 0); }, restore: (s, k) => { s.vas.forEach((v, i) => v.hours = k.v[i] != null ? k.v[i] : v.hours); } },
+  { id: 'sweep', icon: 'broom', label: 'Cards on sweep', keys: s => ({ sw: s.sweep }), apply: s => { s.sweep = true; }, restore: (s, k) => { s.sweep = k.sw; } },
+  { id: 'worst', icon: 'storm', label: 'Worst case', exclusive: true, keys: s => ({ c: s.clients.map(c => c.on), a: s.adsPerDay, o: s.occupancy, cons: s.conservative, add: s.addClients }), apply: s => { s.clients.forEach(c => c.on = false); s.adsPerDay = 0; s.occupancy = 0; s.conservative = true; s.addClients = Math.min(0, s.addClients); }, restore: (s, k) => { s.clients.forEach((c, i) => c.on = k.c[i]); s.adsPerDay = k.a; s.occupancy = k.o; s.conservative = k.cons; s.addClients = k.add; } },
+];
+function buildChips() {
+  const host = $('#chips');
+  for (const c of CHIPS) {
+    const b = document.createElement('button'); b.className = 'chip'; b.setAttribute('aria-pressed', 'false'); b.innerHTML = `${ic(c.icon)}<span>${c.label}</span>`;
+    b.addEventListener('click', () => {
+      const s = cur(); buzz(H.chip);
+      if (s.chips[c.id]) { c.restore(s, s.chips[c.id]); delete s.chips[c.id]; }
+      else { s.chips[c.id] = c.keys(s); c.apply(s); }
       render({ anim: true });
     });
-    tanks.appendChild(t);
-    painters.push(() => {
-      const s = cur(); const signed = isSigned(s, m), booked = isBookedOpen(s, m);
-      t.classList.toggle('signed', signed); t.classList.toggle('booked', booked); t.classList.toggle('off', m >= s.horizon); t.classList.toggle('sel', tankSel === m);
-      $('.fill', t).style.setProperty('--h', signed || booked ? '100%' : Math.round(s.occupancy * 100) + '%');
-      $('.lock', t).textContent = signed || booked ? fmt(rateOf(s, m)) : (s.occupancy > 0 ? Math.round(s.occupancy * 100) + '%' : '');
-    });
-  });
-  // editor for the selected month
-  painters.push(() => {
-    const s = cur();
-    if (tankSel == null || !(isSigned(s, tankSel) || isBookedOpen(s, tankSel))) { ed.hidden = true; tankSel = null; return; }
-    const m = tankSel, signed = isSigned(s, m);
-    ed.hidden = false;
-    ed.innerHTML = `<span class="ed-m">${MONTH_FULL[m].split(' ')[0]}</span><span class="ed-k">${signed ? 'signed' : 'booked'}</span>
-      <label class="ed-rate">$ <input type="number" step="100" min="0" value="${rateOf(s, m)}" aria-label="Rent for ${MONTH_FULL[m]}"> /mo</label>
-      <button class="key ed-un">${signed ? 'Unsign' : 'Unbook'}</button>`;
-    const inp = $('input', ed);
-    const commit = () => { const v = Math.max(0, +inp.value || 0); if (signed) s.signedRent[m] = v; else s.bookedRates[m] = v; render({ anim: true }); };
-    inp.addEventListener('change', commit);
-    inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); inp.blur(); } });
-    $('.ed-un', ed).addEventListener('click', () => {
-      if (signed) { s.signedMonths = s.signedMonths.filter(x => x !== m); delete s.signedRent[m]; }
-      else { s.bookedOpen = s.bookedOpen.filter(x => x !== m); }
-      tankSel = null; render({ anim: true });
-    });
-  });
-  const host = $('#house-rows');
-  painters.push(faderRow(host, {
-    label: 'Occupancy', small: 'open months', min: 0, max: 90, step: 10, tick: 10,
-    get: s => Math.round(s.occupancy * 100), set: (s, v) => { s.occupancy = v / 100; },
-    read: (s, v) => [`${v}%`, v > 0 ? `${fmtK(s.openRate * v / 100)}/mo expected` : 'empty when not signed'],
-  }).paint);
-  painters.push(faderRow(host, {
-    label: 'Open rate', small: 'per month, unsigned', min: 2000, max: 5000, step: 250, tick: 500,
-    get: s => s.openRate, set: (s, v) => { s.openRate = v; },
-    read: (s, v) => [fmtK(v), `carry cost ${fmtK(houseCarry(s))}`],
-  }).paint);
-}
-
-// ---- bills
-function buildBills() {
-  const host = $('#bill-rows');
-  const monthOpts = MONTH_LABELS.map((l, k) => ({ v: k, t: l }));
-  const endOpts = [{ v: '', t: 'ongoing' }].concat(MONTH_LABELS.slice(1).map((l, k) => ({ v: k + 1, t: 'until ' + l })));
-  let lastCount = -1;
-  const rebuild = () => {
-    host.innerHTML = '';
-    cur().bills.forEach((b, i) => {
-      const row = document.createElement('div'); row.className = 'bill';
-      row.innerHTML = `<input class="b-name" type="text" value="" aria-label="Bill name" maxlength="28">
-        <label class="b-amt">$ <input type="number" step="50" min="0" aria-label="Amount per month"></label>
-        <select class="b-kind" aria-label="Kind"><option value="house">house</option><option value="life">life</option><option value="business">business</option></select>
-        <select class="b-start" aria-label="Starts"></select><select class="b-end" aria-label="Ends"></select>
-        <button class="key b-del" aria-label="Delete bill">×</button>`;
-      const name = $('.b-name', row), amt = $('.b-amt input', row), kind = $('.b-kind', row), st = $('.b-start', row), en = $('.b-end', row);
-      monthSelect(st, monthOpts); monthSelect(en, endOpts);
-      name.value = b.name; amt.value = b.amount; kind.value = b.kind || 'life'; st.value = b.start; en.value = b.end == null ? '' : b.end;
-      name.addEventListener('change', () => { cur().bills[i].name = name.value.trim() || 'Bill'; render({}); });
-      amt.addEventListener('change', () => { cur().bills[i].amount = Math.max(0, +amt.value || 0); render({ anim: true }); });
-      amt.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); amt.blur(); } });
-      kind.addEventListener('change', () => { cur().bills[i].kind = kind.value; render({}); });
-      st.addEventListener('change', () => { cur().bills[i].start = +st.value; render({ anim: true }); });
-      en.addEventListener('change', () => { cur().bills[i].end = en.value === '' ? null : +en.value; render({ anim: true }); });
-      $('.b-del', row).addEventListener('click', () => { cur().bills.splice(i, 1); lastCount = -1; render({ anim: true }); });
-      host.appendChild(row);
-    });
-  };
-  $('#bill-add').addEventListener('click', () => {
-    cur().bills.push({ id: 'b' + Date.now(), name: 'New bill', amount: 0, start: 0, end: null, kind: 'life' });
-    lastCount = -1; render({});
-    const last = $$('.bill .b-name', host).pop(); if (last) { last.focus(); last.select(); }
-  });
-  painters.push(() => {
-    const s = cur();
-    if (s.bills.length !== lastCount || host._slot !== state.active) { rebuild(); lastCount = s.bills.length; host._slot = state.active; }
-    const H = s.horizon; const m1 = Math.min(1, H - 1);
-    $('#bills-total').textContent = `${fmt(billsAt(s, m1))}/mo from ${MONTH_LABELS[m1]}`;
-    $('#bills-sub').innerHTML = `house <b>${fmt(billsAt(s, m1, 'house'))}</b> · life <b>${fmt(billsAt(s, m1, 'life'))}</b> · business <b>${fmt(billsAt(s, m1, 'business'))}</b>`;
-  });
-}
-
-// ---- money out
-function buildOut() {
-  const host = $('#out-rows');
-  painters.push(faderRow(host, { label: 'Living', small: 'food, travel, life', min: 500, max: 3000, step: 250, tick: 250, get: s => s.personal, set: (s, v) => { s.personal = v; }, read: (s, v) => [fmtK(v), v >= 2000 ? 'splurge mode' : v <= 750 ? 'tight' : ''] }).paint);
-  painters.push(faderRow(host, {
-    label: 'Cards', small: 'payment on the 30k', min: 0, max: 3000, step: 250, tick: 250,
-    get: s => s.ccPayment, set: (s, v) => { s.ccPayment = v; },
-    read: (s, v) => { const int = s.ccBalance * s.ccApr / 12; return [fmtK(v), v <= int ? `interest alone is ${fmtK(int)}` : `${fmtK(v - int)} hits principal`]; },
-  }).paint);
-}
-
-// ---- credit
-function buildCredit() {
-  const host = $('#credit-rows');
-  painters.push(switchRow(host, { label: 'Capital on Tap', small: '8k business card, pending paperwork', get: s => s.cardApproved, set: (s, v) => { s.cardApproved = v; }, read: (s, on) => on ? 'approved' : 'not yet' }).paint);
-  const cardRow = faderRow(host, {
-    label: 'Card draw', small: '', min: 0, max: 8000, step: 500, tick: 1000,
-    get: s => s.cardDraw, set: (s, v) => { s.cardDraw = v; },
-    read: (s, v) => [fmtK(v), !s.cardApproved ? 'needs approval first' : v > 0 ? `in ${MONTH_LABELS[s.cardMonth]} · 0% for ${s.cardIntroMonths} mo` : ''],
-  });
-  painters.push(cardRow.paint);
-  painters.push(faderRow(host, {
-    label: 'Credit line', small: '6.5k, weekly payback', min: 0, max: 6500, step: 500, tick: 500,
-    get: s => s.locDraw, set: (s, v) => { s.locDraw = v; },
-    read: (s, v) => [fmtK(v), v > 0 ? `in ${MONTH_LABELS[s.locMonth]} · costs ${fmtK(v * s.locFee)} · ${fmtK(v * (1 + s.locFee) / 26)}/wk` : ''],
-  }).paint);
-  const when = document.createElement('div'); when.className = 'row'; when.style.gridTemplateColumns = 'auto 1fr';
-  when.innerHTML = `<div class="lab">Draw in</div><div class="inline-sel">card <select id="card-month"></select> &nbsp; line <select id="loc-month"></select></div>`;
-  host.appendChild(when);
-  monthSelect($('#card-month'), MONTH_LABELS.map((l, k) => ({ v: k, t: l }))); monthSelect($('#loc-month'), MONTH_LABELS.map((l, k) => ({ v: k, t: l })));
-  $('#card-month').addEventListener('change', e => { cur().cardMonth = +e.target.value; render({ anim: true }); });
-  $('#loc-month').addEventListener('change', e => { cur().locMonth = +e.target.value; render({ anim: true }); });
-  painters.push(() => { $('#card-month').value = cur().cardMonth; $('#loc-month').value = cur().locMonth; });
-}
-
-// ---- modes
-function buildModes() {
-  const host = $('#mode-rows');
-  painters.push(switchRow(host, { label: 'Sweep surplus to cards', small: 'anything above floor + buffer pays down the 30k', get: s => s.sweep, set: (s, v) => { s.sweep = v; }, read: s => `buffer ${fmt(s.sweepBuffer)}` }).paint);
-  painters.push(switchRow(host, { label: 'Conservative', small: 'income −20%, clients cost double', get: s => s.conservative, set: (s, v) => { s.conservative = v; }, read: (s, on) => on ? 'on' : 'off' }).paint);
-  painters.push(switchRow(host, { label: 'Ads make clients', small: 'turn off to see ads as pure cost', get: s => s.adsProduceClients, set: (s, v) => { s.adsProduceClients = v; }, read: (s, on) => on ? `1 per ${fmtK(s.costPerClient)}` : 'off' }).paint);
-}
-
-// ---- advanced
-function buildAdvanced() {
-  const grid = $('#adv-grid');
-  const fields = [
-    ['startCash', 'Cash today'], ['floor', 'Floor'],
-    ['costPerClient', 'Ad cost per client'], ['lagMonths', 'Lag to first invoice (mo)'], ['ccBalance', 'Card balance'], ['ccApr', 'Card APR (0.24 = 24%)'],
-    ['sweepBuffer', 'Sweep buffer'], ['hoaArrears', 'HOA arrears (Sept)'], ['turnover', 'Turnover per move-out'], ['agencyFee', 'Agency fee'], ['vaRate', 'VA hourly rate'],
-  ];
-  for (const [k, l] of fields) {
-    const lab = document.createElement('label'); lab.innerHTML = `${l}<input type="number" step="any" data-k="${k}">`;
-    const inp = $('input', lab);
-    inp.addEventListener('change', () => { cur()[k] = +inp.value; render({ anim: true }); });
-    painters.push(() => { inp.value = cur()[k]; });
-    grid.appendChild(lab);
+    painters.push(() => { const s = cur(); const on = !!s.chips[c.id]; b.setAttribute('aria-pressed', on); b.innerHTML = `${ic(on ? 'check' : c.icon)}<span>${c.label}</span>`; const worst = !!s.chips.worst; b.disabled = worst && !c.exclusive; });
+    host.appendChild(b);
   }
-  $('#reset').addEventListener('click', () => { const name = cur().name; state.slots[state.active] = baseScenario(); cur().name = name; render({ anim: true }); });
 }
 
-// ---------- tabs ----------
-function buildTabs() {
-  $$('.tab').forEach(t => t.addEventListener('click', () => { state.active = +t.dataset.slot; render({ anim: true }); }));
-  $('#rename').addEventListener('click', () => { const n = prompt('Name this scenario. Something you would say out loud, like "if the plumber bails".', cur().name); if (n != null && n.trim()) { cur().name = n.trim().slice(0, 24); render({}); } });
-  $$('.horizon button').forEach(b => b.addEventListener('click', () => { state.horizon = +b.dataset.h; state.slots.forEach(s => s.horizon = state.horizon); render({ anim: true }); }));
+// ---------- hero fill number ----------
+const fillSvg = $('#fillnum');
+let heroShown = null, heroRaf = null;
+function fillP(low, floor) { if (low <= 0) return 0; if (low <= floor) return 0.4 * low / floor; return 0.4 + 0.6 * clamp((low - floor) / (1.5 * floor), 0, 1); }
+function drawHero(val, low, s, pulse) {
+  const p = fillP(low, s.floor); const txt = fmt(val);
+  const base = 165, hgt = 125; const y = base - p * hgt;
+  const critc = low < 0 ? ' crit' : ''; const warnc = low < s.floor ? ' warn' : '';
+  fillSvg.innerHTML = `<defs><clipPath id="hclip"><rect x="-10" y="${y.toFixed(1)}" width="620" height="${Math.max(0, base - y).toFixed(1)}"/></clipPath></defs>
+    <text class="disp num outline${critc}" x="0" y="${base}" font-size="170">${txt}</text>
+    ${p > 0 ? `<text class="disp num fill${warnc}" x="0" y="${base}" font-size="170" clip-path="url(#hclip)">${txt}</text>` : ''}
+    <line class="hair${pulse ? ' pulse' : ''}" x1="0" x2="600" y1="${(base - 0.4 * hgt).toFixed(1)}" y2="${(base - 0.4 * hgt).toFixed(1)}"/>`;
+  const t = $('.outline', fillSvg); const len = t.getComputedTextLength(); if (len > 600) { const fs = Math.floor(170 * 600 / len); $$('text', fillSvg).forEach(e => e.setAttribute('font-size', fs)); }
+}
+function renderHero(low, s, opt) {
+  if (heroRaf) cancelAnimationFrame(heroRaf);
+  const pulse = !!opt.pulse;
+  if (heroShown == null || opt.drag || REDUCED) { heroShown = low; drawHero(low, low, s, pulse); return; }
+  const from = heroShown, t0 = performance.now(), D = 300;
+  const step = () => { const p = clamp((performance.now() - t0) / D, 0, 1); const e = 1 - Math.pow(1 - p, 3); const v = from + (low - from) * e; drawHero(v, v, s, pulse && p > .5); if (p < 1) heroRaf = requestAnimationFrame(step); else { heroShown = low; heroRaf = null; } };
+  heroRaf = requestAnimationFrame(step);
+}
+
+// ---------- months-to-floor gauge ----------
+function buildGauge() {
+  const el = $('#gauge'); const cx = 110, cy = 110, r = 95;
+  const pt = (th, rr) => [cx + rr * Math.sin(th * Math.PI / 180), cy - rr * Math.cos(th * Math.PI / 180)];
+  let t = '';
+  for (let i = 0; i <= 60; i++) { const th = -90 + 180 * i / 60; const maj = i % 5 === 0; const [x1, y1] = pt(th, r), [x2, y2] = pt(th, r - (maj ? 10 : 5)); t += `<line class="tick${maj ? ' major' : ''}" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/>`; if (i % 15 === 0) { const [lx, ly] = pt(th, r - 22); t += `<text class="lab" x="${lx.toFixed(1)}" y="${(ly + 4).toFixed(1)}" text-anchor="middle">${i / 5}</text>`; } }
+  el.innerHTML = `<div class="micro" style="align-self:flex-start">Months to floor</div><svg viewBox="0 0 220 122">${t}<line class="needle" x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy - 78}" style="transform:rotate(-90deg)"/><circle class="hub" cx="${cx}" cy="${cy}" r="6"/></svg><div class="ro disp num"></div><div class="sub"></div>`;
+  const needle = $('.needle', el), ro = $('.ro', el), sub = $('.sub', el);
+  return (sim, s) => {
+    const H = s.horizon; let v, never = false;
+    if (!sim.firstBelowFloor) { v = 12; never = true; } else v = clamp(sim.firstBelowFloor.m, 0, 12);
+    needle.style.transform = `rotate(${-90 + 180 * v / 12}deg)`;
+    needle.setAttribute('class', 'needle' + (never ? '' : sim.firstNegative ? ' crit' : ' warn'));
+    ro.textContent = never ? 'Never' : v === 0 ? 'Now' : v; ro.className = 'ro disp num' + (never ? ' never' : '');
+    sub.textContent = never ? `above ${fmt(s.floor)} all ${H} months` : `you dip under the floor in ${sim.firstBelowFloor.full.split(' ')[0]}`;
+  };
 }
 
 // ---------- chart ----------
-const chart = $('#chart'), svg = $('svg', chart), tip = $('#tip');
-let prevCash = null, tweenRaf = null, hoverM = null, flaredOnce = false;
-function chartGeom() {
-  const W = chart.clientWidth, Hh = chart.clientHeight;
-  return { W, H: Hh, L: 46, R: 14, T: 14, B: 22 };
-}
+const chart = $('#chart'), csvg = $('svg', chart), pill = $('#pill');
+let prevCash = null, tweenRaf = null, hoverM = null;
+function geom() { const W = chart.clientWidth, Hh = chart.clientHeight; return { W, H: Hh, L: 40, R: 12, T: 22, B: 22 }; }
 function niceStep(range) { const raw = range / 4; const p = Math.pow(10, Math.floor(Math.log10(raw))); const m = raw / p; return (m >= 5 ? 10 : m >= 2 ? 5 : m >= 1 ? 2 : 1) * p; }
 function drawChart(cash, sim, ghosts, s) {
-  const g = chartGeom(); const H = s.horizon;
-  let lo = Math.min(0, ...cash), hi = Math.max(s.floor * 1.2, ...cash);
+  const g = geom(); const H = s.horizon;
+  let lo = Math.min(0, ...cash), hi = Math.max(s.floor * 1.3, ...cash);
   for (const gh of ghosts) { lo = Math.min(lo, ...gh.cash); hi = Math.max(hi, ...gh.cash); }
-  const pad = (hi - lo) * 0.08; lo -= pad; hi += pad;
-  const step = niceStep(hi - lo);
-  const x = m => g.L + (m / (H - 1)) * (g.W - g.L - g.R);
-  const y = v => g.T + (1 - (v - lo) / (hi - lo)) * (g.H - g.T - g.B);
+  const pad = (hi - lo) * 0.08; lo -= pad; hi += pad; const step = niceStep(hi - lo);
+  const x = m => g.L + (m / (H - 1)) * (g.W - g.L - g.R), y = v => g.T + (1 - (v - lo) / (hi - lo)) * (g.H - g.T - g.B);
   const line = arr => arr.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
   const area = (arr, base) => line(arr) + ` L${x(arr.length - 1).toFixed(1)},${y(base).toFixed(1)} L${x(0).toFixed(1)},${y(base).toFixed(1)} Z`;
-  let out = '';
-  // grid
-  out += '<g class="grid">';
+  let out = '<g class="grid">';
   for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) out += `<line x1="${g.L}" x2="${g.W - g.R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/>`;
   out += '</g><g class="axis">';
-  for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) out += `<text x="${g.L - 6}" y="${(y(v) + 3).toFixed(1)}" text-anchor="end">${v === 0 ? '0' : (Math.abs(v) >= 1000 ? (v / 1000).toFixed(v % 1000 ? 1 : 0) + 'k' : v)}</text>`;
-  for (let m = 0; m < H; m++) out += `<text x="${x(m).toFixed(1)}" y="${g.H - 6}" text-anchor="middle">${MONTH_LABELS[m]}</text>`;
+  for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) out += `<text x="${g.L - 6}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end">${v === 0 ? '0' : Math.abs(v) >= 1000 ? (v / 1000).toFixed(v % 1000 ? 1 : 0) + 'k' : v}</text>`;
+  for (let m = 0; m < H; m++) out += `<text x="${x(m).toFixed(1)}" y="${g.H - 4}" text-anchor="middle">${MONTH_LABELS[m]}</text>`;
   out += '</g>';
-  // clip regions
-  const yF = y(s.floor), y0 = y(0), yLo = y(lo), yHi = y(hi);
-  out += `<defs><clipPath id="c-ok"><rect x="0" y="${yHi - 20}" width="${g.W}" height="${Math.max(0, yF - yHi + 20)}"/></clipPath>
-    <clipPath id="c-warn"><rect x="0" y="${yF}" width="${g.W}" height="${Math.max(0, y0 - yF)}"/></clipPath>
-    <clipPath id="c-crit"><rect x="0" y="${y0}" width="${g.W}" height="${Math.max(0, yLo - y0 + 20)}"/></clipPath>
-    <linearGradient id="g-ok" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".18"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>`;
-  // ghosts
-  for (const gh of ghosts) { out += `<path class="ghost" d="${line(gh.cash)}"/><text class="ghost-lab" x="${(x(H - 1) - 2).toFixed(1)}" y="${(y(gh.cash[H - 1]) - 6).toFixed(1)}" text-anchor="end">${gh.name}</text>`; }
-  // fills
-  out += `<path d="${area(cash, lo)}" fill="url(#g-ok)" clip-path="url(#c-ok)"/>`;
-  // floods: the region between the curve and the line it pressed through, only where it is under
+  const yF = y(s.floor), y0 = y(0), yLo = y(lo);
+  out += `<defs><clipPath id="c-warn"><rect x="0" y="${yF}" width="${g.W}" height="${Math.max(0, y0 - yF)}"/></clipPath><clipPath id="c-crit"><rect x="0" y="${y0}" width="${g.W}" height="${Math.max(0, yLo - y0 + 20)}"/></clipPath><linearGradient id="g-ok" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".22"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>`;
+  for (const gh of ghosts) out += `<path class="ghost" d="${line(gh.cash)}"/>`;
+  out += `<path d="${area(cash, lo)}" fill="url(#g-ok)"/>`;
   if (Math.min(...cash) < s.floor) out += `<path d="${area(cash, s.floor)}" fill="var(--warn-dim)" clip-path="url(#c-warn)"/>`;
   if (Math.min(...cash) < 0) out += `<path d="${area(cash, 0)}" fill="var(--crit-dim)" clip-path="url(#c-crit)"/>`;
-  // floor + zero
   if (lo < 0) out += `<line class="zero" x1="${g.L}" x2="${g.W - g.R}" y1="${y0.toFixed(1)}" y2="${y0.toFixed(1)}"/>`;
-  out += `<line class="floor" x1="${g.L}" x2="${g.W - g.R}" y1="${yF.toFixed(1)}" y2="${yF.toFixed(1)}"/><text class="floor-lab" x="${g.W - g.R}" y="${(yF - 4).toFixed(1)}" text-anchor="end">floor ${fmt(s.floor)}</text>`;
-  // curve
-  out += `<path class="curve" d="${line(cash)}"/>`;
-  // low point
+  out += `<line class="floor" x1="${g.L}" x2="${g.W - g.R}" y1="${yF.toFixed(1)}" y2="${yF.toFixed(1)}"/><text class="floor-lab" x="${g.W - g.R}" y="${(yF - 5).toFixed(1)}" text-anchor="end">Floor ${fmt(s.floor)}</text>`;
+  out += `<path class="line" d="${line(cash)}"/>`;
   let li = 0; for (let i = 1; i < cash.length; i++) if (cash[i] < cash[li]) li = i;
-  const lv = cash[li], col = lv < 0 ? 'var(--crit)' : lv < s.floor ? 'var(--warn)' : 'var(--accent)';
-  const lx = x(li), ly = y(lv);
-  // label sits beside the ring, on whichever side has room, on a short horizontal stem
-  const right = li < H * 0.6; const sx = right ? lx + 16 : lx - 16;
-  out += `<circle class="lowring" cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="4" stroke="${col}"/><line class="lowstem" x1="${(lx + (right ? 5 : -5)).toFixed(1)}" x2="${sx.toFixed(1)}" y1="${ly.toFixed(1)}" y2="${ly.toFixed(1)}" stroke="${col}"/><text class="lowlab" x="${(sx + (right ? 3 : -3)).toFixed(1)}" y="${(ly + 3.5).toFixed(1)}" text-anchor="${right ? 'start' : 'end'}">low ${fmt(lv)} · ${MONTH_LABELS[li]}</text>`;
-  // hover
-  if (hoverM != null && hoverM < H) out += `<line class="tip-line" x1="${x(hoverM).toFixed(1)}" x2="${x(hoverM).toFixed(1)}" y1="${g.T}" y2="${g.H - g.B}"/><circle cx="${x(hoverM).toFixed(1)}" cy="${y(cash[hoverM]).toFixed(1)}" r="4" fill="var(--accent)" stroke="var(--ground)" stroke-width="2"/>`;
-  // flare on first structural surplus
-  const fp = sim.rows.find(r => r.structural > 0);
-  if (fp && !flaredOnce && !REDUCED && !state.celebrated) { out += `<circle class="flare" cx="${x(fp.m).toFixed(1)}" cy="${y(cash[fp.m]).toFixed(1)}" r="6"><animate attributeName="r" from="4" to="22" dur=".5s" fill="freeze"/><animate attributeName="opacity" values="0;.9;0" dur=".5s" fill="freeze"/></circle>`; flaredOnce = true; state.celebrated = true; }
-  svg.innerHTML = out + '<g id="throws"></g>';
-  svg._x = x; svg._y = y;
+  const col = cash[li] < 0 ? 'var(--crit)' : cash[li] < s.floor ? 'var(--warn)' : 'var(--accent)';
+  out += `<circle class="lowring" cx="${x(li).toFixed(1)}" cy="${y(cash[li]).toFixed(1)}" r="5" stroke="${col}"/>`;
+  const hm = hoverM != null && hoverM < H ? hoverM : null;
+  if (hm != null) out += `<line class="ruler" x1="${x(hm).toFixed(1)}" x2="${x(hm).toFixed(1)}" y1="${(y(cash[hm]) + 8).toFixed(1)}" y2="${g.H - g.B}"/><circle class="dot" cx="${x(hm).toFixed(1)}" cy="${y(cash[hm]).toFixed(1)}" r="6"/>`;
+  csvg.innerHTML = out; csvg._x = x; csvg._y = y;
+  if (hm != null) { const r = sim.rows[hm]; pill.hidden = false; pill.style.left = x(hm) + 'px'; pill.style.top = (y(cash[hm]) - 12) + 'px'; pill.innerHTML = `<b>${r.full.split(' ')[0]}, ${fmt(r.cash)}</b><span class="w">${reason(r, s)}</span>`; } else pill.hidden = true;
 }
-function animateTo(cash, sim, ghosts, s) {
+function animateChart(cash, sim, ghosts, s) {
   if (tweenRaf) cancelAnimationFrame(tweenRaf);
   if (!prevCash || REDUCED || prevCash.length !== cash.length) { prevCash = cash.slice(); drawChart(cash, sim, ghosts, s); return; }
-  const from = prevCash.slice(), t0 = performance.now(), D = 240, LAG = 12;
-  const step = () => {
-    const t = performance.now() - t0; let done = true;
-    const c = cash.map((v, i) => { const p = Math.max(0, Math.min(1, (t - i * LAG) / D)); if (p < 1) done = false; const e = 1 - Math.pow(1 - p, 3); return from[i] + (v - from[i]) * e; });
-    drawChart(c, sim, ghosts, s);
-    if (!done) tweenRaf = requestAnimationFrame(step); else { prevCash = cash.slice(); tweenRaf = null; }
-  };
+  const from = prevCash.slice(), t0 = performance.now(), D = 200, LAG = 10;
+  const step = () => { const t = performance.now() - t0; let done = true; const c = cash.map((v, i) => { const p = clamp((t - i * LAG) / D, 0, 1); if (p < 1) done = false; const e = 1 - Math.pow(1 - p, 3); return from[i] + (v - from[i]) * e; }); drawChart(c, sim, ghosts, s); if (!done) tweenRaf = requestAnimationFrame(step); else { prevCash = cash.slice(); tweenRaf = null; } };
   tweenRaf = requestAnimationFrame(step);
 }
-function throwArc(fromM, toM) {
-  if (REDUCED || !svg._x || toM <= fromM) return;
-  const s = cur(); if (toM >= s.horizon) return;
-  const r = simulate(s).rows; const x = svg._x, y = svg._y;
-  const x1 = x(fromM), y1 = y(r[fromM].cash), x2 = x(toM), y2 = y(r[toM].cash);
-  const cx = (x1 + x2) / 2, cy = Math.min(y1, y2) - 40;
-  const gEl = $('#throws', svg); if (!gEl) return;
-  const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  p.setAttribute('class', 'throw'); p.setAttribute('d', `M${x1},${y1} Q${cx},${cy} ${x2},${y2}`);
-  gEl.appendChild(p);
-  const len = p.getTotalLength(); p.style.strokeDasharray = len; p.style.strokeDashoffset = len;
-  p.animate([{ strokeDashoffset: len, opacity: .9 }, { strokeDashoffset: 0, opacity: .9, offset: .6 }, { strokeDashoffset: 0, opacity: 0 }], { duration: 900, easing: 'ease-out' }).onfinish = () => p.remove();
-  const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  dot.setAttribute('cx', x2); dot.setAttribute('cy', y2); dot.setAttribute('r', 3); dot.setAttribute('fill', 'var(--accent)'); gEl.appendChild(dot);
-  dot.animate([{ opacity: 0 }, { opacity: 0, offset: .55 }, { opacity: 1, offset: .65 }, { opacity: 0 }], { duration: 1100 }).onfinish = () => dot.remove();
-}
 function reason(r, s) {
-  if (r.locIn) return 'credit line draw lands';
-  if (r.arrears) return 'HOA catch-up paid';
-  if (r.structural > 0) return 'the business paid for the month';
-  if (r.rentKind === 'none' && r.adClients === 0 && r.adsStartingLater > 0) return 'house empty, ads running, clients not here yet';
-  if (r.rentKind === 'none') return 'house empty, carrying it alone';
-  if (r.adClients === 0 && r.adsStartingLater > 0) return 'ads running, clients not here yet';
-  if (r.rentKind === 'signed') return 'rent covers the house';
-  if (r.rentKind === 'occupancy') return 'expected rent at your occupancy guess';
-  return r.net >= 0 ? 'holding' : 'burning the buffer';
+  if (r.locIn) return 'Credit line lands here.';
+  if (r.arrears) return 'HOA catch-up paid.';
+  if (r.structural > 0) return 'This month pays for itself.';
+  if (r.adClients > 0 && r.m >= s.lagMonths && r.adClients > (s._prevAd || 0)) return `${MONTH_LABELS[Math.max(0, r.m - s.lagMonths)]} ads land here.`;
+  if (r.rentKind === 'none' && r.adsStartingLater > 0) return 'House empty. Ads running, clients not here yet.';
+  if (r.rentKind === 'none') return 'House empty. Carrying it alone.';
+  if (r.adsStartingLater > 0 && r.adClients === 0) return 'Ads running, clients not here yet.';
+  if (r.rentKind === 'signed') return 'Rent covers the house.';
+  if (r.rentKind === 'occupancy') return 'Expected rent at your occupancy guess.';
+  return r.net >= 0 ? 'Holding.' : 'Burning the buffer.';
 }
 function bindChart() {
-  const move = e => {
-    const rect = chart.getBoundingClientRect(); const px = e.clientX - rect.left; const g = chartGeom(); const H = cur().horizon;
-    const m = Math.round(((px - g.L) / (g.W - g.L - g.R)) * (H - 1));
-    hoverM = Math.max(0, Math.min(H - 1, m));
-    const r = simulate(cur()).rows[hoverM]; const prev = hoverM ? simulate(cur()).rows[hoverM - 1].cash : cur().startCash;
-    const d = r.cash - prev;
-    tip.innerHTML = `<b>${r.label}</b> · <b>${fmt(r.cash)}</b> · ${d >= 0 ? 'up' : 'down'} <b>${fmt(Math.abs(d))}</b><br><span class="why">in ${fmt(r.income)} · out ${fmt(r.expenses)} (bills ${fmt(r.bills)})${r.swept ? ` · swept ${fmt(r.swept)} to cards` : ''}<br>${reason(r, cur())}</span>`;
-    tip.style.display = 'block';
-    const tx = Math.min(rect.width - 230, Math.max(0, svg._x(hoverM) + 10)); tip.style.left = tx + 'px'; tip.style.top = '8px';
-    render({ drag: true });
-  };
-  chart.addEventListener('pointermove', move); chart.addEventListener('pointerdown', move);
-  chart.addEventListener('pointerleave', () => { hoverM = null; tip.style.display = 'none'; render({ drag: true }); });
+  const move = e => { const rect = chart.getBoundingClientRect(); const g = geom(); const H = cur().horizon; hoverM = clamp(Math.round(((e.clientX - rect.left - g.L) / (g.W - g.L - g.R)) * (H - 1)), 0, H - 1); render({ drag: true }); };
+  chart.addEventListener('pointerdown', e => { chart.setPointerCapture(e.pointerId); move(e); });
+  chart.addEventListener('pointermove', e => { if (e.buttons || e.pointerType === 'mouse') move(e); });
+  chart.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') { hoverM = null; render({ drag: true }); } });
   addEventListener('resize', () => render({}));
 }
 
@@ -1017,68 +932,310 @@ function bindChart() {
 function renderAnswers(s, sim) {
   const host = $('#answers'); let html = '';
   if (sim.gap > 0) {
-    const cls = sim.low.cash < 0 ? 'crit' : 'warn';
-    const months = sim.low.cash < 0 ? 'under zero' : 'under the floor';
-    html += `<p class="lead ${cls}"><span class="num">${sim.low.full.split(' ')[0]}</span> goes ${months} by <span class="num">${fmtK(sim.gap)}</span>. ${sim.low.cash < 0 ? 'That is borrowing to eat.' : 'That is inside one month of housing. Not fatal, but thin.'} Close it with any of these, in order of how little they change your life:</p>`;
-    const cands = candidates(s, sim).slice(0, 4);
-    if (!cands.length) html += '<p class="note">Nothing on the board closes this alone. Pull two levers.</p>';
-    cands.forEach((c, i) => { html += `<button class="answer" data-i="${i}"><span class="k">${String(i + 1).padStart(2, '0')}</span><span class="t">${c.label}</span><span class="c ${c.full ? 'full' : ''}">${c.full ? 'closes it' : `closes ${fmt(c.closes)}`}</span></button>`; });
-    host.innerHTML = html;
-    $$('.answer', host).forEach(b => b.addEventListener('click', () => { const c = cands[+b.dataset.i]; b.classList.add('lit'); c.apply(cur()); if (navigator.vibrate) navigator.vibrate(10); setTimeout(() => render({ anim: true }), 120); }));
+    const cls = sim.low.cash < 0 ? 'crit' : 'warn'; const mo = sim.low.full.split(' ')[0];
+    html += `<div class="w-h">${ic('sparkle')}<span class="micro">Close the gap</span></div><p class="lead ${cls}">You dip ${sim.low.cash < 0 ? 'under zero' : 'under the floor'} in <b>${mo}</b> by <b>${fmtK(sim.gap)}</b>. Any of these, ranked by how little they change your life.</p><div class="list">`;
+    const cands = candidates(s, sim).slice(0, 5);
+    if (!cands.length) html += '<p class="note">Nothing closes this alone. Turn two dials.</p>';
+    cands.forEach((c, i) => { html += `<button class="ans" data-i="${i}"><span class="t">${c.label}</span><span class="c ${c.full ? 'full' : ''}">${c.full ? 'closes it' : `+${fmt(c.closes)}`}</span></button>`; });
+    html += '</div>'; host.innerHTML = html;
+    $$('.ans', host).forEach(b => b.addEventListener('click', () => { cands[+b.dataset.i].apply(cur()); buzz(H.chip); render({ anim: true }); }));
   } else {
-    const hr = headroom(s);
-    const spare = sim.low.cash - s.floor;
-    html += `<p class="lead"><span class="num">Never</span> touches the floor. Spare at the low point: <span class="num">${fmtK(spare)}</span> in ${sim.low.full.split(' ')[0]}.</p>`;
+    const hr = headroom(s); const spare = sim.low.cash - s.floor;
+    html += `<div class="w-h">${ic('infinity')}<span class="micro">Room to push</span></div><p class="lead">Never under the floor. Spare at the low point: <b>${fmtK(spare)}</b> in ${sim.low.full.split(' ')[0]}.</p><div class="list">`;
     const lines = [];
-    if (hr.adsPerDay > s.adsPerDay) lines.push({ t: `You could run ads at $${hr.adsPerDay}/day and stay above the floor`, apply: t => { t.adsPerDay = hr.adsPerDay; } });
-    if (hr.ccPayment > s.ccPayment) lines.push({ t: `You could pay $${fmt(hr.ccPayment)}/mo on the cards and stay above the floor`, apply: t => { t.ccPayment = hr.ccPayment; } });
-    if (hr.personal > s.personal) lines.push({ t: `You could live on $${fmt(hr.personal)}/mo and stay above the floor`, apply: t => { t.personal = hr.personal; } });
-    if (!s.sweep && sim.endCc > 0) lines.push({ t: 'Sweep the surplus into the cards and watch the 30k move', apply: t => { t.sweep = true; } });
-    lines.forEach((l, i) => { html += `<button class="answer" data-i="${i}"><span class="k">${String(i + 1).padStart(2, '0')}</span><span class="t">${l.t}</span><span class="c"></span></button>`; });
-    host.innerHTML = html;
-    $$('.answer', host).forEach(b => b.addEventListener('click', () => { lines[+b.dataset.i].apply(cur()); render({ anim: true }); }));
+    if (hr.adsPerDay > s.adsPerDay) lines.push({ t: `Ads could run at $${hr.adsPerDay}/day`, apply: t => { t.adsPerDay = hr.adsPerDay; } });
+    if (hr.ccPayment > s.ccPayment) lines.push({ t: `Cards could take $${fmt(hr.ccPayment)}/mo`, apply: t => { t.ccPayment = hr.ccPayment; } });
+    if (hr.personal > s.personal) lines.push({ t: `You could live on $${fmt(hr.personal)}/mo`, apply: t => { t.personal = hr.personal; } });
+    if (!s.sweep && sim.endCc > 0) lines.push({ t: 'Sweep the surplus into the cards', apply: t => { t.sweep = true; } });
+    lines.forEach((l, i) => { html += `<button class="ans" data-i="${i}"><span class="t">${l.t}</span><span class="c">apply</span></button>`; });
+    html += '</div>'; host.innerHTML = html;
+    $$('.ans', host).forEach(b => b.addEventListener('click', () => { lines[+b.dataset.i].apply(cur()); buzz(H.chip); render({ anim: true }); }));
   }
 }
 
+// ---------- dials bank ----------
+function buildDials() {
+  const host = $('#dials');
+  dial(host, { label: 'Ads per day', icon: 'megaphone', unit: 'per day', min: 0, max: 150, step: 5, get: s => s.adsPerDay, set: (s, v) => { s.adsPerDay = v; },
+    read: (s, v) => { const cpc = s.conservative ? s.costPerClient * 2 : s.costPerClient; const per = s.adsProduceClients && v > 0 ? v * 30 / cpc : 0; return [`$${v}`, per > 0 ? `${per.toFixed(2)} clients/mo` : 'no new clients']; } });
+  dial(host, { label: 'VA hours per week', icon: 'headset', unit: 'hrs / wk', min: 0, max: 50, step: 1, get: s => (s.vas[0] ? s.vas[0].hours : 0), set: (s, v) => { if (!s.vas[0]) s.vas.push({ id: 'va1', name: 'VA 1', hours: v, rate: 5.5, start: 0, end: null }); else s.vas[0].hours = v; },
+    read: (s, v) => [String(v), s.vas[0] ? `${fmtK(v * WEEKS_PER_MONTH * s.vas[0].rate)}/mo` : ''] });
+  dial(host, { label: 'Living', icon: 'fork', unit: 'per month', min: 500, max: 3000, step: 50, get: s => s.personal, set: (s, v) => { s.personal = v; }, read: (s, v) => [fmtK(v), v >= 2000 ? 'splurge' : v <= 750 ? 'tight' : ''] });
+  dial(host, { label: 'Card payment', icon: 'carddown', unit: 'per month', min: 0, max: 3000, step: 50, get: s => s.ccPayment, set: (s, v) => { s.ccPayment = v; }, read: (s, v) => { const i = s.ccBalance * s.ccApr / 12; return [fmtK(v), v <= i ? 'interest only' : `${fmtK(v - i)} to principal`]; } });
+}
+
+// ---------- payoff ring ----------
+function buildRing() {
+  const el = $('#ring'); const c = 80, r = 66, r2 = 54;
+  const pt = (th, rr) => [c + rr * Math.sin(th * Math.PI / 180), c - rr * Math.cos(th * Math.PI / 180)];
+  const arc = rr => { const [x1, y1] = pt(-135, rr), [x2, y2] = pt(135, rr); return `M${x1},${y1} A${rr},${rr} 0 1 1 ${x2},${y2}`; };
+  el.innerHTML = `<svg viewBox="0 0 160 160"><path class="trk" d="${arc(r)}"/><path class="prg" d="${arc(r)}" pathLength="100" stroke-dasharray="0 100"/><path class="cost" d="${arc(r2)}" pathLength="100" stroke-dasharray="0 100"/></svg><div class="c"><span class="micro">Cards</span><div class="v disp num"></div><div class="s"></div></div>`;
+  const prg = $('.prg', el), cost = $('.cost', el), v = $('.v', el), s2 = $('.s', el), sub = $('#ring-sub');
+  return (sim, s) => {
+    const orig = s.ccBalance || 1; const p = clamp((orig - sim.endCc) / orig, 0, 1);
+    prg.setAttribute('stroke-dasharray', `${(p * 100).toFixed(1)} 100`);
+    cost.setAttribute('stroke-dasharray', `${clamp(sim.borrowCost / orig * 100, 0, 100).toFixed(1)} 100`);
+    v.textContent = fmt(sim.endCc);
+    s2.textContent = sim.payoffMonths === Infinity ? 'never at this payment' : sim.payoffMonths === 0 ? 'paid off' : `paid off in ${sim.payoffMonths} mo`;
+    sub.innerHTML = `<span>${fmt(orig - sim.endCc)} cut by ${MONTH_LABELS[s.horizon - 1]}</span><span>borrowing cost ${fmt(sim.borrowCost)}</span>`;
+  };
+}
+
+// ---------- clients ----------
+function buildClients() {
+  const host = $('#client-rows'); const icons = { electrician: 'bolt', plumber: 'wrench', audit: 'magnifier' };
+  cur().clients.forEach((c, i) => {
+    const row = document.createElement('div'); row.className = 'row';
+    row.innerHTML = `<span class="ic">${ic(icons[c.id] || 'hardhat')}</span><div class="nm">${c.name}<small></small></div><select aria-label="${c.name} end"></select><button class="pt" role="switch" aria-label="${c.name} on"></button>`;
+    const sel = $('select', row), sw = $('.pt', row), sm = $('small', row);
+    fillSelect(sel, [{ v: '', t: 'stays' }].concat(monthOpts(1, 'ends ')));
+    sel.addEventListener('change', () => { cur().clients[i].end = sel.value === '' ? null : +sel.value; render({ anim: true }); });
+    sw.addEventListener('click', () => { cur().clients[i].on = !cur().clients[i].on; buzz(H.toggle); render({ anim: true }); });
+    painters.push(() => { const cc = cur().clients[i]; sel.value = cc.end == null ? '' : cc.end; sw.setAttribute('aria-checked', cc.on); row.classList.toggle('dead', !cc.on || (cc.end != null && cc.end <= 1)); sm.textContent = (cc.amounts && cc.amounts[0] != null && cc.amounts[0] !== cc.amount ? `${fmt(cc.amounts[0])} now, then ` : '') + `${fmt(cc.amount)}/mo` + (cc.start > 0 ? ` from ${MONTH_LABELS[cc.start]}` : ''); });
+    host.appendChild(row);
+  });
+  const addN = $('#add-n'), addStart = $('#add-start'), addAmt = $('#add-amt');
+  fillSelect(addStart, monthOpts(1));
+  const bump = d => { const s = cur(); s.addClients = clamp(s.addClients + d, -3, 8); buzz(H.detent); render({ anim: true }); };
+  holdRepeat($('#add-minus'), () => bump(-1)); holdRepeat($('#add-plus'), () => bump(1));
+  addStart.addEventListener('change', () => { cur().addStart = +addStart.value; render({ anim: true }); });
+  addAmt.addEventListener('change', () => { cur().newRetainer = Math.max(0, +addAmt.value || 0); render({ anim: true }); });
+  painters.push(() => { const s = cur(); addN.textContent = (s.addClients > 0 ? '+' : '') + s.addClients; addStart.value = s.addStart; addAmt.value = s.newRetainer; });
+  // lose key
+  const lose = $('#lose'), txt = $('#lose-t'); let t0 = null, raf = null, tick = null, undo = null;
+  const setRing = p => lose.style.setProperty('--ring', p * 100);
+  const idle = '<b>Hold to lose a client.</b> Your biggest one stops paying next month.';
+  const frame = () => { const p = clamp((performance.now() - t0) / 600, 0, 1); setRing(p); if (p < 1) raf = requestAnimationFrame(frame); else fire(); };
+  const start = e => { e.preventDefault(); t0 = performance.now(); raf = requestAnimationFrame(frame); tick = setInterval(() => buzz(H.loseTick), 100); };
+  const cancel = () => { if (raf) cancelAnimationFrame(raf); clearInterval(tick); raf = tick = null; t0 = null; setRing(0); };
+  const fire = () => {
+    cancel(); const s = cur();
+    const active = s.clients.map((c, i) => ({ c, i, v: clientIncome(c, 1) })).filter(x => x.v > 0).sort((a, b) => b.v - a.v);
+    if (!active.length) { txt.innerHTML = '<b>Nobody left to lose.</b>'; return; }
+    const v = active[0]; undo = { i: v.i, end: v.c.end, on: v.c.on }; s.clients[v.i].end = 1; buzz(H.loseFire);
+    txt.innerHTML = `<b>Gone.</b> ${v.c.name} leaves in ${MONTH_LABELS[1]}. That is ${fmtK(v.v)} a month.<button class="undo" id="undo">Undo</button>`;
+    $('#undo').addEventListener('click', () => { if (!undo) return; cur().clients[undo.i].end = undo.end; cur().clients[undo.i].on = undo.on; undo = null; txt.innerHTML = idle; render({ anim: true }); });
+    render({ anim: true });
+  };
+  lose.addEventListener('pointerdown', start); ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => lose.addEventListener(ev, cancel));
+  lose.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fire(); } });
+}
+
+// ---------- VAs ----------
+function buildVAs() {
+  const host = $('#va-rows'); let n = -1, slot = -1;
+  const rebuild = () => {
+    host.innerHTML = '';
+    cur().vas.forEach((v, i) => {
+      const row = document.createElement('div'); row.className = 'row va-row';
+      row.innerHTML = `<span class="ic">${ic('headset')}</span><input type="text" class="nm" aria-label="Name" maxlength="16" style="max-width:110px"><input type="number" class="hrs" step="5" min="0" max="60" aria-label="Hours per week"><span class="micro">hrs at $</span><input type="number" class="rate" step="0.5" min="0" aria-label="Rate"><select class="st" aria-label="Starts"></select><select class="en" aria-label="Ends"></select><button class="del" aria-label="Remove">${ic('x')}</button>`;
+      const nm = $('.nm', row), hrs = $('.hrs', row), rate = $('.rate', row), st = $('.st', row), en = $('.en', row);
+      fillSelect(st, monthOpts(0, 'from '), v.start); fillSelect(en, [{ v: '', t: 'stays' }].concat(monthOpts(1, 'until ')), v.end == null ? '' : v.end);
+      nm.value = v.name; hrs.value = v.hours; rate.value = v.rate;
+      nm.addEventListener('change', () => { cur().vas[i].name = nm.value.trim() || 'VA'; render({}); });
+      hrs.addEventListener('change', () => { cur().vas[i].hours = clamp(+hrs.value || 0, 0, 60); render({ anim: true }); });
+      rate.addEventListener('change', () => { cur().vas[i].rate = Math.max(0, +rate.value || 0); render({ anim: true }); });
+      st.addEventListener('change', () => { cur().vas[i].start = +st.value; render({ anim: true }); });
+      en.addEventListener('change', () => { cur().vas[i].end = en.value === '' ? null : +en.value; render({ anim: true }); });
+      $('.del', row).addEventListener('click', () => { cur().vas.splice(i, 1); n = -1; render({ anim: true }); });
+      host.appendChild(row);
+    });
+  };
+  $('#va-add').addEventListener('click', () => { const s = cur(); const k = s.vas.length + 1; s.vas.push({ id: 'va' + Date.now(), name: 'VA ' + k, hours: 20, rate: 5.5, start: Math.min(s.horizon - 1, 2), end: null }); n = -1; buzz(H.commit); render({ anim: true }); });
+  painters.push(() => { const s = cur(); if (s.vas.length !== n || slot !== state.active) { rebuild(); n = s.vas.length; slot = state.active; } else { $$('.va-row', host).forEach((row, i) => { const v = s.vas[i]; if (document.activeElement !== $('.hrs', row)) $('.hrs', row).value = v.hours; }); } const m1 = Math.min(1, s.horizon - 1); $('#va-r').textContent = `${fmt(vaCost(s, m1))}/mo now · ${fmt(vaCost(s, s.horizon - 1))}/mo by ${MONTH_LABELS[s.horizon - 1]}`; });
+}
+
+// ---------- ads / modes / credit ----------
+function buildAds() {
+  const host = $('#ads-rows');
+  toggleRow(host, { icon: 'megaphone', label: 'Ad agency', small: () => 'runs the campaigns', get: s => s.agency, set: (s, v) => { s.agency = v; }, read: s => `${fmt(s.agencyFee)}/mo` });
+  toggleRow(host, { icon: 'personplus', label: 'Ads make clients', small: s => `one per ${fmtK(s.costPerClient)}, ${s.lagMonths} month lag`, get: s => s.adsProduceClients, set: (s, v) => { s.adsProduceClients = v; }, read: (s, on) => on ? 'on' : 'pure cost' });
+}
+function buildCredit() {
+  const host = $('#credit-rows');
+  toggleRow(host, { icon: 'cardtap', label: 'Capital on Tap', small: () => '8k business card, pending paperwork', get: s => s.cardApproved, set: (s, v) => { s.cardApproved = v; }, read: (s, on) => on ? 'approved' : 'not yet' });
+  const r1 = document.createElement('div'); r1.className = 'row'; r1.innerHTML = `<span class="ic">${ic('carddown')}</span>`; host.appendChild(r1);
+  scrub(r1, { label: 'Card draw', min: 0, max: 8000, step: 500, get: s => s.cardDraw, set: (s, v) => { s.cardDraw = v; }, fmt: (v, s) => !s.cardApproved && v > 0 ? `${fmtK(v)} (needs approval)` : fmtK(v) });
+  const sel1 = document.createElement('select'); sel1.setAttribute('aria-label', 'Card draw month'); fillSelect(sel1, monthOpts(0, 'in ')); sel1.addEventListener('change', () => { cur().cardMonth = +sel1.value; render({ anim: true }); }); r1.appendChild(sel1);
+  const r2 = document.createElement('div'); r2.className = 'row'; r2.innerHTML = `<span class="ic">${ic('coin')}</span>`; host.appendChild(r2);
+  scrub(r2, { label: 'Credit line', min: 0, max: 6500, step: 500, get: s => s.locDraw, set: (s, v) => { s.locDraw = v; }, fmt: (v, s) => v > 0 ? `${fmtK(v)} · costs ${fmtK(v * s.locFee)}` : '$0' });
+  const sel2 = document.createElement('select'); sel2.setAttribute('aria-label', 'Credit line month'); fillSelect(sel2, monthOpts(0, 'in ')); sel2.addEventListener('change', () => { cur().locMonth = +sel2.value; render({ anim: true }); }); r2.appendChild(sel2);
+  painters.push(() => { sel1.value = cur().cardMonth; sel2.value = cur().locMonth; });
+  const mh = $('#mode-rows');
+  toggleRow(mh, { icon: 'broom', label: 'Sweep surplus to cards', small: s => `anything above floor + ${fmt(s.sweepBuffer)} pays down the balance`, get: s => s.sweep, set: (s, v) => { s.sweep = v; } });
+  toggleRow(mh, { icon: 'shield', label: 'Conservative', small: () => 'income −20%, clients cost double', get: s => s.conservative, set: (s, v) => { s.conservative = v; } });
+  const grid = $('#adv-grid');
+  const fields = [['startCash', 'Cash today'], ['floor', 'Floor'], ['costPerClient', 'Ad cost per client'], ['lagMonths', 'Lag to first invoice'], ['newRetainer', 'New client retainer'], ['ccBalance', 'Card balance'], ['ccApr', 'Card APR (0.24)'], ['sweepBuffer', 'Sweep buffer'], ['hoaArrears', 'HOA arrears (Sept)'], ['turnover', 'Turnover per move-out'], ['agencyFee', 'Agency fee']];
+  for (const [k, l] of fields) { const lab = document.createElement('label'); lab.innerHTML = `${l}<input type="number" step="any">`; const inp = $('input', lab); inp.addEventListener('change', () => { cur()[k] = +inp.value; render({ anim: true }); }); painters.push(() => { if (document.activeElement !== inp) inp.value = cur()[k]; }); grid.appendChild(lab); }
+  $('#reset').addEventListener('click', () => { const name = cur().name; const fresh = baseScenario(); migrate(fresh); fresh.name = name; state.slots[state.active] = fresh; render({ anim: true }); });
+}
+
+// ---------- tanks ----------
+let tankSel = null;
+function buildTanks() {
+  const host = $('#tanks'), mh = $('#tank-m'), ed = $('#tank-ed');
+  const rateOf = (s, m) => isSigned(s, m) ? (s.signedRent[m] || 0) : (s.bookedRates[m] != null ? s.bookedRates[m] : s.openRate);
+  MONTH_LABELS.forEach((l, m) => {
+    const t = document.createElement('button'); t.className = 'tank'; t.setAttribute('aria-label', MONTH_FULL[m]); t.innerHTML = `<div class="f"></div><div class="v num"></div><div class="lk"></div>`;
+    t.addEventListener('click', () => { const s = cur(); if (isSigned(s, m) || isBookedOpen(s, m)) { tankSel = tankSel === m ? null : m; render({}); return; } s.bookedOpen.push(m); if (s.bookedRates[m] == null) s.bookedRates[m] = s.openRate; tankSel = m; buzz(H.commit); render({ anim: true }); });
+    host.appendChild(t); const ml = document.createElement('div'); ml.textContent = l; mh.appendChild(ml);
+    painters.push(() => {
+      const s = cur(); const signed = isSigned(s, m), booked = isBookedOpen(s, m); const full = Math.max(s.openRate, ...Object.values(s.signedRent), ...Object.values(s.bookedRates)) || 1;
+      t.classList.toggle('signed', signed); t.classList.toggle('occ', !signed && !booked && s.occupancy > 0); t.classList.toggle('off', m >= s.horizon); t.classList.toggle('sel', tankSel === m);
+      const h = signed || booked ? clamp(rateOf(s, m) / full, 0, 1) * 100 : s.occupancy * 100;
+      t.style.setProperty('--h', h.toFixed(0) + '%');
+      $('.v', t).textContent = signed || booked ? fmt(rateOf(s, m)) : (s.occupancy > 0 ? Math.round(s.occupancy * 100) + '%' : '');
+      $('.lk', t).innerHTML = signed ? ic('lock') : '';
+    });
+  });
+  // editor
+  let edFor = null;
+  painters.push(() => {
+    const s = cur();
+    if (tankSel == null || !(isSigned(s, tankSel) || isBookedOpen(s, tankSel))) { ed.innerHTML = ''; edFor = null; tankSel = null; return; }
+    if (edFor === tankSel) { $('.scrub b', ed).textContent = fmtK(rateOf(s, tankSel)); return; }
+    edFor = tankSel; const m = tankSel, signed = isSigned(s, m);
+    ed.innerHTML = `<span class="nm">${MONTH_FULL[m].split(' ')[0]}</span><span class="micro">${signed ? 'signed' : 'booked'}</span>`;
+    const sc = scrub(ed, { label: 'Rent this month', min: 0, max: 6000, step: 100, get: t => rateOf(t, m), set: (t, v) => { if (signed) t.signedRent[m] = v; else t.bookedRates[m] = v; }, fmt: v => fmtK(v) });
+    painters.pop(); // scrub registered its own painter; keep one-off paint instead
+    const paintScrub = () => { const strip = $('.strip', sc), ticks = $('.ticks', sc); const W = strip.clientWidth || 200; ticks.style.setProperty('--o', (W / 2 - rateOf(cur(), m) / 100 * 10) + 'px'); $('b', sc).textContent = fmtK(rateOf(cur(), m)); };
+    paintScrub(); sc._paint = paintScrub;
+    const un = document.createElement('button'); un.className = 'key sm'; un.innerHTML = `${ic('x')}${signed ? 'Unsign' : 'Unbook'}`;
+    un.addEventListener('click', () => { const t = cur(); if (signed) { t.signedMonths = t.signedMonths.filter(x => x !== m); delete t.signedRent[m]; } else t.bookedOpen = t.bookedOpen.filter(x => x !== m); tankSel = null; buzz(H.toggle); render({ anim: true }); });
+    ed.appendChild(un);
+  });
+  const hr = $('#house-rows');
+  scrub(hr, { label: 'Occupancy on open months', min: 0, max: 90, step: 10, get: s => Math.round(s.occupancy * 100), set: (s, v) => { s.occupancy = v / 100; }, fmt: (v, s) => v > 0 ? `${v}% · ${fmtK(s.openRate * v / 100)}/mo` : 'empty' });
+  scrub(hr, { label: 'Open rate', min: 2000, max: 5000, step: 250, get: s => s.openRate, set: (s, v) => { s.openRate = v; }, fmt: (v, s) => `${fmtK(v)} · carry ${fmtK(houseCarry(s))}` });
+}
+
+// ---------- bills ----------
+function buildBills() {
+  const host = $('#bill-rows'); let n = -1, slot = -1;
+  const rebuild = () => {
+    host.innerHTML = '';
+    cur().bills.forEach((b, i) => {
+      const row = document.createElement('div'); row.className = 'bill';
+      row.innerHTML = `<input class="nm" type="text" maxlength="28" aria-label="Bill"><input class="amt" type="number" step="50" min="0" aria-label="Amount"><select class="kind" aria-label="Kind"><option value="house">house</option><option value="life">life</option><option value="business">business</option></select><select class="st" aria-label="From"></select><select class="en" aria-label="Until"></select><button class="del" aria-label="Delete">${ic('x')}</button>`;
+      const nm = $('.nm', row), amt = $('.amt', row), kind = $('.kind', row), st = $('.st', row), en = $('.en', row);
+      fillSelect(st, monthOpts(0), b.start); fillSelect(en, [{ v: '', t: 'ongoing' }].concat(monthOpts(1, 'until ')), b.end == null ? '' : b.end);
+      nm.value = b.name; amt.value = b.amount; kind.value = b.kind || 'life';
+      nm.addEventListener('change', () => { cur().bills[i].name = nm.value.trim() || 'Bill'; render({}); });
+      amt.addEventListener('change', () => { cur().bills[i].amount = Math.max(0, +amt.value || 0); render({ anim: true }); });
+      amt.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); amt.blur(); } });
+      kind.addEventListener('change', () => { cur().bills[i].kind = kind.value; render({}); });
+      st.addEventListener('change', () => { cur().bills[i].start = +st.value; render({ anim: true }); });
+      en.addEventListener('change', () => { cur().bills[i].end = en.value === '' ? null : +en.value; render({ anim: true }); });
+      $('.del', row).addEventListener('click', () => { cur().bills.splice(i, 1); n = -1; render({ anim: true }); });
+      host.appendChild(row);
+    });
+  };
+  $('#bill-add').addEventListener('click', () => { cur().bills.push({ id: 'b' + Date.now(), name: 'New bill', amount: 0, start: 0, end: null, kind: 'life' }); n = -1; render({}); const last = $$('.bill .nm', host).pop(); if (last) { last.focus(); last.select(); } });
+  painters.push(() => { const s = cur(); if (s.bills.length !== n || slot !== state.active) { rebuild(); n = s.bills.length; slot = state.active; } const m1 = Math.min(1, s.horizon - 1); $('#bills-r').textContent = `${fmt(billsAt(s, m1))}/mo from ${MONTH_LABELS[m1]}`; $('#bills-tot').innerHTML = `<span>house <b>${fmt(billsAt(s, m1, 'house'))}</b></span><span>life <b>${fmt(billsAt(s, m1, 'life'))}</b></span><span>business <b>${fmt(billsAt(s, m1, 'business'))}</b></span>`; });
+}
+
+// ---------- clusters ----------
+function buildClusters() {
+  const host = $('#clusters'), mh = $('#cl-m');
+  for (let m = 0; m < 12; m++) { const c = document.createElement('div'); c.className = 'cl'; c.innerHTML = `<span class="p"></span><div class="bars"><i class="b in"></i><i class="b out"></i><i class="b net"></i></div>`; host.appendChild(c); const l = document.createElement('div'); l.textContent = MONTH_LABELS[m]; mh.appendChild(l); }
+  return (sim, s) => {
+    const H = s.horizon; const mx = Math.max(1, ...sim.rows.map(r => Math.max(r.income, r.expenses, Math.abs(r.net))));
+    $$('.cl', host).forEach((c, m) => {
+      const r = sim.rows[m]; c.style.visibility = m < H ? '' : 'hidden'; $$('.cl-m div', document)[m].style.visibility = m < H ? '' : 'hidden'; if (!r) return;
+      $('.in', c).style.setProperty('--h', (r.income / mx * 100).toFixed(0) + '%'); $('.out', c).style.setProperty('--h', (r.expenses / mx * 100).toFixed(0) + '%');
+      const net = $('.net', c); net.style.setProperty('--h', (Math.abs(r.net) / mx * 100).toFixed(0) + '%'); net.classList.toggle('neg', r.net < 0);
+      const p = $('.p', c); const pct = r.income ? Math.round(r.net / r.income * 100) : 0; p.textContent = (pct > 0 ? '+' : '') + pct + '%'; p.classList.toggle('neg', pct < 0);
+    });
+    $('#cl-r').textContent = `${fmt(sim.rows.reduce((a, r) => a + r.income, 0))} in · ${fmt(sim.rows.reduce((a, r) => a + r.expenses, 0))} out over ${H} mo`;
+  };
+}
+
+// ---------- slots ----------
+function buildSlots() {
+  const host = $('#slots');
+  const seedJson = JSON.stringify((() => { const b = baseScenario(); migrate(b); delete b.name; return b; })());
+  return (sim) => {
+    host.innerHTML = '';
+    state.slots.forEach((sl, i) => {
+      const t = JSON.parse(JSON.stringify(sl)); t.horizon = state.horizon; const r = simulate(t);
+      const untouched = (() => { const c = JSON.parse(JSON.stringify(sl)); delete c.name; c.chips = {}; c.horizon = 12; return JSON.stringify(c) === seedJson; })();
+      const el = document.createElement('div'); el.className = 'slot'; el.setAttribute('aria-current', i === state.active);
+      const cls = r.low.cash < 0 ? 'crit' : r.low.cash < sl.floor ? 'warn' : 'good';
+      el.innerHTML = `<div class="n">${ic(i === state.active ? 'check' : 'clipboard')}<span>${sl.name}</span><button class="key sm" data-a="rename" style="margin-left:auto">rename</button></div><div class="v disp num ${cls}">${fmt(r.low.cash)}</div><div class="s">low in ${r.low.label} · ${fmt(r.endCash)} by ${MONTH_LABELS[state.horizon - 1]}${untouched && i !== state.active ? ' · seed' : ''}</div><div class="acts">${i === state.active ? '' : `<button class="key sm" data-a="open">Open</button><button class="key sm acc" data-a="save">${ic('plus')}${untouched ? 'Save this plan' : 'Overwrite'}</button>`}</div>`;
+      $$('button', el).forEach(b => b.addEventListener('click', () => {
+        const a = b.dataset.a;
+        if (a === 'open') { state.active = i; tankSel = null; buzz(H.chip); render({ anim: true }); }
+        if (a === 'save') { const copy = JSON.parse(JSON.stringify(cur())); copy.name = sl.name; state.slots[i] = copy; buzz(H.commit); render({}); }
+        if (a === 'rename') { const nn = prompt('Name this plan. Something you would say out loud.', sl.name); if (nn != null && nn.trim()) { sl.name = nn.trim().slice(0, 24); render({}); } }
+      }));
+      host.appendChild(el);
+    });
+  };
+}
+
+// ---------- header / tabs ----------
+function buildHeader() {
+  $$('.hz button').forEach(b => b.addEventListener('click', () => { state.horizon = +b.dataset.h; state.slots.forEach(s => s.horizon = state.horizon); buzz(H.toggle); render({ anim: true }); }));
+  $('#bell').addEventListener('click', () => { $('#s-home').scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth' }); });
+  $$('.tab').forEach(t => t.addEventListener('click', () => { $('#' + t.dataset.sec).scrollIntoView({ block: 'start', behavior: REDUCED ? 'auto' : 'smooth' }); $$('.tab').forEach(x => x.setAttribute('aria-current', x === t)); }));
+  addEventListener('scroll', () => {
+    const secs = ['s-home', 'off', 's-train', 's-house', 's-load', 's-plans'].filter(x => x !== 'off'); let best = secs[0];
+    for (const id of secs) { const r = $('#' + id).getBoundingClientRect(); if (r.top <= 140) best = id; }
+    $$('.tab').forEach(x => x.setAttribute('aria-current', x.dataset.sec === best));
+    const on = isPhone() && $('.hero').getBoundingClientRect().bottom < 0; $('#hero-strip').classList.toggle('on', on); document.body.classList.toggle('strip-on', on);
+  }, { passive: true });
+}
+
 // ---------- render ----------
+let paintGauge, paintRing, paintClusters, paintSlots, lastBelow = undefined;
 function render(opt = {}) {
-  const s = cur(); s.horizon = state.horizon;
-  const sim = simulate(s);
-  const cash = sim.rows.map(r => r.cash);
-  const H = s.horizon;
+  const s = cur(); s.horizon = state.horizon; const H = s.horizon;
+  const sim = simulate(s); const cash = sim.rows.map(r => r.cash);
+  // floor crossing haptics
+  const below = sim.firstBelowFloor ? sim.firstBelowFloor.m : null; let pulse = false;
+  if (lastBelow !== undefined && !opt.drag) { if (lastBelow === null && below !== null) { buzz(H.down); pulse = true; } else if (lastBelow !== null && below === null) buzz(H.up); }
+  lastBelow = below;
   // hero
-  const low = $('#h-low'); low.textContent = fmt(sim.low.cash); low.className = 'val ' + (sim.low.cash < 0 ? 'crit' : sim.low.cash < s.floor ? 'warn' : 'good');
-  $('#h-low-sub').textContent = 'in ' + sim.low.full.split(' ')[0];
-  const fl = $('#h-floor');
-  if (!sim.firstBelowFloor) { fl.textContent = 'never'; fl.className = 'val good'; $('#h-floor-sub').textContent = `floor ${fmt(s.floor)}, ${H} months out`; }
-  else { const n = sim.firstBelowFloor.m; fl.textContent = n === 0 ? 'now' : String(n); fl.className = 'val ' + (sim.firstNegative ? 'crit' : 'warn'); $('#h-floor-sub').textContent = (n === 0 ? 'already under in ' : 'goes under in ') + sim.firstBelowFloor.full.split(' ')[0]; }
-  $('#h-end-cap').textContent = 'Cash in ' + MONTH_LABELS[H - 1];
-  const en = $('#h-end'); en.textContent = fmt(sim.endCash); en.className = 'val ' + (sim.endCash < 0 ? 'crit' : sim.endCash < s.floor ? 'warn' : '');
-  $('#h-end-sub').textContent = sim.structural >= 0 ? `+${fmt(sim.structural)}/mo without rent` : `${fmt(sim.structural)}/mo without rent`;
-  // strip
-  const pay = sim.payoffMonths === Infinity ? 'never at this payment' : sim.payoffMonths === 0 ? 'paid off' : `paid off in ${sim.payoffMonths} mo`;
-  const firstPay = sim.rows.find(r => r.structural > 0);
-  $('#strip').innerHTML = `<span>breakeven <b>${sim.breakeven ? sim.breakeven.label : 'not yet'}</b></span><span>cards <b>${fmt(sim.endCc)}</b> · ${pay}</span><span>borrowing cost <b>${fmt(sim.borrowCost)}</b></span><span>ad clients <b>${sim.adClientsTotal}</b> by ${MONTH_LABELS[H - 1]}</span>${firstPay ? `<span class="good">${firstPay.full.split(' ')[0]}: first month the business pays for the month.</span>` : ''}`;
+  renderHero(sim.low.cash, s, { drag: opt.drag, pulse });
+  $('#hero-m').textContent = `${sim.low.full.split(' ')[0]} · floor ${fmt(s.floor)}, one month of home`;
+  $('#hs-v').textContent = fmt(sim.low.cash); $('#hs-p').style.setProperty('--p', (fillP(sim.low.cash, s.floor) * 100).toFixed(0) + '%'); $('#hs-m').textContent = sim.low.label;
+  paintGauge(sim, s);
+  // tiles
+  const allEnd = state.slots.map(sl => { const t = JSON.parse(JSON.stringify(sl)); t.horizon = H; return simulate(t); });
+  const bestEnd = Math.max(1, ...allEnd.map(r => r.endCash)), bestGain = Math.max(1, ...allEnd.map(r => r.structural));
+  $('#t-end-l').textContent = 'Cash in ' + MONTH_LABELS[H - 1];
+  const te = $('#t-end'); te.textContent = fmt(sim.endCash); te.className = 'disp num v ' + (sim.endCash < 0 ? 'crit' : sim.endCash < s.floor ? 'warn' : ''); $('#t-end-p').style.setProperty('--p', clamp(sim.endCash / bestEnd * 100, 0, 100).toFixed(0) + '%');
+  $('#t-end-s').textContent = sim.breakeven ? `breakeven ${sim.breakeven.label}` : 'no breakeven yet';
+  const tg = $('#t-gain'); tg.textContent = (sim.structural > 0 ? '+' : '') + fmt(sim.structural); tg.className = 'disp num v ' + (sim.structural > 0 ? 'good' : sim.structural < -3000 ? 'crit' : 'warn'); $('#t-gain-p').style.setProperty('--p', clamp(sim.structural / bestGain * 100, 0, 100).toFixed(0) + '%');
+  const fp = sim.rows.find(r => r.structural > 0); $('#t-gain-s').innerHTML = fp ? `<span class="celebrate">${ic('sparkle')}${fp.full.split(' ')[0]} pays for itself.</span>` : 'no month pays for itself yet';
   // chart
-  const ghosts = state.slots.map((g, i) => ({ i, g })).filter(x => x.i !== state.active).map(x => { const t = JSON.parse(JSON.stringify(x.g)); t.horizon = H; return { name: x.g.name, cash: simulate(t).rows.map(r => r.cash) }; }).filter(g => g.cash.some((v, i) => v !== cash[i]));
-  if (opt.anim) animateTo(cash, sim, ghosts, s); else { if (tweenRaf) { cancelAnimationFrame(tweenRaf); tweenRaf = null; } prevCash = cash.slice(); drawChart(cash, sim, ghosts, s); }
-  // rack
-  if (!opt.drag) { renderAnswers(s, sim); }
+  const ghosts = state.slots.map((g, i) => ({ i, g })).filter(x => x.i !== state.active).map(x => ({ name: x.g.name, cash: allEnd[x.i].rows.map(r => r.cash) })).filter(g => g.cash.some((v, i) => v !== cash[i]));
+  if (opt.anim) animateChart(cash, sim, ghosts, s); else { if (tweenRaf) { cancelAnimationFrame(tweenRaf); tweenRaf = null; } prevCash = cash.slice(); drawChart(cash, sim, ghosts, s); }
+  $('#curve-r').textContent = `${sim.adClientsTotal} ad clients by ${MONTH_LABELS[H - 1]}`;
+  // widgets
+  if (!opt.drag) renderAnswers(s, sim);
+  paintRing(sim, s); paintClusters(sim, s); if (!opt.drag) paintSlots(sim);
   painters.forEach(p => p());
-  $$('.tab').forEach(t => { const i = +t.dataset.slot; t.setAttribute('aria-selected', i === state.active); $('.tn', t).textContent = state.slots[i].name; });
-  $$('.horizon button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.h === H));
-  const r0 = sim.rows[Math.min(2, H - 1)];
-  $('#clients-total').textContent = `${fmt(r0.retainers)}/mo by ${r0.label}`;
-  $('#house-total').textContent = `${fmt(sim.rows.reduce((a, r) => a + r.rent, 0))} rent over ${H} mo`;
-  $('#out-total').textContent = `${fmt(sim.rows[Math.min(1, H - 1)].expenses)}/mo all in from ${MONTH_LABELS[Math.min(1, H - 1)]}`;
-  $('#credit-total').textContent = sim.borrowCost ? `costs ${fmt(sim.borrowCost)}` : 'untouched';
+  $('#lv').textContent = s.name; $$('.hz button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.h === H));
+  const nb = sim.rows.filter(r => r.cash < s.floor).length; const bn = $('#bell-n'); bn.hidden = nb === 0; bn.textContent = nb;
+  $('#dials-r').textContent = `${fmt(sim.rows[Math.min(1, H - 1)].expenses)}/mo out from ${MONTH_LABELS[Math.min(1, H - 1)]}`;
+  $('#clients-r').textContent = `${fmt(sim.rows[Math.min(2, H - 1)].retainers)}/mo by ${MONTH_LABELS[Math.min(2, H - 1)]}`;
+  $('#house-r').textContent = `${fmt(sim.rows.reduce((a, r) => a + r.rent, 0))} rent over ${H} mo`;
+  $('#credit-r').textContent = sim.borrowCost ? `costs ${fmt(sim.borrowCost)}` : 'untouched';
   save();
 }
 
 // ---------- boot ----------
-buildTabs(); buildClients(); buildGrowth(); buildHouse(); buildBills(); buildOut(); buildCredit(); buildModes(); buildAdvanced(); bindChart();
+buildHeader(); buildChips(); paintGauge = buildGauge(); bindChart(); buildDials(); paintRing = buildRing(); buildClients(); buildVAs(); buildAds(); buildTanks(); buildBills(); buildCredit(); paintClusters = buildClusters(); paintSlots = buildSlots();
 render({});
-if (!REDUCED) { const c = $('.curve', svg); if (c) { const L = c.getTotalLength(); c.style.strokeDasharray = L; c.style.strokeDashoffset = L; c.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: 700, easing: 'ease-out' }).onfinish = () => { c.style.strokeDasharray = ''; c.style.strokeDashoffset = ''; }; } }
+if (!REDUCED) {
+  // load: fill rises, curve draws, tanks stagger
+  const s = cur(), sim = simulate(s); heroShown = Math.min(0, sim.low.cash); const t0 = performance.now();
+  const rise = () => { const p = clamp((performance.now() - t0) / 900, 0, 1); const e = 1 - Math.pow(1 - p, 3); const v = heroShown + (sim.low.cash - heroShown) * e; drawHero(v, v, s, false); if (p < 1) requestAnimationFrame(rise); else heroShown = sim.low.cash; };
+  requestAnimationFrame(rise);
+  const ln = $('.line', csvg); if (ln) { const L = ln.getTotalLength(); ln.style.strokeDasharray = L; ln.style.strokeDashoffset = L; ln.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: 800, delay: 100, easing: 'ease-out', fill: 'forwards' }).onfinish = () => { ln.style.strokeDasharray = ''; ln.style.strokeDashoffset = ''; }; }
+  $$('.tank').forEach((t, i) => { const h = t.style.getPropertyValue('--h'); t.style.setProperty('--h', '0%'); setTimeout(() => t.style.setProperty('--h', h), 200 + i * 40); });
+}
 </script>
 </body>
 </html>

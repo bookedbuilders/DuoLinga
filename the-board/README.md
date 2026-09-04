@@ -10,7 +10,17 @@ frame. The page tells you the lowest point, when you hit the floor, and which
 levers close the gap, ranked by how little they change your life.
 
 No framework, no build, no backend. One HTML file. State lives in
-`localStorage` under `board.v1`, three scenario slots.
+`localStorage` under `board.v2`, three plan slots.
+
+The interface is built like a fitness dashboard: a huge two-tone fill number
+for the low point with the floor as a hairline through the digits, a needle
+dial for months to floor that parks at Never, rotary knobs for the four
+levers you turn most (ads, VA hours, living, card payment), scrub rulers for
+credit draws and rates, month tanks for the house, a payoff ring for the
+cards, preset what-if chips (lose the electrician, rent December, double
+ads, pause the VA, cards on sweep, worst case), and an icon rail on laptop
+that becomes a tab bar on phone. Haptics fire on detents, commits, toggles,
+and floor crossings where the browser supports vibration.
 
 ## Run it
 
@@ -53,7 +63,7 @@ or a field in the Advanced drawer.
 | Credit cards | 30,000 balance, 24% APR, 1,000 / mo payment |
 | Agency | 500 / mo |
 | Ads | 50 / day, one client per 2,000 spent, two-month lag |
-| VA | 45 hrs / wk at 5.50 |
+| VA 1 | 45 hrs / wk at 5.50 from Sept; add more VAs with their own start month |
 | Electrician | 2,000 / mo |
 | Plumber | 1,300 Sept and Oct, then 2,000 / mo |
 | Audit client | 2,000 / mo from Oct |
@@ -73,5 +83,9 @@ or a field in the Advanced drawer.
 - Sweep mode pays anything above floor plus buffer into the cards at month end.
 - Bills are an editable list: name, amount, kind (house, life, business), start
   month and optional end month. Add or delete rows on the page.
+- Assistants are a list too: name, hours per week, rate, start month, end month.
+  The VA knob drives the first one; the answer cards scale all active ones.
+- Preset chips save the values they touch and restore them when tapped off.
+  Worst case is exclusive and locks the others while it is on.
 - Tap an open month to book it. Tap a booked or signed month to set that
   month's rent or let it go. Booked months without a rate use the open rate.
