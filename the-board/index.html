@@ -142,7 +142,19 @@ body.strip-on .chips-wrap { top: 52px; }
 
 /* ---------- curve ---------- */
 .curve { min-height: 260px; }
-.chart { position: relative; height: 220px; touch-action: pan-y; }
+.chart { position: relative; height: 280px; touch-action: pan-y; }
+.chart .lane { font-size: 11px; fill: var(--ink-2); font-family: Inter, sans-serif; font-variant-numeric: tabular-nums; }
+.chart .lane.chg { fill: var(--ink); font-weight: 600; }
+.chart .lane-ic path { fill: none; stroke: var(--ink-3); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.sched { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 4px; }
+.sc { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.sc .up { width: 100%; height: 40px; border-radius: 10px; background: var(--raised); border: 1px solid var(--rule); display: grid; place-items: center; }
+.sc .up .n { font-size: 15px; color: var(--ink-2); }
+.sc.on .up { background: var(--accent-dim); border-color: var(--accent); } .sc.on .up .n { color: var(--accent); }
+.sc .dn { width: 100%; height: 20px; border-radius: 6px; color: var(--ink-3); font-size: 14px; line-height: 1; }
+.sc .dn:hover { color: var(--ink); background: var(--raised); }
+.sc .m { font-size: 10px; color: var(--ink-2); }
+.sc.off { opacity: .3; pointer-events: none; }
 .chart svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .chart .axis text { font-size: 11px; fill: var(--ink-2); font-family: Inter, sans-serif; font-variant-numeric: tabular-nums; }
 .chart .grid line { stroke: var(--rule); stroke-width: 1; }
@@ -324,7 +336,7 @@ body.strip-on .chips-wrap { top: 52px; }
         <section class="w tile"><span class="micro" id="t-end-l">Cash in Aug</span><div><div class="disp num v" id="t-end">–</div><div class="bar"><i id="t-end-p"></i></div><div class="s" id="t-end-s"></div></div></section>
         <section class="w tile"><span class="micro">Gains, monthly, no rent</span><div><div class="disp num v" id="t-gain">–</div><div class="bar"><i id="t-gain-p"></i></div><div class="s" id="t-gain-s"></div></div></section>
       </div>
-      <section class="w c8 curve"><div class="w-h"><span data-ic="compare"></span><span class="sp"></span><span class="r" id="curve-r"></span></div><div class="chart" id="chart"><svg aria-label="Projected cash by month"></svg><div class="pill" id="pill" hidden></div></div></section>
+      <section class="w c8 curve"><div class="w-h"><span data-ic="compare"></span><span class="micro">Cash, with clients, VAs and money out per month</span><span class="sp"></span><span class="r" id="curve-r"></span></div><div class="chart" id="chart"><svg aria-label="Projected cash by month"></svg><div class="pill" id="pill" hidden></div></div></section>
       <section class="w c4 answers" id="answers"></section>
     </div>
 
@@ -332,7 +344,9 @@ body.strip-on .chips-wrap { top: 52px; }
       <section class="w c8"><div class="w-h"><span data-ic="dumbbell"></span><span class="micro">Turn these</span><span class="sp"></span><span class="r" id="dials-r"></span></div><div class="dials" id="dials"></div></section>
       <section class="w c4 ringw"><div class="ring" id="ring"></div><div class="ring-sub" id="ring-sub"></div></section>
       <section class="w c6"><div class="w-h"><span data-ic="hardhat"></span><span class="micro">Clients</span><span class="sp"></span><span class="r" id="clients-r"></span></div><div id="client-rows"></div>
-        <div class="row"><span data-ic="personplus" class="ic"></span><div class="stepper"><button class="k" id="add-minus" aria-label="Fewer">−</button><span class="n disp num" id="add-n">0</span><button class="k" id="add-plus" aria-label="More">+</button></div><span class="micro">from</span><select id="add-start"></select><span class="micro">at</span><input type="number" id="add-amt" step="250" min="0"></div>
+        <div class="w-h" style="margin-top:14px"><span data-ic="personplus"></span><span class="micro">New clients by month</span><span class="sp"></span><span class="r" id="sched-r"></span></div>
+        <div class="sched" id="sched"></div>
+        <div class="row" style="border-top:0;padding-top:4px"><span class="micro">each at $</span><input type="number" id="add-amt" step="250" min="0" aria-label="Retainer per new client"><span class="micro">per month</span></div>
         <div class="lose"><button class="k" id="lose" aria-label="Hold to lose a client" data-ic="personminus"></button><div class="t" id="lose-t"><b>Hold to lose a client.</b> Your biggest one stops paying next month.</div></div>
       </section>
       <section class="w c6"><div class="w-h"><span data-ic="headset"></span><span class="micro">Assistants</span><span class="sp"></span><span class="r" id="va-r"></span></div><div id="va-rows"></div><button class="key sm" id="va-add" style="margin-top:8px"><span data-ic="plus"></span>Add a VA</button>
@@ -428,7 +442,8 @@ function baseScenario() {
       { id: 'plumber',     name: 'Plumber',     on: true, start: 0, end: null, amounts: { 0: 1300, 1: 1300 }, amount: 2000 },
       { id: 'audit',       name: 'Audit client',on: true, start: 1, end: null, amounts: {}, amount: 2000 },
     ],
-    addClients: 0,
+    addSchedule: {},           // month index -> number of new clients starting that month
+    addClients: 0,             // legacy, migrated into addSchedule
     addStart: 1,
     conservative: false,
   };
@@ -473,19 +488,15 @@ function simulate(s) {
 
   for (let m = 0; m < H; m++) {
     // ---- income
-    let retainers = 0;
-    for (const c of s.clients) retainers += clientIncome(c, m);
-    if (s.addClients > 0 && m >= s.addStart) retainers += s.addClients * s.newRetainer;
-    if (s.addClients < 0) {
-      // negative = lose that many of the existing, biggest first, from addStart
-      if (m >= s.addStart) {
-        const active = s.clients.filter(c => clientIncome(c, m) > 0).sort((a,b)=>clientIncome(b,m)-clientIncome(a,m));
-        for (let i = 0; i < Math.min(-s.addClients, active.length); i++) retainers -= clientIncome(active[i], m);
-      }
-    }
+    let retainers = 0, existing = 0, added = 0;
+    for (const c of s.clients) { const v = clientIncome(c, m); retainers += v; if (v > 0) existing++; }
+    for (let k = 0; k <= m; k++) added += (s.addSchedule && s.addSchedule[k]) ? +s.addSchedule[k] : 0;
+    retainers += added * s.newRetainer;
     adActive += adStarts[m];
     retainers += adActive * s.newRetainer;
     retainers *= hair;
+    const clientsActive = existing + added + adActive;
+    let vasActive = 0; for (const v of s.vas) if (m >= v.start && (v.end == null || m < v.end) && (+v.hours || 0) > 0) vasActive++;
 
     let rent = 0, rentKind = 'none';
     if (isSigned(s, m)) { rent = s.signedRent[m] || 0; rentKind = 'signed'; }
@@ -560,6 +571,7 @@ function simulate(s) {
       net: Math.round(income - expenses + locIn - swept),
       cash: Math.round(cash), cc: Math.round(cc), card: Math.round(card),
       adClients: adActive, adsStartingLater: adStarts.slice(m + 1).reduce((a,b)=>a+b,0),
+      clientsActive, addedClients: added, vasActive,
       structural: Math.round(retainers - (fixed + business + ccPay)),
     });
   }
@@ -607,9 +619,9 @@ function candidates(s, sim) {
   };
   // clients
   for (let n = 1; n <= 4; n++) {
-    const start = Math.max(1, Math.min(gm - 1, 1));
+    const start = 1;
     push(`Sign ${n === 1 ? 'one more client' : n + ' more clients'} by ${MONTH_LABELS[start]}`, n * 1.0,
-      t => { t.addClients = (t.addClients || 0) + n; t.addStart = start; });
+      t => { if (!t.addSchedule) t.addSchedule = {}; t.addSchedule[start] = (t.addSchedule[start] || 0) + n; });
   }
   // book open months at or before the gap
   const open = [];
@@ -725,6 +737,7 @@ function migrate(s) {
   }
   if (!s.vas) { s.vas = [{ id: 'va1', name: 'VA 1', hours: s.vaHours != null ? s.vaHours : 45, rate: s.vaRate != null ? s.vaRate : 5.5, start: 0, end: null }]; delete s.vaHours; delete s.vaRate; }
   if (!s.chips) s.chips = {};
+  if (!s.addSchedule) { s.addSchedule = {}; if (s.addClients > 0) s.addSchedule[s.addStart != null ? s.addStart : 1] = s.addClients; s.addClients = 0; }
   if (s.name === 'Slot 2') s.name = 'Plan B'; if (s.name === 'Slot 3') s.name = 'Plan C';
 }
 state.slots.forEach(migrate);
@@ -807,7 +820,7 @@ const CHIPS = [
   { id: 'double-ads', icon: 'double', label: 'Double ads', keys: s => ({ a: s.adsPerDay }), apply: s => { s.adsPerDay = Math.min(150, s.adsPerDay * 2 || 50); }, restore: (s, k) => { s.adsPerDay = k.a; } },
   { id: 'pause-va', icon: 'pause', label: 'Pause the VA', keys: s => ({ v: s.vas.map(v => v.hours) }), apply: s => { s.vas.forEach(v => v.hours = 0); }, restore: (s, k) => { s.vas.forEach((v, i) => v.hours = k.v[i] != null ? k.v[i] : v.hours); } },
   { id: 'sweep', icon: 'broom', label: 'Cards on sweep', keys: s => ({ sw: s.sweep }), apply: s => { s.sweep = true; }, restore: (s, k) => { s.sweep = k.sw; } },
-  { id: 'worst', icon: 'storm', label: 'Worst case', exclusive: true, keys: s => ({ c: s.clients.map(c => c.on), a: s.adsPerDay, o: s.occupancy, cons: s.conservative, add: s.addClients }), apply: s => { s.clients.forEach(c => c.on = false); s.adsPerDay = 0; s.occupancy = 0; s.conservative = true; s.addClients = Math.min(0, s.addClients); }, restore: (s, k) => { s.clients.forEach((c, i) => c.on = k.c[i]); s.adsPerDay = k.a; s.occupancy = k.o; s.conservative = k.cons; s.addClients = k.add; } },
+  { id: 'worst', icon: 'storm', label: 'Worst case', exclusive: true, keys: s => ({ c: s.clients.map(c => c.on), a: s.adsPerDay, o: s.occupancy, cons: s.conservative, add: { ...s.addSchedule } }), apply: s => { s.clients.forEach(c => c.on = false); s.adsPerDay = 0; s.occupancy = 0; s.conservative = true; s.addSchedule = {}; }, restore: (s, k) => { s.clients.forEach((c, i) => c.on = k.c[i]); s.adsPerDay = k.a; s.occupancy = k.o; s.conservative = k.cons; s.addSchedule = k.add; } },
 ];
 function buildChips() {
   const host = $('#chips');
@@ -868,7 +881,8 @@ function buildGauge() {
 // ---------- chart ----------
 const chart = $('#chart'), csvg = $('svg', chart), pill = $('#pill');
 let prevCash = null, tweenRaf = null, hoverM = null;
-function geom() { const W = chart.clientWidth, Hh = chart.clientHeight; return { W, H: Hh, L: 40, R: 12, T: 22, B: 22 }; }
+const LANES = 3, LANE_H = 18;
+function geom() { const W = chart.clientWidth, Hh = chart.clientHeight; return { W, H: Hh, L: 40, R: 12, T: 22, B: 22 + LANES * LANE_H }; }
 function niceStep(range) { const raw = range / 4; const p = Math.pow(10, Math.floor(Math.log10(raw))); const m = raw / p; return (m >= 5 ? 10 : m >= 2 ? 5 : m >= 1 ? 2 : 1) * p; }
 function drawChart(cash, sim, ghosts, s) {
   const g = geom(); const H = s.horizon;
@@ -882,7 +896,17 @@ function drawChart(cash, sim, ghosts, s) {
   for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) out += `<line x1="${g.L}" x2="${g.W - g.R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/>`;
   out += '</g><g class="axis">';
   for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) out += `<text x="${g.L - 6}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end">${v === 0 ? '0' : Math.abs(v) >= 1000 ? (v / 1000).toFixed(v % 1000 ? 1 : 0) + 'k' : v}</text>`;
-  for (let m = 0; m < H; m++) out += `<text x="${x(m).toFixed(1)}" y="${g.H - 4}" text-anchor="middle">${MONTH_LABELS[m]}</text>`;
+  const axY = g.H - LANES * LANE_H - 6;
+  for (let m = 0; m < H; m++) out += `<text x="${x(m).toFixed(1)}" y="${axY}" text-anchor="middle">${MONTH_LABELS[m]}</text>`;
+  out += '</g>';
+  // lanes: clients, VAs, money out
+  const lanes = [['hardhat', r => r.clientsActive], ['headset', r => r.vasActive], ['kettlebell', r => (r.expenses / 1000).toFixed(1) + 'k']];
+  out += '<g class="lanes">';
+  lanes.forEach(([icon, f], i) => {
+    const ly = g.H - (LANES - i) * LANE_H + LANE_H - 4;
+    out += `<g transform="translate(${g.L - 34} ${ly - 12}) scale(.5)" class="lane-ic"><path d="${ICONS[icon]}"/></g>`;
+    for (let m = 0; m < H; m++) { const r = sim.rows[m]; const v = f(r); const chg = m > 0 && f(sim.rows[m - 1]) !== v; out += `<text class="lane${chg ? ' chg' : ''}" x="${x(m).toFixed(1)}" y="${ly}" text-anchor="middle">${v}</text>`; }
+  });
   out += '</g>';
   const yF = y(s.floor), y0 = y(0), yLo = y(lo);
   out += `<defs><clipPath id="c-warn"><rect x="0" y="${yF}" width="${g.W}" height="${Math.max(0, y0 - yF)}"/></clipPath><clipPath id="c-crit"><rect x="0" y="${y0}" width="${g.W}" height="${Math.max(0, yLo - y0 + 20)}"/></clipPath><linearGradient id="g-ok" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".22"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>`;
@@ -899,7 +923,7 @@ function drawChart(cash, sim, ghosts, s) {
   const hm = hoverM != null && hoverM < H ? hoverM : null;
   if (hm != null) out += `<line class="ruler" x1="${x(hm).toFixed(1)}" x2="${x(hm).toFixed(1)}" y1="${(y(cash[hm]) + 8).toFixed(1)}" y2="${g.H - g.B}"/><circle class="dot" cx="${x(hm).toFixed(1)}" cy="${y(cash[hm]).toFixed(1)}" r="6"/>`;
   csvg.innerHTML = out; csvg._x = x; csvg._y = y;
-  if (hm != null) { const r = sim.rows[hm]; pill.hidden = false; pill.style.left = x(hm) + 'px'; pill.style.top = (y(cash[hm]) - 12) + 'px'; pill.innerHTML = `<b>${r.full.split(' ')[0]}, ${fmt(r.cash)}</b><span class="w">${reason(r, s)}</span>`; } else pill.hidden = true;
+  if (hm != null) { const r = sim.rows[hm]; pill.hidden = false; pill.style.left = x(hm) + 'px'; pill.style.top = (y(cash[hm]) - 12) + 'px'; pill.innerHTML = `<b>${r.full.split(' ')[0]}, ${fmt(r.cash)}</b><span class="w">${r.clientsActive} clients · ${r.vasActive} VA${r.vasActive === 1 ? '' : 's'} · ${fmt(r.income)} in · ${fmt(r.expenses)} out</span><span class="w">${reason(r, s)}</span>`; } else pill.hidden = true;
 }
 function animateChart(cash, sim, ghosts, s) {
   if (tweenRaf) cancelAnimationFrame(tweenRaf);
@@ -994,13 +1018,18 @@ function buildClients() {
     painters.push(() => { const cc = cur().clients[i]; sel.value = cc.end == null ? '' : cc.end; sw.setAttribute('aria-checked', cc.on); row.classList.toggle('dead', !cc.on || (cc.end != null && cc.end <= 1)); sm.textContent = (cc.amounts && cc.amounts[0] != null && cc.amounts[0] !== cc.amount ? `${fmt(cc.amounts[0])} now, then ` : '') + `${fmt(cc.amount)}/mo` + (cc.start > 0 ? ` from ${MONTH_LABELS[cc.start]}` : ''); });
     host.appendChild(row);
   });
-  const addN = $('#add-n'), addStart = $('#add-start'), addAmt = $('#add-amt');
-  fillSelect(addStart, monthOpts(1));
-  const bump = d => { const s = cur(); s.addClients = clamp(s.addClients + d, -3, 8); buzz(H.detent); render({ anim: true }); };
-  holdRepeat($('#add-minus'), () => bump(-1)); holdRepeat($('#add-plus'), () => bump(1));
-  addStart.addEventListener('change', () => { cur().addStart = +addStart.value; render({ anim: true }); });
+  // per-month schedule of new clients
+  const sched = $('#sched'), addAmt = $('#add-amt');
+  MONTH_LABELS.forEach((l, m) => {
+    const c = document.createElement('div'); c.className = 'sc';
+    c.innerHTML = `<button class="up" aria-label="Add a client starting ${MONTH_FULL[m]}"><span class="n disp num">0</span></button><button class="dn" aria-label="Remove one">−</button><span class="m">${l}</span>`;
+    const chg = d => { const s = cur(); const v = clamp((s.addSchedule[m] || 0) + d, 0, 9); if (v) s.addSchedule[m] = v; else delete s.addSchedule[m]; buzz(H.detent); render({ anim: true }); };
+    holdRepeat($('.up', c), () => chg(1)); holdRepeat($('.dn', c), () => chg(-1));
+    sched.appendChild(c);
+    painters.push(() => { const s = cur(); const v = s.addSchedule[m] || 0; $('.n', c).textContent = v ? '+' + v : '0'; c.classList.toggle('on', v > 0); c.classList.toggle('off', m >= s.horizon); });
+  });
   addAmt.addEventListener('change', () => { cur().newRetainer = Math.max(0, +addAmt.value || 0); render({ anim: true }); });
-  painters.push(() => { const s = cur(); addN.textContent = (s.addClients > 0 ? '+' : '') + s.addClients; addStart.value = s.addStart; addAmt.value = s.newRetainer; });
+  painters.push(() => { const s = cur(); if (document.activeElement !== addAmt) addAmt.value = s.newRetainer; const tot = Object.values(s.addSchedule).reduce((a, b) => a + b, 0); $('#sched-r').textContent = tot ? `${tot} planned · ${fmtK(tot * s.newRetainer)}/mo once all in` : 'tap a month to plan a client'; });
   // lose key
   const lose = $('#lose'), txt = $('#lose-t'); let t0 = null, raf = null, tick = null, undo = null;
   const setRing = p => lose.style.setProperty('--ring', p * 100);
@@ -1197,7 +1226,7 @@ function render(opt = {}) {
   lastBelow = below;
   // hero
   renderHero(sim.low.cash, s, { drag: opt.drag, pulse });
-  $('#hero-m').textContent = `${sim.low.full.split(' ')[0]} · floor ${fmt(s.floor)}, one month of home`;
+  $('#hero-m').textContent = `${sim.low.full.split(' ')[0]} · the least you will have in the bank at any month end`;
   $('#hs-v').textContent = fmt(sim.low.cash); $('#hs-p').style.setProperty('--p', (fillP(sim.low.cash, s.floor) * 100).toFixed(0) + '%'); $('#hs-m').textContent = sim.low.label;
   paintGauge(sim, s);
   // tiles

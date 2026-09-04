@@ -83,6 +83,9 @@ or a field in the Advanced drawer.
 - Sweep mode pays anything above floor plus buffer into the cards at month end.
 - Bills are an editable list: name, amount, kind (house, life, business), start
   month and optional end month. Add or delete rows on the page.
+- New clients are planned per month: tap a month to add one starting then,
+  each at the retainer you set. The curve carries three lanes under the axis:
+  active clients, active VAs, and money out for each month.
 - Assistants are a list too: name, hours per week, rate, start month, end month.
   The VA knob drives the first one; the answer cards scale all active ones.
 - Preset chips save the values they touch and restore them when tapped off.
