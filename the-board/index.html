@@ -1,0 +1,958 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;500;600&family=Familjen+Grotesk:wght@400;500;600&display=swap">
+<style>
+:root {
+  color-scheme: dark;
+  --ground: #15120F; --ground-2: #1C1814; --groove: #2A241E; --rule: #2E2822;
+  --ink: #F1EBE1; --ink-2: #8F877B; --ink-3: #5E574D;
+  --accent: #5CE0C6; --accent-dim: rgba(92,224,198,.14); --accent-glow: rgba(92,224,198,.35);
+  --sand: #C9B79C; --sand-dim: rgba(201,183,156,.22);
+  --warn: #F2A33A; --warn-dim: rgba(242,163,58,.22);
+  --crit: #E5484D; --crit-dim: rgba(229,72,77,.24);
+  --ghost: #8683A0;
+  --key: #221D18; --key-edge: #3A332B;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --ground: #E8EAE4; --ground-2: #DFE2DB; --groove: #C9CDC4; --rule: #CBCFC6;
+    --ink: #17191B; --ink-2: #5E635F; --ink-3: #8A8F8A;
+    --accent: #0E8C78; --accent-dim: rgba(14,140,120,.16); --accent-glow: rgba(14,140,120,.3);
+    --sand: #7A6F5C; --sand-dim: rgba(122,111,92,.22);
+    --warn: #B86E0C; --warn-dim: rgba(184,110,12,.2);
+    --crit: #B8262C; --crit-dim: rgba(184,38,44,.2);
+    --ghost: #8E8FA8;
+    --key: #F2F4EE; --key-edge: #BFC3BA;
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --ground: #E8EAE4; --ground-2: #DFE2DB; --groove: #C9CDC4; --rule: #CBCFC6;
+  --ink: #17191B; --ink-2: #5E635F; --ink-3: #8A8F8A;
+  --accent: #0E8C78; --accent-dim: rgba(14,140,120,.16); --accent-glow: rgba(14,140,120,.3);
+  --sand: #7A6F5C; --sand-dim: rgba(122,111,92,.22);
+  --warn: #B86E0C; --warn-dim: rgba(184,110,12,.2);
+  --crit: #B8262C; --crit-dim: rgba(184,38,44,.2);
+  --ghost: #8E8FA8;
+  --key: #F2F4EE; --key-edge: #BFC3BA;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--ground); color: var(--ink);
+  font-family: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif; font-size: 15px; line-height: 1.4;
+  -webkit-font-smoothing: antialiased; overflow-x: hidden;
+}
+.mono, .num { font-family: "Martian Mono", "SF Mono", Menlo, monospace; font-variant-numeric: tabular-nums; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+button:focus-visible, input:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- frame ---------- */
+.board { display: grid; grid-template-columns: 1fr; min-height: 100vh; }
+.deck { position: sticky; top: 0; z-index: 5; background: var(--ground); padding: 8px 8px 6px; border-bottom: 1px solid var(--rule); }
+.rack { padding: 6px 12px 80px; }
+@media (min-width: 900px) {
+  .board { grid-template-columns: 58fr 42fr; max-width: 1180px; margin: 0 auto; column-gap: 28px; padding: 0 20px; }
+  .deck { position: sticky; top: 0; height: 100vh; padding: 22px 0 0 0; border-bottom: 0; align-self: start; overflow: hidden; }
+  .rack { padding: 22px 0 120px; }
+}
+
+/* ---------- deck: tabs ---------- */
+.tabs { display: flex; align-items: center; gap: 2px; margin-bottom: 8px; }
+.tab { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding: 5px 9px; color: var(--ink-2); border: 1px solid transparent; border-radius: 2px; }
+.tab[aria-selected="true"] { color: var(--ink); border-color: var(--rule); background: var(--ground-2); }
+.tab.ghost1[aria-selected="false"], .tab.ghost2[aria-selected="false"] { color: var(--ghost); }
+.tab-dot { display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:6px; vertical-align:middle; background: var(--accent); }
+.tab.ghost1 .tab-dot, .tab.ghost2 .tab-dot { background: var(--ghost); }
+.tabs .spacer { flex: 1; }
+.horizon { display: flex; border: 1px solid var(--rule); border-radius: 2px; overflow: hidden; }
+.horizon button { font-size: 11px; padding: 4px 8px; color: var(--ink-2); }
+.horizon button[aria-pressed="true"] { color: var(--ground); background: var(--ink-2); }
+.tab-edit { font-size: 11px; color: var(--ink-3); padding: 4px 6px; }
+
+/* ---------- deck: hero ---------- */
+.hero { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+.hero .cap { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 2px; }
+.hero .val { font-family: "Martian Mono", "SF Mono", Menlo, monospace; font-variant-numeric: tabular-nums; font-weight: 500; font-size: clamp(22px, 7.5vw, 40px); line-height: 1.05; letter-spacing: -.02em; white-space: nowrap; }
+.hero .sub { font-size: 11px; color: var(--ink-2); margin-top: 3px; }
+.hero .val.warn { color: var(--warn); } .hero .val.crit { color: var(--crit); } .hero .val.good { color: var(--accent); }
+@media (min-width: 900px) { .hero .val { font-size: 56px; } .hero .cap { font-size: 12px; } .hero { gap: 18px; margin-bottom: 10px; } }
+
+/* ---------- chart ---------- */
+.chart { position: relative; height: 28vh; min-height: 170px; margin: 0 -2px; touch-action: pan-y; }
+@media (min-width: 900px) { .chart { height: 420px; margin: 0; } }
+.chart svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.chart .axis text { font-family: "Martian Mono", monospace; font-size: 10px; fill: var(--ink-2); }
+.chart .grid line { stroke: var(--rule); stroke-width: 1; }
+.chart .zero { stroke: var(--ink-3); stroke-width: 1; }
+.chart .floor { stroke: var(--sand); stroke-width: 1; stroke-dasharray: 3 4; }
+.chart .floor-lab { font-family: "Martian Mono", monospace; font-size: 10px; fill: var(--sand); }
+.chart .curve { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; filter: drop-shadow(0 0 6px var(--accent-glow)); }
+.chart .ghost { fill: none; stroke: var(--ghost); stroke-width: 1; stroke-dasharray: 4 3; }
+.chart .ghost-lab { font-family: "Martian Mono", monospace; font-size: 9px; letter-spacing: .06em; text-transform: uppercase; fill: var(--ghost); }
+.chart .lowring { fill: none; stroke-width: 2; }
+.chart .lowstem { stroke-width: 1; }
+.chart .lowlab { font-family: "Martian Mono", monospace; font-size: 10px; fill: var(--ink); }
+.chart .tip-line { stroke: var(--ink-2); stroke-width: 1; }
+.chart .flare { fill: none; stroke: var(--sand); stroke-width: 2; opacity: 0; }
+.chart .throw { fill: none; stroke: var(--accent); stroke-width: 1.2; opacity: .9; }
+.tip { position: absolute; pointer-events: none; background: var(--ground-2); border: 1px solid var(--rule); padding: 6px 8px; font-size: 11px; line-height: 1.45; min-width: 150px; max-width: 220px; z-index: 6; display: none; }
+.tip b { font-family: "Martian Mono", monospace; font-weight: 500; }
+.tip .why { color: var(--ink-2); }
+
+/* ---------- secondary strip ---------- */
+.strip { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 6px 2px 0; font-family: "Martian Mono", monospace; font-size: 11px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.strip b { color: var(--ink); font-weight: 500; }
+.strip .good { color: var(--accent); }
+@media (min-width: 900px) { .strip { font-size: 12px; padding-top: 10px; } }
+
+/* ---------- answers ---------- */
+.answers { margin: 10px 0 6px; }
+.answers .lead { font-size: 15px; line-height: 1.45; margin: 0 0 8px; max-width: 60ch; text-wrap: balance; }
+.answers .lead .num { font-weight: 500; }
+.answers .lead.warn .num { color: var(--warn); } .answers .lead.crit .num { color: var(--crit); }
+.answer { display: flex; align-items: baseline; gap: 10px; width: 100%; text-align: left; padding: 9px 0; border-top: 1px solid var(--rule); font-size: 15px; line-height: 1.4; transition: color .2s; }
+.answer:last-child { border-bottom: 1px solid var(--rule); }
+.answer .k { font-family: "Martian Mono", monospace; font-size: 10px; color: var(--ink-3); width: 14px; flex: none; }
+.answer .t { flex: 1; }
+.answer .c { font-family: "Martian Mono", monospace; font-size: 11px; color: var(--ink-2); white-space: nowrap; }
+.answer .c.full { color: var(--accent); }
+.answer:hover .t, .answer.lit .t { color: var(--accent); }
+@media (min-width: 900px) { .answers .lead { font-size: 17px; } .answer { font-size: 16px; } }
+
+/* ---------- rack ---------- */
+.grp { padding: 14px 0 6px; border-top: 1px solid var(--rule); }
+.grp:first-child { border-top: 0; padding-top: 4px; }
+.grp-lab { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 10px; display: flex; justify-content: space-between; }
+.grp-lab .mono { color: var(--ink-3); letter-spacing: 0; text-transform: none; }
+.row { display: grid; grid-template-columns: minmax(84px, 120px) 1fr auto; align-items: center; gap: 10px; padding: 7px 0; }
+.row .lab { font-size: 14px; font-weight: 600; }
+.row .lab small { display: block; font-weight: 400; font-size: 11px; color: var(--ink-2); }
+.row .out { font-family: "Martian Mono", monospace; font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; min-width: 78px; color: var(--ink); white-space: nowrap; }
+.row .out .why { display: block; font-size: 10px; color: var(--ink-2); }
+.row.dragging .out { color: var(--accent); }
+
+/* fader */
+.fader { position: relative; height: 28px; display: flex; align-items: center; }
+.fader input { -webkit-appearance: none; appearance: none; width: 100%; height: 28px; margin: 0; background: transparent; cursor: pointer; }
+.fader input::-webkit-slider-runnable-track { height: 6px; border-radius: 1px; background: linear-gradient(to right, var(--accent) 0, var(--accent) var(--p, 0%), var(--groove) var(--p, 0%), var(--groove) 100%); box-shadow: inset 0 1px 0 rgba(0,0,0,.45), inset 0 -1px 0 rgba(255,255,255,.04); }
+.fader input::-moz-range-track { height: 6px; border-radius: 1px; background: var(--groove); }
+.fader input::-moz-range-progress { height: 6px; background: var(--accent); }
+.fader input::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 18px; margin-top: -6px; border-radius: 2px; background: linear-gradient(var(--key-edge), var(--key)); border: 1px solid var(--key-edge); box-shadow: 0 2px 4px rgba(0,0,0,.5); position: relative; transition: transform .08s; }
+.fader input::-moz-range-thumb { width: 28px; height: 18px; border-radius: 2px; background: var(--key); border: 1px solid var(--key-edge); box-shadow: 0 2px 4px rgba(0,0,0,.5); }
+.fader input:active::-webkit-slider-thumb { transform: scale(1.06); }
+.fader .ticks { position: absolute; left: 14px; right: 14px; bottom: 1px; height: 4px; pointer-events: none; background-image: repeating-linear-gradient(to right, var(--ink-3) 0 1px, transparent 1px var(--tick, 10%)); background-size: calc(100% + 1px) 100%; opacity: .7; }
+.fader .cap-line { position: absolute; width: 1px; height: 10px; background: var(--ink-3); left: calc(14px + (100% - 28px) * var(--f, 0)); top: 9px; pointer-events: none; }
+
+/* keys + stepper */
+.key { font-family: "Martian Mono", monospace; font-size: 13px; min-width: 34px; height: 30px; padding: 0 10px; background: linear-gradient(var(--key-edge), var(--key)); border: 1px solid var(--key-edge); border-radius: 2px; box-shadow: 0 2px 0 rgba(0,0,0,.4); transition: transform .05s, box-shadow .05s; }
+.key:active, .key.down { transform: translateY(1px); box-shadow: inset 0 2px 3px rgba(0,0,0,.5); }
+.stepper { display: inline-flex; align-items: center; gap: 6px; }
+.stepper .n { font-family: "Martian Mono", monospace; font-size: 18px; font-weight: 500; min-width: 36px; text-align: center; }
+.inline-sel { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2); }
+select, input[type=number], input[type=text] { font: inherit; font-family: "Martian Mono", monospace; font-size: 12px; color: var(--ink); background: var(--ground-2); border: 1px solid var(--rule); border-radius: 2px; padding: 4px 6px; }
+input[type=number] { width: 84px; }
+
+/* toggle switch */
+.switch { position: relative; width: 40px; height: 22px; border-radius: 2px; background: var(--groove); border: 1px solid var(--key-edge); box-shadow: inset 0 1px 2px rgba(0,0,0,.5); flex: none; }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 2px; background: linear-gradient(var(--key-edge), var(--key)); box-shadow: 0 1px 2px rgba(0,0,0,.5); transition: transform .12s; }
+.switch[aria-checked="true"] { background: var(--accent-dim); border-color: var(--accent); }
+.switch[aria-checked="true"]::after { transform: translateX(18px); background: var(--accent); }
+.row.sw { grid-template-columns: 1fr auto auto; }
+.row.sw .lab { font-weight: 500; }
+
+/* client rows */
+.client { grid-template-columns: 1fr auto auto; }
+.client.dead .lab { opacity: .35; text-decoration: line-through; }
+.client .end { font-size: 11px; color: var(--ink-2); }
+
+/* lose key */
+.lose { display: flex; align-items: center; gap: 14px; padding: 8px 0; }
+.lose .btn { position: relative; width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--crit); background: radial-gradient(circle at 50% 40%, var(--key-edge), var(--key)); box-shadow: 0 2px 0 rgba(0,0,0,.4); flex: none; }
+.lose .btn::before { content: ""; position: absolute; inset: -6px; border-radius: 50%; background: conic-gradient(var(--crit) calc(var(--ring, 0) * 1%), transparent 0); -webkit-mask: radial-gradient(circle, transparent 60%, #000 61%); mask: radial-gradient(circle, transparent 60%, #000 61%); }
+.lose .btn:active { transform: translateY(1px); }
+.lose .txt { font-size: 13px; color: var(--ink-2); max-width: 32ch; }
+.lose .txt b { color: var(--ink); font-weight: 600; }
+.undo { font-family: "Martian Mono", monospace; font-size: 12px; color: var(--accent); border: 1px solid var(--accent); padding: 4px 10px; border-radius: 2px; }
+
+/* month tanks */
+.tanks { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; padding: 4px 0 2px; }
+.tank { position: relative; height: 46px; border: 1px solid var(--key-edge); border-radius: 2px; background: var(--ground-2); overflow: hidden; cursor: pointer; }
+.tank .fill { position: absolute; left: 0; right: 0; bottom: 0; height: var(--h, 0%); background: var(--accent-dim); border-top: 1px solid var(--accent); transition: height .25s ease-out; }
+.tank.signed { background: var(--sand-dim); border-color: var(--sand); cursor: default; }
+.tank.signed .fill { height: 100%; background: transparent; border-top: 0; }
+.tank.booked .fill { background: var(--accent-dim); }
+.tank .m { position: absolute; top: 3px; left: 0; right: 0; text-align: center; font-family: "Martian Mono", monospace; font-size: 9px; color: var(--ink-2); }
+.tank.signed .m { color: var(--sand); }
+.tank .lock { position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font-size: 9px; color: var(--sand); }
+.tank.off { opacity: .45; }
+.tank.past { opacity: .35; pointer-events: none; }
+.tank-legend { font-size: 11px; color: var(--ink-2); padding: 4px 0 0; }
+
+/* drawer */
+details.adv summary { list-style: none; cursor: pointer; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); padding: 12px 0; display: flex; justify-content: space-between; }
+details.adv summary::-webkit-details-marker { display: none; }
+details.adv summary::after { content: "+"; font-family: "Martian Mono", monospace; }
+details.adv[open] summary::after { content: "–"; }
+.adv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; padding-bottom: 12px; }
+.adv-grid label { font-size: 12px; color: var(--ink-2); display: flex; flex-direction: column; gap: 3px; }
+.adv-grid input { width: 100%; }
+.adv .reset { font-family: "Martian Mono", monospace; font-size: 11px; color: var(--crit); padding: 6px 0; }
+
+.note { font-size: 12px; color: var(--ink-2); max-width: 52ch; margin: 6px 0 0; }
+.foot { font-size: 11px; color: var(--ink-3); margin-top: 28px; max-width: 60ch; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fader input::-webkit-slider-thumb, .switch::after, .tank .fill, .key, .answer { transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="board">
+  <section class="deck">
+    <div class="tabs" id="tabs">
+      <button class="tab" data-slot="0" role="tab" aria-selected="true"><span class="tab-dot"></span><span class="tn">Base</span></button>
+      <button class="tab ghost1" data-slot="1" role="tab" aria-selected="false"><span class="tab-dot"></span><span class="tn">Slot 2</span></button>
+      <button class="tab ghost2" data-slot="2" role="tab" aria-selected="false"><span class="tab-dot"></span><span class="tn">Slot 3</span></button>
+      <button class="tab-edit" id="rename" title="Rename this scenario">rename</button>
+      <span class="spacer"></span>
+      <div class="horizon" role="group" aria-label="Horizon"><button data-h="6" aria-pressed="false">6 mo</button><button data-h="12" aria-pressed="true">12 mo</button></div>
+    </div>
+    <div class="hero">
+      <div><div class="cap">Lowest point</div><div class="val" id="h-low">–</div><div class="sub" id="h-low-sub"></div></div>
+      <div><div class="cap">To floor</div><div class="val" id="h-floor">–</div><div class="sub" id="h-floor-sub"></div></div>
+      <div><div class="cap" id="h-end-cap">Cash in Aug</div><div class="val" id="h-end">–</div><div class="sub" id="h-end-sub"></div></div>
+    </div>
+    <div class="chart" id="chart"><svg aria-label="Projected cash by month"></svg><div class="tip" id="tip"></div></div>
+    <div class="strip" id="strip"></div>
+  </section>
+
+  <section class="rack">
+    <div class="answers" id="answers"></div>
+
+    <div class="grp" id="g-clients">
+      <div class="grp-lab"><span>Clients</span><span class="mono" id="clients-total"></span></div>
+      <div id="client-rows"></div>
+      <div class="row" style="grid-template-columns:auto 1fr">
+        <div class="stepper"><button class="key" id="add-minus" aria-label="Fewer clients">–</button><span class="n" id="add-n">0</span><button class="key" id="add-plus" aria-label="More clients">+</button></div>
+        <div class="inline-sel">more clients from <select id="add-start"></select> at <input type="number" id="add-amt" step="250" min="0"> /mo</div>
+      </div>
+      <div class="lose">
+        <button class="btn" id="lose" aria-label="Hold to lose a client"></button>
+        <div class="txt" id="lose-txt"><b>Hold to lose a client.</b> Your biggest one stops paying next month. No notice, like this year.</div>
+      </div>
+    </div>
+
+    <div class="grp" id="g-growth">
+      <div class="grp-lab"><span>Growth</span><span class="mono">ads make clients</span></div>
+      <div id="growth-rows"></div>
+    </div>
+
+    <div class="grp" id="g-house">
+      <div class="grp-lab"><span>The house</span><span class="mono" id="house-total"></span></div>
+      <div class="tanks" id="tanks"></div>
+      <div class="tank-legend">Sand is signed and locked. Tap an open month to book it at the open rate, or let the occupancy fader fill it.</div>
+      <div id="house-rows"></div>
+    </div>
+
+    <div class="grp" id="g-out">
+      <div class="grp-lab"><span>Money out</span><span class="mono" id="out-total"></span></div>
+      <div id="out-rows"></div>
+    </div>
+
+    <div class="grp" id="g-credit">
+      <div class="grp-lab"><span>Credit</span><span class="mono" id="credit-total"></span></div>
+      <div id="credit-rows"></div>
+      <p class="note">The credit line costs 30 cents on the dollar over six months, paid weekly. It is the most expensive money on this page and it shows up as a fee, not a rate.</p>
+    </div>
+
+    <div class="grp" id="g-modes">
+      <div class="grp-lab"><span>Modes</span></div>
+      <div id="mode-rows"></div>
+    </div>
+
+    <details class="adv">
+      <summary>Advanced</summary>
+      <div class="adv-grid" id="adv-grid"></div>
+      <button class="reset" id="reset">Reset this slot to the seed numbers</button>
+    </details>
+
+    <p class="foot">Cash lands in the month it is collected. Deposits are not counted. Taxes are not modeled this year. Ads turn into clients at the cost per client with the lag you set, which is the most optimistic thing on this page, so try Conservative before you believe August.</p>
+  </section>
+</div>
+<script>
+// ---- Cash engine (pure, no DOM) ----
+const MONTH_LABELS = ['Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug'];
+const MONTH_FULL   = ['September 2026','October 2026','November 2026','December 2026','January 2027','February 2027','March 2027','April 2027','May 2027','June 2027','July 2027','August 2027'];
+const WEEKS_PER_MONTH = 4.33;
+
+function baseScenario() {
+  return {
+    name: 'Base',
+    horizon: 12,
+    startCash: 10000,
+    floor: 3000,
+    // house
+    housing: 3000,
+    utilities: 250,
+    hoaArrears: 1200,
+    // signed leases: cash in the month it lands
+    signedRent: { 0: 3000, 1: 3000, 2: 600, 4: 3867, 5: 3867, 6: 3866 },
+    signedMonths: [0,1,2,4,5,6],
+    bookedOpen: [],            // open months he assumes he fills at openRate
+    occupancy: 0,              // 0..0.9, applied to open, unbooked months
+    openRate: 3000,
+    turnover: 300,             // per move-out (end of a booked run)
+    // life
+    mexicoRent: 1000,
+    mexicoStart: 1,
+    personal: 1000,
+    // debt
+    ccBalance: 30000,
+    ccApr: 0.24,
+    ccPayment: 1000,
+    sweep: false,
+    sweepBuffer: 1000,
+    loan: 300,
+    locDraw: 0,
+    locMonth: 3,
+    locFee: 0.30,
+    locTerm: 6,
+    cardApproved: false,
+    cardDraw: 0,
+    cardMonth: 3,
+    cardLimit: 8000,
+    cardIntroMonths: 6,
+    cardApr: 0.30,
+    // business
+    subs: 1000,
+    agency: true,
+    agencyFee: 500,
+    adsPerDay: 50,
+    adsProduceClients: true,
+    costPerClient: 2000,
+    lagMonths: 2,
+    newRetainer: 2000,
+    vaHours: 45,
+    vaRate: 5.5,
+    // clients
+    clients: [
+      { id: 'electrician', name: 'Electrician', on: true, start: 0, end: null, amounts: { 0: 2000 }, amount: 2000 },
+      { id: 'plumber',     name: 'Plumber',     on: true, start: 0, end: null, amounts: { 0: 1300, 1: 1300 }, amount: 2000 },
+      { id: 'audit',       name: 'Audit client',on: true, start: 1, end: null, amounts: {}, amount: 2000 },
+    ],
+    addClients: 0,
+    addStart: 1,
+    conservative: false,
+  };
+}
+
+function clientIncome(c, m) {
+  if (!c.on) return 0;
+  if (m < c.start) return 0;
+  if (c.end != null && m >= c.end) return 0;
+  return (c.amounts && c.amounts[m] != null) ? c.amounts[m] : c.amount;
+}
+
+function isSigned(s, m) { return s.signedMonths.indexOf(m) >= 0; }
+function isBookedOpen(s, m) { return s.bookedOpen.indexOf(m) >= 0; }
+
+function simulate(s) {
+  const H = s.horizon;
+  const hair = s.conservative ? 0.8 : 1;
+  const cpc = s.conservative ? s.costPerClient * 2 : s.costPerClient;
+  const rows = [];
+  let cash = s.startCash;
+  let cc = s.ccBalance;
+  let card = 0, cardFirst = null;
+  let adBucket = 0;
+  const adStarts = new Array(H + 12).fill(0);
+  let adActive = 0;
+  const locSched = new Array(H + 12).fill(0);
+  let borrowCost = 0;
+  let ccInterestTotal = 0;
+
+  for (let m = 0; m < H; m++) {
+    // ---- income
+    let retainers = 0;
+    for (const c of s.clients) retainers += clientIncome(c, m);
+    if (s.addClients > 0 && m >= s.addStart) retainers += s.addClients * s.newRetainer;
+    if (s.addClients < 0) {
+      // negative = lose that many of the existing, biggest first, from addStart
+      if (m >= s.addStart) {
+        const active = s.clients.filter(c => clientIncome(c, m) > 0).sort((a,b)=>clientIncome(b,m)-clientIncome(a,m));
+        for (let i = 0; i < Math.min(-s.addClients, active.length); i++) retainers -= clientIncome(active[i], m);
+      }
+    }
+    adActive += adStarts[m];
+    retainers += adActive * s.newRetainer;
+    retainers *= hair;
+
+    let rent = 0, rentKind = 'none';
+    if (isSigned(s, m)) { rent = s.signedRent[m] || 0; rentKind = 'signed'; }
+    else if (isBookedOpen(s, m)) { rent = s.openRate * hair; rentKind = 'booked'; }
+    else if (s.occupancy > 0) { rent = Math.round(s.openRate * s.occupancy * hair); rentKind = 'occupancy'; }
+
+    const income = retainers + rent;
+
+    // ---- expenses
+    const ads = s.adsPerDay * 30;
+    const va = Math.round(s.vaHours * WEEKS_PER_MONTH * s.vaRate);
+    const agency = s.agency ? s.agencyFee : 0;
+    const mexico = m >= s.mexicoStart ? s.mexicoRent : 0;
+    const arrears = m === 0 ? s.hoaArrears : 0;
+    // turnover: month where a booked/signed run ends and next month is not booked
+    const occNow = isSigned(s, m) || isBookedOpen(s, m);
+    const occNext = isSigned(s, m + 1) || isBookedOpen(s, m + 1);
+    const turnover = occNow && !occNext ? s.turnover : 0;
+
+    // credit cards
+    const ccInterest = Math.round(cc * s.ccApr / 12);
+    ccInterestTotal += ccInterest;
+    const ccPay = Math.min(s.ccPayment, cc + ccInterest);
+    cc = cc + ccInterest - ccPay;
+
+    // business card (Capital on Tap)
+    let cardPay = 0;
+    if (s.cardApproved && s.cardDraw > 0 && m === s.cardMonth) { card += Math.min(s.cardDraw, s.cardLimit); cardFirst = m; cash += Math.min(s.cardDraw, s.cardLimit); }
+    if (card > 0) {
+      const inIntro = cardFirst != null && m - cardFirst < s.cardIntroMonths;
+      const interest = inIntro ? 0 : Math.round(card * s.cardApr / 12);
+      borrowCost += interest;
+      cardPay = Math.min(card + interest, Math.max(100, Math.round(card * 0.03)) + interest);
+      card = card + interest - cardPay;
+    }
+
+    // line of credit
+    let locIn = 0;
+    if (s.locDraw > 0 && m === s.locMonth) {
+      locIn = s.locDraw;
+      const total = s.locDraw * (1 + s.locFee);
+      borrowCost += s.locDraw * s.locFee;
+      for (let k = 1; k <= s.locTerm; k++) locSched[m + k] += total / s.locTerm;
+    }
+    const locPay = Math.round(locSched[m]);
+
+    const fixed = s.housing + s.utilities + mexico + s.personal + s.loan + s.subs;
+    const business = ads + va + agency;
+    const debt = ccPay + locPay + cardPay;
+    const expenses = fixed + business + debt + arrears + turnover;
+
+    // ads -> clients
+    if (s.adsProduceClients && ads > 0) {
+      adBucket += ads;
+      while (adBucket >= cpc) { adBucket -= cpc; adStarts[m + s.lagMonths] += 1; }
+    }
+
+    cash += income + locIn - expenses;
+
+    // sweep surplus to cards
+    let swept = 0;
+    if (s.sweep && cash > s.floor + s.sweepBuffer && cc > 0) {
+      swept = Math.min(cash - (s.floor + s.sweepBuffer), cc);
+      cc -= swept; cash -= swept;
+    }
+
+    rows.push({
+      m, label: MONTH_LABELS[m], full: MONTH_FULL[m],
+      retainers: Math.round(retainers), rent: Math.round(rent), rentKind, income: Math.round(income),
+      fixed, business, debt, arrears, turnover, expenses: Math.round(expenses),
+      ads, va, agency, mexico, ccPay, locPay, locIn, cardPay, swept,
+      net: Math.round(income - expenses + locIn - swept),
+      cash: Math.round(cash), cc: Math.round(cc), card: Math.round(card),
+      adClients: adActive, adsStartingLater: adStarts.slice(m + 1).reduce((a,b)=>a+b,0),
+      structural: Math.round(retainers - (fixed + business + ccPay)),
+    });
+  }
+
+  // ---- summary
+  let low = rows[0];
+  for (const r of rows) if (r.cash < low.cash) low = r;
+  const firstBelowFloor = rows.find(r => r.cash < s.floor);
+  const firstNegative = rows.find(r => r.cash < 0);
+  let breakeven = null;
+  for (let i = 0; i < rows.length - 1; i++) {
+    if (rows[i].net >= 0 && rows[i + 1].net >= 0) { breakeven = rows[i]; break; }
+  }
+  const firstProfit = rows.find(r => r.net > 0 && r.m > 0);
+  const last = rows[rows.length - 1];
+  // cc payoff estimate continuing last month's payment
+  let payoffMonths = null;
+  { let b = last.cc, n = 0; const pay = s.ccPayment;
+    if (b <= 0) payoffMonths = 0;
+    else if (pay <= b * s.ccApr / 12) payoffMonths = Infinity;
+    else { while (b > 0 && n < 600) { b = b + b * s.ccApr / 12 - pay; n++; } payoffMonths = n; } }
+  const gap = Math.max(0, s.floor - low.cash);
+  return {
+    rows, low, gap, gapMonth: low.m,
+    firstBelowFloor, firstNegative, breakeven, firstProfit, last,
+    endCash: last.cash, endCc: last.cc, payoffMonths, borrowCost: Math.round(borrowCost), ccInterestTotal,
+    structural: last.structural,
+    adClientsTotal: last.adClients,
+  };
+}
+
+// ---- Answer engine: what closes the gap?
+function clone(s) { return JSON.parse(JSON.stringify(s)); }
+
+function candidates(s, sim) {
+  const out = [];
+  const gm = sim.gapMonth;
+  const push = (label, effort, mutate, note) => {
+    const t = clone(s); mutate(t);
+    const r = simulate(t);
+    const closes = Math.max(0, r.low.cash - sim.low.cash);
+    if (closes <= 0) return;
+    const full = r.low.cash >= s.floor;
+    out.push({ label, effort, apply: mutate, low: r.low.cash, closes: Math.round(closes), full, note });
+  };
+  // clients
+  for (let n = 1; n <= 4; n++) {
+    const start = Math.max(1, Math.min(gm - 1, 1));
+    push(`Sign ${n === 1 ? 'one more client' : n + ' more clients'} by ${MONTH_LABELS[start]}`, n * 1.0,
+      t => { t.addClients = (t.addClients || 0) + n; t.addStart = start; });
+  }
+  // book open months at or before the gap
+  const open = [];
+  for (let m = 1; m <= gm; m++) if (!isSigned(s, m) && !isBookedOpen(s, m)) open.push(m);
+  for (const m of open) push(`Rent the house in ${MONTH_FULL[m].split(' ')[0]}`, 0.6, t => { t.bookedOpen.push(m); });
+  if (open.length >= 2) push(`Rent the house in ${open.slice(0,2).map(m=>MONTH_LABELS[m]).join(' and ')}`, 1.1, t => { t.bookedOpen.push(open[0], open[1]); });
+  for (const occ of [0.5, 0.7, 0.9]) if (occ > s.occupancy) push(`Assume ${Math.round(occ*100)}% occupancy on open months`, 0.9 + occ, t => { t.occupancy = occ; });
+  // VA
+  for (const h of [30, 20, 10, 0]) if (h < s.vaHours) push(h === 0 ? 'Pause the VA' : `Cut the VA to ${h} hrs/week`, 0.5 + (s.vaHours - h) / s.vaHours, t => { t.vaHours = h; });
+  // ads
+  for (const a of [25, 0]) if (a < s.adsPerDay) push(a === 0 ? 'Pause ads' : `Drop ads to $${a}/day`, 0.9 + (s.adsPerDay - a) / Math.max(1, s.adsPerDay), t => { t.adsPerDay = a; });
+  if (s.agency) push('Drop the agency', 1.0, t => { t.agency = false; });
+  // personal
+  for (const p of [750, 500]) if (p < s.personal) push(`Live on $${p}/mo in Mexico`, 1.6 + (s.personal - p) / 500, t => { t.personal = p; });
+  // cc payment
+  for (const p of [750, 500]) if (p < s.ccPayment) push(`Drop card payments to $${p}`, 1.8, t => { t.ccPayment = p; });
+  // borrow
+  const need = Math.ceil(sim.gap / 500) * 500;
+  if (need > 0 && need <= 6500 && s.locDraw === 0) push(`Draw $${need.toLocaleString()} on the credit line (costs $${Math.round(need * s.locFee).toLocaleString()})`, 2.5, t => { t.locDraw = need; t.locMonth = Math.max(0, gm - 1); });
+  if (need > 0 && need <= 8000 && s.cardApproved && s.cardDraw === 0) push(`Put $${need.toLocaleString()} on Capital on Tap`, 2.0, t => { t.cardDraw = need; t.cardMonth = Math.max(0, gm - 1); });
+  // full closers first (cheapest effort), then partials by how much they close per unit effort
+  out.sort((a, b) => (b.full - a.full) || (a.full ? a.effort - b.effort : (b.closes / b.effort) - (a.closes / a.effort)));
+  // drop dominated client counts: if 'one more client' fully closes, don't also list 2,3,4
+  const seen = new Set(); const res = [];
+  for (const c of out) { const key = c.label.replace(/\d+/g, '#').replace(/one more client|# more clients/, 'clients'); if (c.full && seen.has(key)) continue; seen.add(key); res.push(c); }
+  return res;
+}
+
+// headroom: how far a lever can go before the floor breaks
+function headroom(s) {
+  const r = {};
+  // ads per day
+  let lo = s.adsPerDay, hi = 300;
+  for (let a = s.adsPerDay; a <= 300; a += 5) { const t = clone(s); t.adsPerDay = a; if (simulate(t).low.cash < s.floor) break; lo = a; }
+  r.adsPerDay = lo;
+  let p = s.personal;
+  for (let x = s.personal; x <= 5000; x += 250) { const t = clone(s); t.personal = x; if (simulate(t).low.cash < s.floor) break; p = x; }
+  r.personal = p;
+  let c = s.ccPayment;
+  for (let x = s.ccPayment; x <= 6000; x += 250) { const t = clone(s); t.ccPayment = x; if (simulate(t).low.cash < s.floor) break; c = x; }
+  r.ccPayment = c;
+  return r;
+}
+
+// ---------- app ----------
+const $ = (q, el = document) => el.querySelector(q);
+const $$ = (q, el = document) => Array.from(el.querySelectorAll(q));
+const fmt = n => (n < 0 ? '−' : '') + Math.abs(Math.round(n)).toLocaleString('en-US');
+const fmtK = n => (n < 0 ? '−' : '') + '$' + Math.abs(Math.round(n)).toLocaleString('en-US');
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const STORE = 'board.v1';
+
+let state = load();
+function load() {
+  try { const raw = localStorage.getItem(STORE); if (raw) { const st = JSON.parse(raw); if (st && st.slots && st.slots.length === 3) return st; } } catch (e) {}
+  const a = baseScenario(); const b = baseScenario(); b.name = 'Slot 2'; const c = baseScenario(); c.name = 'Slot 3';
+  return { slots: [a, b, c], active: 0, horizon: 12, celebrated: false };
+}
+function save() { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {} }
+const cur = () => state.slots[state.active];
+
+// ---------- controls ----------
+function faderRow(host, spec) {
+  const row = document.createElement('div'); row.className = 'row';
+  row.innerHTML = `<div class="lab">${spec.label}${spec.small ? `<small>${spec.small}</small>` : ''}</div>
+    <div class="fader"><input type="range" min="${spec.min}" max="${spec.max}" step="${spec.step}" aria-label="${spec.label}"><div class="ticks" style="--tick:${100 / ((spec.max - spec.min) / (spec.tick || spec.step))}%"></div></div>
+    <div class="out"></div>`;
+  const input = $('input', row), out = $('.out', row);
+  const setP = v => { const p = (v - spec.min) / (spec.max - spec.min); input.style.setProperty('--p', (p * 100) + '%'); };
+  let dragging = false, startVal = null;
+  const paint = () => { const v = spec.get(cur()); input.value = v; setP(v); const [a, b] = spec.read(cur(), v); out.innerHTML = `${a}${b ? `<span class="why">${b}</span>` : ''}`; };
+  input.addEventListener('input', () => { spec.set(cur(), +input.value); setP(+input.value); if (navigator.vibrate && dragging) navigator.vibrate(4); render({ drag: true, only: row }); });
+  input.addEventListener('pointerdown', () => { dragging = true; startVal = spec.get(cur()); row.classList.add('dragging'); });
+  const end = () => { if (!dragging) return; dragging = false; row.classList.remove('dragging'); if (spec.onCommit && startVal !== spec.get(cur())) spec.onCommit(startVal, spec.get(cur())); render({ anim: true }); };
+  input.addEventListener('pointerup', end); input.addEventListener('pointercancel', end); input.addEventListener('keyup', () => render({ anim: true }));
+  host.appendChild(row);
+  return { paint };
+}
+function switchRow(host, spec) {
+  const row = document.createElement('div'); row.className = 'row sw';
+  row.innerHTML = `<div class="lab">${spec.label}${spec.small ? `<small>${spec.small}</small>` : ''}</div><div class="out"></div><button class="switch" role="switch" aria-checked="false" aria-label="${spec.label}"></button>`;
+  const sw = $('.switch', row), out = $('.out', row);
+  const paint = () => { const on = !!spec.get(cur()); sw.setAttribute('aria-checked', on); out.innerHTML = spec.read ? spec.read(cur(), on) : ''; };
+  sw.addEventListener('click', () => { spec.set(cur(), !spec.get(cur())); render({ anim: true }); if (navigator.vibrate) navigator.vibrate(8); });
+  host.appendChild(row); return { paint };
+}
+function monthSelect(sel, opts) {
+  sel.innerHTML = '';
+  for (const o of opts) { const op = document.createElement('option'); op.value = o.v; op.textContent = o.t; sel.appendChild(op); }
+}
+const painters = [];
+
+// ---- clients
+function buildClients() {
+  const host = $('#client-rows'); host.innerHTML = '';
+  cur().clients.forEach((c, i) => {
+    const row = document.createElement('div'); row.className = 'row client';
+    row.innerHTML = `<div class="lab">${c.name}<small class="amt"></small></div><select class="end" aria-label="${c.name} end month"></select><button class="switch" role="switch" aria-label="${c.name} on"></button>`;
+    const sel = $('.end', row), sw = $('.switch', row);
+    monthSelect(sel, [{ v: '', t: 'stays' }].concat(MONTH_LABELS.slice(1).map((l, k) => ({ v: k + 1, t: 'ends ' + l }))));
+    sel.addEventListener('change', () => { cur().clients[i].end = sel.value === '' ? null : +sel.value; render({ anim: true }); });
+    sw.addEventListener('click', () => { cur().clients[i].on = !cur().clients[i].on; render({ anim: true }); });
+    painters.push(() => { const cc = cur().clients[i]; sel.value = cc.end == null ? '' : cc.end; sw.setAttribute('aria-checked', cc.on); row.classList.toggle('dead', !cc.on || (cc.end != null && cc.end <= 1)); $('.amt', row).textContent = (cc.amounts && cc.amounts[0] != null && cc.amounts[0] !== cc.amount ? `${fmt(cc.amounts[0])} now, then ` : '') + `${fmt(cc.amount)}/mo` + (cc.start > 0 ? ` from ${MONTH_LABELS[cc.start]}` : ''); });
+    host.appendChild(row);
+  });
+  const addN = $('#add-n'), addStart = $('#add-start'), addAmt = $('#add-amt');
+  monthSelect(addStart, MONTH_LABELS.slice(1).map((l, k) => ({ v: k + 1, t: l })));
+  const bump = d => { const s = cur(); const before = s.addClients; s.addClients = Math.max(-3, Math.min(8, s.addClients + d)); if (d > 0 && s.addClients > before) throwArc(0, s.addStart); render({ anim: true }); };
+  holdRepeat($('#add-minus'), () => bump(-1)); holdRepeat($('#add-plus'), () => bump(1));
+  addStart.addEventListener('change', () => { cur().addStart = +addStart.value; render({ anim: true }); });
+  addAmt.addEventListener('change', () => { cur().newRetainer = Math.max(0, +addAmt.value || 0); render({ anim: true }); });
+  painters.push(() => { const s = cur(); addN.textContent = (s.addClients > 0 ? '+' : '') + s.addClients; addStart.value = s.addStart; addAmt.value = s.newRetainer; });
+  // lose key
+  const lose = $('#lose'); let t0 = null, raf = null, undoState = null;
+  const setRing = p => lose.style.setProperty('--ring', p * 100);
+  const tick = () => { const p = Math.min(1, (performance.now() - t0) / 400); setRing(p); if (p < 1) raf = requestAnimationFrame(tick); else fire(); };
+  const start = e => { e.preventDefault(); t0 = performance.now(); raf = requestAnimationFrame(tick); };
+  const cancel = () => { if (raf) cancelAnimationFrame(raf); raf = null; t0 = null; setRing(0); };
+  const fire = () => {
+    cancel(); const s = cur();
+    const active = s.clients.map((c, i) => ({ c, i, v: clientIncome(c, 1) })).filter(x => x.v > 0).sort((a, b) => b.v - a.v);
+    if (!active.length) { $('#lose-txt').innerHTML = '<b>Nobody left to lose.</b> That is its own kind of scenario.'; return; }
+    const victim = active[0]; undoState = { i: victim.i, end: victim.c.end, on: victim.c.on };
+    s.clients[victim.i].end = 1;
+    if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
+    $('#lose-txt').innerHTML = `<b>${victim.c.name} is gone from ${MONTH_LABELS[1]}.</b> That is ${fmtK(victim.v)} a month you were counting on. <button class="undo" id="undo">Undo</button>`;
+    $('#undo').addEventListener('click', () => { const u = undoState; if (!u) return; cur().clients[u.i].end = u.end; cur().clients[u.i].on = u.on; undoState = null; $('#lose-txt').innerHTML = '<b>Hold to lose a client.</b> Your biggest one stops paying next month. No notice, like this year.'; render({ anim: true }); });
+    render({ anim: true });
+  };
+  lose.addEventListener('pointerdown', start); lose.addEventListener('pointerup', cancel); lose.addEventListener('pointerleave', cancel); lose.addEventListener('pointercancel', cancel);
+  lose.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fire(); } });
+}
+function holdRepeat(btn, fn) {
+  let t = null, iv = null;
+  const stop = () => { clearTimeout(t); clearInterval(iv); t = iv = null; btn.classList.remove('down'); };
+  btn.addEventListener('pointerdown', e => { e.preventDefault(); btn.classList.add('down'); fn(); t = setTimeout(() => { iv = setInterval(fn, 160); }, 450); });
+  btn.addEventListener('pointerup', stop); btn.addEventListener('pointerleave', stop); btn.addEventListener('pointercancel', stop);
+  btn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); } });
+}
+
+// ---- growth
+function buildGrowth() {
+  const host = $('#growth-rows');
+  painters.push(faderRow(host, {
+    label: 'Ads', small: 'per day', min: 0, max: 150, step: 5, tick: 10,
+    get: s => s.adsPerDay, set: (s, v) => { s.adsPerDay = v; },
+    read: (s, v) => { const cpc = s.conservative ? s.costPerClient * 2 : s.costPerClient; const per = s.adsProduceClients && v > 0 ? (v * 30) / cpc : 0; return [`$${v}/day`, per > 0 ? `${per.toFixed(2)} clients/mo · lands ${MONTH_LABELS[Math.min(11, Math.ceil(cpc / (v * 30)) - 1 + s.lagMonths)] || 'later'}` : 'no ads, no new clients']; },
+    onCommit: (a, b) => { if (b > a && cur().adsProduceClients) throwArc(0, cur().lagMonths + Math.max(0, Math.ceil((cur().conservative ? cur().costPerClient * 2 : cur().costPerClient) / (b * 30)) - 1)); },
+  }).paint);
+  painters.push(faderRow(host, {
+    label: 'VA', small: 'hours per week', min: 0, max: 50, step: 5, tick: 5,
+    get: s => s.vaHours, set: (s, v) => { s.vaHours = v; },
+    read: (s, v) => [`${v} hrs`, `${fmtK(v * WEEKS_PER_MONTH * s.vaRate)}/mo at $${s.vaRate}`],
+  }).paint);
+  painters.push(switchRow(host, { label: 'Ad agency', small: 'runs the campaigns', get: s => s.agency, set: (s, v) => { s.agency = v; }, read: s => `${fmt(s.agencyFee)}/mo` }).paint);
+}
+
+// ---- house
+function buildHouse() {
+  const tanks = $('#tanks'); tanks.innerHTML = '';
+  MONTH_LABELS.forEach((l, m) => {
+    const t = document.createElement('button'); t.className = 'tank'; t.setAttribute('aria-label', MONTH_FULL[m]);
+    t.innerHTML = `<div class="fill"></div><div class="m">${l}</div><div class="lock"></div>`;
+    t.addEventListener('click', () => { const s = cur(); if (isSigned(s, m)) return; const k = s.bookedOpen.indexOf(m); if (k >= 0) s.bookedOpen.splice(k, 1); else s.bookedOpen.push(m); render({ anim: true }); });
+    tanks.appendChild(t);
+    painters.push(() => {
+      const s = cur(); const signed = isSigned(s, m), booked = isBookedOpen(s, m);
+      t.classList.toggle('signed', signed); t.classList.toggle('booked', booked); t.classList.toggle('off', m >= s.horizon);
+      $('.fill', t).style.setProperty('--h', signed || booked ? '100%' : Math.round(s.occupancy * 100) + '%');
+      $('.lock', t).textContent = signed ? fmt(s.signedRent[m]) : (booked ? fmt(s.openRate) : (s.occupancy > 0 ? Math.round(s.occupancy * 100) + '%' : ''));
+    });
+  });
+  const host = $('#house-rows');
+  painters.push(faderRow(host, {
+    label: 'Occupancy', small: 'open months', min: 0, max: 90, step: 10, tick: 10,
+    get: s => Math.round(s.occupancy * 100), set: (s, v) => { s.occupancy = v / 100; },
+    read: (s, v) => [`${v}%`, v > 0 ? `${fmtK(s.openRate * v / 100)}/mo expected` : 'empty when not signed'],
+  }).paint);
+  painters.push(faderRow(host, {
+    label: 'Open rate', small: 'per month, unsigned', min: 2000, max: 5000, step: 250, tick: 500,
+    get: s => s.openRate, set: (s, v) => { s.openRate = v; },
+    read: (s, v) => [fmtK(v), `carry cost ${fmtK(s.housing + s.utilities)}`],
+  }).paint);
+}
+
+// ---- money out
+function buildOut() {
+  const host = $('#out-rows');
+  painters.push(faderRow(host, { label: 'Hermosillo', small: 'rent from Oct', min: 500, max: 2000, step: 100, tick: 100, get: s => s.mexicoRent, set: (s, v) => { s.mexicoRent = v; }, read: (s, v) => [fmtK(v), ''] }).paint);
+  painters.push(faderRow(host, { label: 'Living', small: 'food, travel, life', min: 500, max: 3000, step: 250, tick: 250, get: s => s.personal, set: (s, v) => { s.personal = v; }, read: (s, v) => [fmtK(v), v >= 2000 ? 'splurge mode' : v <= 750 ? 'tight' : ''] }).paint);
+  painters.push(faderRow(host, {
+    label: 'Cards', small: 'payment on the 30k', min: 0, max: 3000, step: 250, tick: 250,
+    get: s => s.ccPayment, set: (s, v) => { s.ccPayment = v; },
+    read: (s, v) => { const int = s.ccBalance * s.ccApr / 12; return [fmtK(v), v <= int ? `interest alone is ${fmtK(int)}` : `${fmtK(v - int)} hits principal`]; },
+  }).paint);
+  painters.push(faderRow(host, { label: 'Software', small: 'subscriptions', min: 0, max: 2500, step: 100, tick: 250, get: s => s.subs, set: (s, v) => { s.subs = v; }, read: (s, v) => [fmtK(v), ''] }).paint);
+}
+
+// ---- credit
+function buildCredit() {
+  const host = $('#credit-rows');
+  painters.push(switchRow(host, { label: 'Capital on Tap', small: '8k business card, pending paperwork', get: s => s.cardApproved, set: (s, v) => { s.cardApproved = v; }, read: (s, on) => on ? 'approved' : 'not yet' }).paint);
+  const cardRow = faderRow(host, {
+    label: 'Card draw', small: '', min: 0, max: 8000, step: 500, tick: 1000,
+    get: s => s.cardDraw, set: (s, v) => { s.cardDraw = v; },
+    read: (s, v) => [fmtK(v), !s.cardApproved ? 'needs approval first' : v > 0 ? `in ${MONTH_LABELS[s.cardMonth]} · 0% for ${s.cardIntroMonths} mo` : ''],
+  });
+  painters.push(cardRow.paint);
+  painters.push(faderRow(host, {
+    label: 'Credit line', small: '6.5k, weekly payback', min: 0, max: 6500, step: 500, tick: 500,
+    get: s => s.locDraw, set: (s, v) => { s.locDraw = v; },
+    read: (s, v) => [fmtK(v), v > 0 ? `in ${MONTH_LABELS[s.locMonth]} · costs ${fmtK(v * s.locFee)} · ${fmtK(v * (1 + s.locFee) / 26)}/wk` : ''],
+  }).paint);
+  const when = document.createElement('div'); when.className = 'row'; when.style.gridTemplateColumns = 'auto 1fr';
+  when.innerHTML = `<div class="lab">Draw in</div><div class="inline-sel">card <select id="card-month"></select> &nbsp; line <select id="loc-month"></select></div>`;
+  host.appendChild(when);
+  monthSelect($('#card-month'), MONTH_LABELS.map((l, k) => ({ v: k, t: l }))); monthSelect($('#loc-month'), MONTH_LABELS.map((l, k) => ({ v: k, t: l })));
+  $('#card-month').addEventListener('change', e => { cur().cardMonth = +e.target.value; render({ anim: true }); });
+  $('#loc-month').addEventListener('change', e => { cur().locMonth = +e.target.value; render({ anim: true }); });
+  painters.push(() => { $('#card-month').value = cur().cardMonth; $('#loc-month').value = cur().locMonth; });
+}
+
+// ---- modes
+function buildModes() {
+  const host = $('#mode-rows');
+  painters.push(switchRow(host, { label: 'Sweep surplus to cards', small: 'anything above floor + buffer pays down the 30k', get: s => s.sweep, set: (s, v) => { s.sweep = v; }, read: s => `buffer ${fmt(s.sweepBuffer)}` }).paint);
+  painters.push(switchRow(host, { label: 'Conservative', small: 'income −20%, clients cost double', get: s => s.conservative, set: (s, v) => { s.conservative = v; }, read: (s, on) => on ? 'on' : 'off' }).paint);
+  painters.push(switchRow(host, { label: 'Ads make clients', small: 'turn off to see ads as pure cost', get: s => s.adsProduceClients, set: (s, v) => { s.adsProduceClients = v; }, read: (s, on) => on ? `1 per ${fmtK(s.costPerClient)}` : 'off' }).paint);
+}
+
+// ---- advanced
+function buildAdvanced() {
+  const grid = $('#adv-grid');
+  const fields = [
+    ['startCash', 'Cash today'], ['floor', 'Floor'], ['housing', 'Mortgage + HOA + HELOC'], ['utilities', 'House utilities (you pay)'],
+    ['costPerClient', 'Ad cost per client'], ['lagMonths', 'Lag to first invoice (mo)'], ['ccBalance', 'Card balance'], ['ccApr', 'Card APR (0.24 = 24%)'],
+    ['sweepBuffer', 'Sweep buffer'], ['loan', 'Bank loan payment'], ['hoaArrears', 'HOA arrears (Sept)'], ['turnover', 'Turnover per move-out'],
+  ];
+  for (const [k, l] of fields) {
+    const lab = document.createElement('label'); lab.innerHTML = `${l}<input type="number" step="any" data-k="${k}">`;
+    const inp = $('input', lab);
+    inp.addEventListener('change', () => { cur()[k] = +inp.value; render({ anim: true }); });
+    painters.push(() => { inp.value = cur()[k]; });
+    grid.appendChild(lab);
+  }
+  $('#reset').addEventListener('click', () => { const name = cur().name; state.slots[state.active] = baseScenario(); cur().name = name; render({ anim: true }); });
+}
+
+// ---------- tabs ----------
+function buildTabs() {
+  $$('.tab').forEach(t => t.addEventListener('click', () => { state.active = +t.dataset.slot; render({ anim: true }); }));
+  $('#rename').addEventListener('click', () => { const n = prompt('Name this scenario. Something you would say out loud, like "if the plumber bails".', cur().name); if (n != null && n.trim()) { cur().name = n.trim().slice(0, 24); render({}); } });
+  $$('.horizon button').forEach(b => b.addEventListener('click', () => { state.horizon = +b.dataset.h; state.slots.forEach(s => s.horizon = state.horizon); render({ anim: true }); }));
+}
+
+// ---------- chart ----------
+const chart = $('#chart'), svg = $('svg', chart), tip = $('#tip');
+let prevCash = null, tweenRaf = null, hoverM = null, flaredOnce = false;
+function chartGeom() {
+  const W = chart.clientWidth, Hh = chart.clientHeight;
+  return { W, H: Hh, L: 46, R: 14, T: 14, B: 22 };
+}
+function niceStep(range) { const raw = range / 4; const p = Math.pow(10, Math.floor(Math.log10(raw))); const m = raw / p; return (m >= 5 ? 10 : m >= 2 ? 5 : m >= 1 ? 2 : 1) * p; }
+function drawChart(cash, sim, ghosts, s) {
+  const g = chartGeom(); const H = s.horizon;
+  let lo = Math.min(0, ...cash), hi = Math.max(s.floor * 1.2, ...cash);
+  for (const gh of ghosts) { lo = Math.min(lo, ...gh.cash); hi = Math.max(hi, ...gh.cash); }
+  const pad = (hi - lo) * 0.08; lo -= pad; hi += pad;
+  const step = niceStep(hi - lo);
+  const x = m => g.L + (m / (H - 1)) * (g.W - g.L - g.R);
+  const y = v => g.T + (1 - (v - lo) / (hi - lo)) * (g.H - g.T - g.B);
+  const line = arr => arr.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  const area = (arr, base) => line(arr) + ` L${x(arr.length - 1).toFixed(1)},${y(base).toFixed(1)} L${x(0).toFixed(1)},${y(base).toFixed(1)} Z`;
+  let out = '';
+  // grid
+  out += '<g class="grid">';
+  for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) out += `<line x1="${g.L}" x2="${g.W - g.R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/>`;
+  out += '</g><g class="axis">';
+  for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) out += `<text x="${g.L - 6}" y="${(y(v) + 3).toFixed(1)}" text-anchor="end">${v === 0 ? '0' : (Math.abs(v) >= 1000 ? (v / 1000).toFixed(v % 1000 ? 1 : 0) + 'k' : v)}</text>`;
+  for (let m = 0; m < H; m++) out += `<text x="${x(m).toFixed(1)}" y="${g.H - 6}" text-anchor="middle">${MONTH_LABELS[m]}</text>`;
+  out += '</g>';
+  // clip regions
+  const yF = y(s.floor), y0 = y(0), yLo = y(lo), yHi = y(hi);
+  out += `<defs><clipPath id="c-ok"><rect x="0" y="${yHi - 20}" width="${g.W}" height="${Math.max(0, yF - yHi + 20)}"/></clipPath>
+    <clipPath id="c-warn"><rect x="0" y="${yF}" width="${g.W}" height="${Math.max(0, y0 - yF)}"/></clipPath>
+    <clipPath id="c-crit"><rect x="0" y="${y0}" width="${g.W}" height="${Math.max(0, yLo - y0 + 20)}"/></clipPath>
+    <linearGradient id="g-ok" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".18"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>`;
+  // ghosts
+  for (const gh of ghosts) { out += `<path class="ghost" d="${line(gh.cash)}"/><text class="ghost-lab" x="${(x(H - 1) - 2).toFixed(1)}" y="${(y(gh.cash[H - 1]) - 6).toFixed(1)}" text-anchor="end">${gh.name}</text>`; }
+  // fills
+  out += `<path d="${area(cash, lo)}" fill="url(#g-ok)" clip-path="url(#c-ok)"/>`;
+  // floods: the region between the curve and the line it pressed through, only where it is under
+  if (Math.min(...cash) < s.floor) out += `<path d="${area(cash, s.floor)}" fill="var(--warn-dim)" clip-path="url(#c-warn)"/>`;
+  if (Math.min(...cash) < 0) out += `<path d="${area(cash, 0)}" fill="var(--crit-dim)" clip-path="url(#c-crit)"/>`;
+  // floor + zero
+  if (lo < 0) out += `<line class="zero" x1="${g.L}" x2="${g.W - g.R}" y1="${y0.toFixed(1)}" y2="${y0.toFixed(1)}"/>`;
+  out += `<line class="floor" x1="${g.L}" x2="${g.W - g.R}" y1="${yF.toFixed(1)}" y2="${yF.toFixed(1)}"/><text class="floor-lab" x="${g.W - g.R}" y="${(yF - 4).toFixed(1)}" text-anchor="end">floor ${fmt(s.floor)}</text>`;
+  // curve
+  out += `<path class="curve" d="${line(cash)}"/>`;
+  // low point
+  let li = 0; for (let i = 1; i < cash.length; i++) if (cash[i] < cash[li]) li = i;
+  const lv = cash[li], col = lv < 0 ? 'var(--crit)' : lv < s.floor ? 'var(--warn)' : 'var(--accent)';
+  const lx = x(li), ly = y(lv);
+  // label sits beside the ring, on whichever side has room, on a short horizontal stem
+  const right = li < H * 0.6; const sx = right ? lx + 16 : lx - 16;
+  out += `<circle class="lowring" cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="4" stroke="${col}"/><line class="lowstem" x1="${(lx + (right ? 5 : -5)).toFixed(1)}" x2="${sx.toFixed(1)}" y1="${ly.toFixed(1)}" y2="${ly.toFixed(1)}" stroke="${col}"/><text class="lowlab" x="${(sx + (right ? 3 : -3)).toFixed(1)}" y="${(ly + 3.5).toFixed(1)}" text-anchor="${right ? 'start' : 'end'}">low ${fmt(lv)} · ${MONTH_LABELS[li]}</text>`;
+  // hover
+  if (hoverM != null && hoverM < H) out += `<line class="tip-line" x1="${x(hoverM).toFixed(1)}" x2="${x(hoverM).toFixed(1)}" y1="${g.T}" y2="${g.H - g.B}"/><circle cx="${x(hoverM).toFixed(1)}" cy="${y(cash[hoverM]).toFixed(1)}" r="4" fill="var(--accent)" stroke="var(--ground)" stroke-width="2"/>`;
+  // flare on first structural surplus
+  const fp = sim.rows.find(r => r.structural > 0);
+  if (fp && !flaredOnce && !REDUCED && !state.celebrated) { out += `<circle class="flare" cx="${x(fp.m).toFixed(1)}" cy="${y(cash[fp.m]).toFixed(1)}" r="6"><animate attributeName="r" from="4" to="22" dur=".5s" fill="freeze"/><animate attributeName="opacity" values="0;.9;0" dur=".5s" fill="freeze"/></circle>`; flaredOnce = true; state.celebrated = true; }
+  svg.innerHTML = out + '<g id="throws"></g>';
+  svg._x = x; svg._y = y;
+}
+function animateTo(cash, sim, ghosts, s) {
+  if (tweenRaf) cancelAnimationFrame(tweenRaf);
+  if (!prevCash || REDUCED || prevCash.length !== cash.length) { prevCash = cash.slice(); drawChart(cash, sim, ghosts, s); return; }
+  const from = prevCash.slice(), t0 = performance.now(), D = 240, LAG = 12;
+  const step = () => {
+    const t = performance.now() - t0; let done = true;
+    const c = cash.map((v, i) => { const p = Math.max(0, Math.min(1, (t - i * LAG) / D)); if (p < 1) done = false; const e = 1 - Math.pow(1 - p, 3); return from[i] + (v - from[i]) * e; });
+    drawChart(c, sim, ghosts, s);
+    if (!done) tweenRaf = requestAnimationFrame(step); else { prevCash = cash.slice(); tweenRaf = null; }
+  };
+  tweenRaf = requestAnimationFrame(step);
+}
+function throwArc(fromM, toM) {
+  if (REDUCED || !svg._x || toM <= fromM) return;
+  const s = cur(); if (toM >= s.horizon) return;
+  const r = simulate(s).rows; const x = svg._x, y = svg._y;
+  const x1 = x(fromM), y1 = y(r[fromM].cash), x2 = x(toM), y2 = y(r[toM].cash);
+  const cx = (x1 + x2) / 2, cy = Math.min(y1, y2) - 40;
+  const gEl = $('#throws', svg); if (!gEl) return;
+  const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  p.setAttribute('class', 'throw'); p.setAttribute('d', `M${x1},${y1} Q${cx},${cy} ${x2},${y2}`);
+  gEl.appendChild(p);
+  const len = p.getTotalLength(); p.style.strokeDasharray = len; p.style.strokeDashoffset = len;
+  p.animate([{ strokeDashoffset: len, opacity: .9 }, { strokeDashoffset: 0, opacity: .9, offset: .6 }, { strokeDashoffset: 0, opacity: 0 }], { duration: 900, easing: 'ease-out' }).onfinish = () => p.remove();
+  const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  dot.setAttribute('cx', x2); dot.setAttribute('cy', y2); dot.setAttribute('r', 3); dot.setAttribute('fill', 'var(--accent)'); gEl.appendChild(dot);
+  dot.animate([{ opacity: 0 }, { opacity: 0, offset: .55 }, { opacity: 1, offset: .65 }, { opacity: 0 }], { duration: 1100 }).onfinish = () => dot.remove();
+}
+function reason(r, s) {
+  if (r.locIn) return 'credit line draw lands';
+  if (r.arrears) return 'HOA catch-up paid';
+  if (r.structural > 0) return 'the business paid for the month';
+  if (r.rentKind === 'none' && r.adClients === 0 && r.adsStartingLater > 0) return 'house empty, ads running, clients not here yet';
+  if (r.rentKind === 'none') return 'house empty, carrying it alone';
+  if (r.adClients === 0 && r.adsStartingLater > 0) return 'ads running, clients not here yet';
+  if (r.rentKind === 'signed') return 'rent covers the house';
+  if (r.rentKind === 'occupancy') return 'expected rent at your occupancy guess';
+  return r.net >= 0 ? 'holding' : 'burning the buffer';
+}
+function bindChart() {
+  const move = e => {
+    const rect = chart.getBoundingClientRect(); const px = e.clientX - rect.left; const g = chartGeom(); const H = cur().horizon;
+    const m = Math.round(((px - g.L) / (g.W - g.L - g.R)) * (H - 1));
+    hoverM = Math.max(0, Math.min(H - 1, m));
+    const r = simulate(cur()).rows[hoverM]; const prev = hoverM ? simulate(cur()).rows[hoverM - 1].cash : cur().startCash;
+    const d = r.cash - prev;
+    tip.innerHTML = `<b>${r.label}</b> · <b>${fmt(r.cash)}</b> · ${d >= 0 ? 'up' : 'down'} <b>${fmt(Math.abs(d))}</b><br><span class="why">in ${fmt(r.income)} · out ${fmt(r.expenses)}${r.swept ? ` · swept ${fmt(r.swept)} to cards` : ''}<br>${reason(r, cur())}</span>`;
+    tip.style.display = 'block';
+    const tx = Math.min(rect.width - 230, Math.max(0, svg._x(hoverM) + 10)); tip.style.left = tx + 'px'; tip.style.top = '8px';
+    render({ drag: true });
+  };
+  chart.addEventListener('pointermove', move); chart.addEventListener('pointerdown', move);
+  chart.addEventListener('pointerleave', () => { hoverM = null; tip.style.display = 'none'; render({ drag: true }); });
+  addEventListener('resize', () => render({}));
+}
+
+// ---------- answers ----------
+function renderAnswers(s, sim) {
+  const host = $('#answers'); let html = '';
+  if (sim.gap > 0) {
+    const cls = sim.low.cash < 0 ? 'crit' : 'warn';
+    const months = sim.low.cash < 0 ? 'under zero' : 'under the floor';
+    html += `<p class="lead ${cls}"><span class="num">${sim.low.full.split(' ')[0]}</span> goes ${months} by <span class="num">${fmtK(sim.gap)}</span>. ${sim.low.cash < 0 ? 'That is borrowing to eat.' : 'That is inside one month of housing. Not fatal, but thin.'} Close it with any of these, in order of how little they change your life:</p>`;
+    const cands = candidates(s, sim).slice(0, 4);
+    if (!cands.length) html += '<p class="note">Nothing on the board closes this alone. Pull two levers.</p>';
+    cands.forEach((c, i) => { html += `<button class="answer" data-i="${i}"><span class="k">${String(i + 1).padStart(2, '0')}</span><span class="t">${c.label}</span><span class="c ${c.full ? 'full' : ''}">${c.full ? 'closes it' : `closes ${fmt(c.closes)}`}</span></button>`; });
+    host.innerHTML = html;
+    $$('.answer', host).forEach(b => b.addEventListener('click', () => { const c = cands[+b.dataset.i]; b.classList.add('lit'); c.apply(cur()); if (navigator.vibrate) navigator.vibrate(10); setTimeout(() => render({ anim: true }), 120); }));
+  } else {
+    const hr = headroom(s);
+    const spare = sim.low.cash - s.floor;
+    html += `<p class="lead"><span class="num">Never</span> touches the floor. Spare at the low point: <span class="num">${fmtK(spare)}</span> in ${sim.low.full.split(' ')[0]}.</p>`;
+    const lines = [];
+    if (hr.adsPerDay > s.adsPerDay) lines.push({ t: `You could run ads at $${hr.adsPerDay}/day and stay above the floor`, apply: t => { t.adsPerDay = hr.adsPerDay; } });
+    if (hr.ccPayment > s.ccPayment) lines.push({ t: `You could pay $${fmt(hr.ccPayment)}/mo on the cards and stay above the floor`, apply: t => { t.ccPayment = hr.ccPayment; } });
+    if (hr.personal > s.personal) lines.push({ t: `You could live on $${fmt(hr.personal)}/mo and stay above the floor`, apply: t => { t.personal = hr.personal; } });
+    if (!s.sweep && sim.endCc > 0) lines.push({ t: 'Sweep the surplus into the cards and watch the 30k move', apply: t => { t.sweep = true; } });
+    lines.forEach((l, i) => { html += `<button class="answer" data-i="${i}"><span class="k">${String(i + 1).padStart(2, '0')}</span><span class="t">${l.t}</span><span class="c"></span></button>`; });
+    host.innerHTML = html;
+    $$('.answer', host).forEach(b => b.addEventListener('click', () => { lines[+b.dataset.i].apply(cur()); render({ anim: true }); }));
+  }
+}
+
+// ---------- render ----------
+function render(opt = {}) {
+  const s = cur(); s.horizon = state.horizon;
+  const sim = simulate(s);
+  const cash = sim.rows.map(r => r.cash);
+  const H = s.horizon;
+  // hero
+  const low = $('#h-low'); low.textContent = fmt(sim.low.cash); low.className = 'val ' + (sim.low.cash < 0 ? 'crit' : sim.low.cash < s.floor ? 'warn' : 'good');
+  $('#h-low-sub').textContent = 'in ' + sim.low.full.split(' ')[0];
+  const fl = $('#h-floor');
+  if (!sim.firstBelowFloor) { fl.textContent = 'never'; fl.className = 'val good'; $('#h-floor-sub').textContent = `floor ${fmt(s.floor)}, ${H} months out`; }
+  else { const n = sim.firstBelowFloor.m; fl.textContent = n === 0 ? 'now' : String(n); fl.className = 'val ' + (sim.firstNegative ? 'crit' : 'warn'); $('#h-floor-sub').textContent = (n === 0 ? 'already under in ' : 'goes under in ') + sim.firstBelowFloor.full.split(' ')[0]; }
+  $('#h-end-cap').textContent = 'Cash in ' + MONTH_LABELS[H - 1];
+  const en = $('#h-end'); en.textContent = fmt(sim.endCash); en.className = 'val ' + (sim.endCash < 0 ? 'crit' : sim.endCash < s.floor ? 'warn' : '');
+  $('#h-end-sub').textContent = sim.structural >= 0 ? `+${fmt(sim.structural)}/mo without rent` : `${fmt(sim.structural)}/mo without rent`;
+  // strip
+  const pay = sim.payoffMonths === Infinity ? 'never at this payment' : sim.payoffMonths === 0 ? 'paid off' : `paid off in ${sim.payoffMonths} mo`;
+  const firstPay = sim.rows.find(r => r.structural > 0);
+  $('#strip').innerHTML = `<span>breakeven <b>${sim.breakeven ? sim.breakeven.label : 'not yet'}</b></span><span>cards <b>${fmt(sim.endCc)}</b> · ${pay}</span><span>borrowing cost <b>${fmt(sim.borrowCost)}</b></span><span>ad clients <b>${sim.adClientsTotal}</b> by ${MONTH_LABELS[H - 1]}</span>${firstPay ? `<span class="good">${firstPay.full.split(' ')[0]}: first month the business pays for the month.</span>` : ''}`;
+  // chart
+  const ghosts = state.slots.map((g, i) => ({ i, g })).filter(x => x.i !== state.active).map(x => { const t = JSON.parse(JSON.stringify(x.g)); t.horizon = H; return { name: x.g.name, cash: simulate(t).rows.map(r => r.cash) }; }).filter(g => g.cash.some((v, i) => v !== cash[i]));
+  if (opt.anim) animateTo(cash, sim, ghosts, s); else { if (tweenRaf) { cancelAnimationFrame(tweenRaf); tweenRaf = null; } prevCash = cash.slice(); drawChart(cash, sim, ghosts, s); }
+  // rack
+  if (!opt.drag) { renderAnswers(s, sim); }
+  painters.forEach(p => p());
+  $$('.tab').forEach(t => { const i = +t.dataset.slot; t.setAttribute('aria-selected', i === state.active); $('.tn', t).textContent = state.slots[i].name; });
+  $$('.horizon button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.h === H));
+  const r0 = sim.rows[Math.min(2, H - 1)];
+  $('#clients-total').textContent = `${fmt(r0.retainers)}/mo by ${r0.label}`;
+  $('#house-total').textContent = `${fmt(sim.rows.reduce((a, r) => a + r.rent, 0))} rent over ${H} mo`;
+  $('#out-total').textContent = `${fmt(sim.rows[Math.min(1, H - 1)].expenses)}/mo from Oct`;
+  $('#credit-total').textContent = sim.borrowCost ? `costs ${fmt(sim.borrowCost)}` : 'untouched';
+  save();
+}
+
+// ---------- boot ----------
+buildTabs(); buildClients(); buildGrowth(); buildHouse(); buildOut(); buildCredit(); buildModes(); buildAdvanced(); bindChart();
+render({});
+if (!REDUCED) { const c = $('.curve', svg); if (c) { const L = c.getTotalLength(); c.style.strokeDasharray = L; c.style.strokeDashoffset = L; c.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: 700, easing: 'ease-out' }).onfinish = () => { c.style.strokeDasharray = ''; c.style.strokeDashoffset = ''; }; } }
+</script>
+</body>
+</html>
